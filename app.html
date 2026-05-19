@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Great Guest — Приложение для гостей</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Mono:wght@300;400;500&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+html,body{height:100%;overflow:hidden;background:#F2E8C6;font-family:'Jost',sans-serif}
+
+:root{
+  --bg:    #F6EDD4;
+  --bg2:   #EDE3C4;
+  --bg3:   #E6D9B4;
+  --text:  #1A1008;
+  --gold:  #8C6810;
+  --gold2: #A87E20;
+  --gold3: #C09830;
+  --mute:  rgba(26,16,8,.45);
+  --rule:  rgba(26,16,8,.09);
+  --f: 'Cormorant Garamond', serif;
+  --m: 'DM Mono', monospace;
+  --n: 'Jost', sans-serif;
+}
+
+/* ─── STAGE ─── */
+.stage{
+  width:100vw;height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 90% 70% at 50% 40%, #EFE2B8 0%, #E8D8A4 50%, #DFD098 100%);
+  position:relative;overflow:hidden;
+}
+
+/* ambient warm orbs */
+.orb{position:absolute;border-radius:50%;pointer-events:none}
+.orb1{width:700px;height:700px;background:radial-gradient(circle,rgba(200,160,60,.12) 0%,transparent 70%);top:-200px;right:-150px;animation:orbFloat1 20s ease-in-out infinite}
+.orb2{width:600px;height:600px;background:radial-gradient(circle,rgba(160,120,30,.08) 0%,transparent 70%);bottom:-200px;left:-150px;animation:orbFloat2 24s ease-in-out infinite}
+@keyframes orbFloat1{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,25px)}}
+@keyframes orbFloat2{0%,100%{transform:translate(0,0)}50%{transform:translate(25px,-20px)}}
+
+/* subtle dot pattern */
+.dot-bg{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(140,104,16,.12) 1px,transparent 1px);
+  background-size:28px 28px;
+  pointer-events:none;
+}
+
+/* ─── PHONE FRAME ─── */
+.phone-scene{
+  perspective:1200px;
+  width:340px;height:680px;
+  position:relative;z-index:10;
+  filter:drop-shadow(0 40px 80px rgba(100,70,0,.18)) drop-shadow(0 8px 24px rgba(100,70,0,.12));
+}
+.phone-wrapper{
+  width:100%;height:100%;
+  transform-style:preserve-3d;
+  transition:transform .12s ease-out;
+}
+.phone{
+  width:340px;height:680px;
+  background:var(--bg);
+  border-radius:44px;
+  border:1px solid rgba(140,104,16,.18);
+  position:relative;overflow:hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.6),
+    inset 1px 0 0 rgba(255,255,255,.4),
+    0 0 0 1px rgba(100,70,0,.08);
+}
+
+/* notch */
+.notch{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:120px;height:32px;
+  background:var(--bg);border-radius:0 0 20px 20px;
+  z-index:20;
+  box-shadow:0 1px 0 rgba(140,104,16,.1);
+}
+.notch::after{
+  content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  width:12px;height:12px;border-radius:50%;
+  background:var(--bg2);border:1px solid var(--rule);
+}
+
+/* status bar */
+.status-bar{
+  position:absolute;top:10px;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0 28px;z-index:19;
+  font-family:var(--m);font-size:10px;
+  color:var(--mute);letter-spacing:.04em;
+}
+
+/* ─── SCREENS ─── */
+.screens{
+  position:absolute;inset:0;border-radius:44px;overflow:hidden;
+}
+.screen{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  background:var(--bg);
+  opacity:0;pointer-events:none;
+  transition:opacity .45s ease, transform .45s cubic-bezier(.4,0,.2,1);
+  transform:translateX(36px);
+}
+.screen.active{opacity:1;pointer-events:auto;transform:translateX(0)}
+.screen.exit-left{transform:translateX(-36px);opacity:0}
+
+/* ─── BOTTOM NAV ─── */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;right:0;height:72px;
+  background:rgba(246,237,212,.97);
+  border-top:1px solid var(--rule);
+  display:flex;align-items:flex-start;justify-content:space-around;
+  padding-top:12px;z-index:30;border-radius:0 0 44px 44px;
+  backdrop-filter:blur(12px);
+}
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;padding:0 12px;transition:all .2s ease;
+}
+.nav-item.active .nav-ico{color:var(--gold2)}
+.nav-item.active .nav-lbl{color:var(--gold2)}
+.nav-ico{
+  font-size:18px;color:rgba(26,16,8,.22);
+  transition:color .2s, transform .2s;
+}
+.nav-lbl{
+  font-family:var(--m);font-size:8px;letter-spacing:.08em;
+  color:rgba(26,16,8,.22);text-transform:uppercase;transition:color .2s;
+}
+.nav-item:active .nav-ico{transform:scale(.88)}
+
+/* ─── SCREEN 1: HOME ─── */
+.s-home{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+.s-home-header{
+  padding:44px 24px 0;
+  display:flex;justify-content:space-between;align-items:flex-start;
+}
+.s-home-logo{
+  font-family:var(--m);font-size:8px;letter-spacing:.22em;
+  color:var(--gold);text-transform:uppercase;opacity:.7;
+}
+.s-home-bell{
+  width:34px;height:34px;background:rgba(140,104,16,.06);
+  border:1px solid var(--rule);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;cursor:pointer;position:relative;
+}
+.s-home-bell::after{
+  content:'';position:absolute;top:6px;right:8px;
+  width:7px;height:7px;background:var(--gold2);border-radius:50%;
+  border:1.5px solid var(--bg);
+}
+
+/* MEMBERSHIP CARD */
+.card-scene{
+  perspective:800px;
+  margin:22px 20px 0;
+  height:186px;
+}
+.membership-card{
+  width:100%;height:100%;
+  transform-style:preserve-3d;
+  border-radius:20px;
+  position:relative;
+  animation:cardFloat 5s ease-in-out infinite;
+  cursor:pointer;
+}
+@keyframes cardFloat{
+  0%,100%{transform:rotateX(2deg) rotateY(-1deg) translateY(0)}
+  50%{transform:rotateX(-1deg) rotateY(2deg) translateY(-4px)}
+}
+.card-face{
+  position:absolute;inset:0;border-radius:20px;
+  background:linear-gradient(135deg,#2A1E08 0%,#1A1206 40%,#261808 80%,#180E04 100%);
+  border:1px solid rgba(212,168,83,.22);
+  overflow:hidden;
+  box-shadow:0 12px 40px rgba(20,10,0,.25),0 2px 8px rgba(20,10,0,.15);
+}
+.card-face::before{
+  content:'';position:absolute;inset:0;border-radius:20px;
+  background:repeating-linear-gradient(
+    105deg,
+    transparent 0px,transparent 30px,
+    rgba(212,168,83,.03) 30px,rgba(212,168,83,.03) 31px,
+    transparent 31px,transparent 60px
+  );pointer-events:none;
+}
+.card-face::after{
+  content:'';position:absolute;
+  top:-60%;left:-30%;width:60%;height:200%;
+  background:linear-gradient(105deg,transparent 40%,rgba(212,168,83,.07) 50%,transparent 60%);
+  animation:cardSheen 4s ease-in-out infinite;pointer-events:none;
+}
+@keyframes cardSheen{0%,100%{left:-30%}50%{left:80%}}
+
+.card-inner{position:relative;z-index:2;padding:22px 24px;height:100%;display:flex;flex-direction:column;justify-content:space-between}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start}
+.card-gg{font-family:var(--m);font-size:8px;letter-spacing:.22em;color:rgba(212,168,83,.55);text-transform:uppercase}
+.card-chip{
+  width:30px;height:22px;
+  border:1px solid rgba(212,168,83,.22);border-radius:4px;
+  background:linear-gradient(135deg,rgba(212,168,83,.1),rgba(212,168,83,.03));
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;padding:4px;
+}
+.card-chip-cell{background:rgba(212,168,83,.14);border-radius:1px}
+.card-mid{display:flex;flex-direction:column;gap:4px}
+.card-holder-name{
+  font-family:var(--f);font-size:20px;font-weight:400;
+  color:rgba(248,242,228,.9);letter-spacing:.04em;
+}
+.card-status-line{display:flex;align-items:center;gap:8px}
+.card-status-dot{width:6px;height:6px;background:#D4A853;border-radius:50%;animation:statusPulse 2.5s infinite}
+@keyframes statusPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.card-status-text{font-family:var(--m);font-size:9px;letter-spacing:.14em;color:rgba(212,168,83,.75);text-transform:uppercase}
+.card-bottom{display:flex;justify-content:space-between;align-items:flex-end}
+.card-id{font-family:var(--m);font-size:9px;letter-spacing:.1em;color:rgba(248,242,228,.25)}
+.card-tier{font-family:var(--m);font-size:8px;letter-spacing:.1em;color:rgba(212,168,83,.5);text-transform:uppercase}
+
+/* PROGRESS */
+.home-progress{padding:18px 24px 0;display:flex;flex-direction:column;gap:6px}
+.hp-header{display:flex;justify-content:space-between;align-items:center}
+.hp-title{font-family:var(--m);font-size:9px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase}
+.hp-next{font-family:var(--m);font-size:9px;letter-spacing:.06em;color:var(--gold2)}
+.progress-bar{height:3px;background:var(--rule);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold3));border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* STATS */
+.home-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 24px 0}
+.stat-box{
+  background:rgba(255,255,255,.5);border:1px solid var(--rule);
+  border-radius:12px;padding:12px 10px;text-align:center;
+  box-shadow:0 1px 4px rgba(100,70,0,.04);
+}
+.stat-val{
+  font-family:var(--f);font-size:22px;font-weight:400;
+  color:var(--text);line-height:1;display:block;margin-bottom:3px;
+}
+.stat-lbl{font-family:var(--m);font-size:8px;letter-spacing:.1em;color:var(--mute);text-transform:uppercase}
+
+/* RECENT */
+.home-recent{padding:14px 24px 0}
+.section-label{font-family:var(--m);font-size:9px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase;margin-bottom:10px}
+.visit-row{
+  display:flex;align-items:center;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--rule);
+}
+.visit-row:last-child{border-bottom:none}
+.visit-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.visit-name{font-size:13px;color:var(--text);flex:1;font-weight:400;opacity:.75}
+.visit-pts{font-family:var(--m);font-size:10px;color:var(--gold2)}
+.visit-chk{font-family:var(--m);font-size:10px;color:var(--mute)}
+
+/* ─── SCREEN 2: QR ─── */
+.s-qr{
+  background:radial-gradient(ellipse 70% 50% at 50% 30%,var(--bg2) 0%,var(--bg) 60%);
+  align-items:center;
+}
+.qr-header{
+  padding:44px 24px 0;width:100%;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.qr-back{
+  width:34px;height:34px;background:rgba(140,104,16,.06);
+  border:1px solid var(--rule);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  cursor:pointer;color:var(--mute);
+}
+.qr-title{font-family:var(--f);font-size:16px;font-weight:400;color:var(--text);letter-spacing:.06em;opacity:.75}
+
+.qr-hero{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;padding:0 32px;
+}
+.qr-frame{
+  width:200px;height:200px;
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  position:relative;
+  animation:qrReveal 1s cubic-bezier(.4,0,.2,1) both;
+  box-shadow:0 8px 32px rgba(100,70,0,.12),0 0 0 1px rgba(140,104,16,.1);
+}
+@keyframes qrReveal{
+  from{opacity:0;transform:scale(.85) rotateY(15deg)}
+  to{opacity:1;transform:scale(1) rotateY(0)}
+}
+.qr-code{
+  width:100%;height:100%;
+  background:
+    repeating-conic-gradient(#1A1008 0% 25%,transparent 0% 50%) 0 0/12px 12px,
+    repeating-conic-gradient(transparent 0% 25%,#1A1008 0% 50%) 0 0/12px 12px;
+  position:relative;
+}
+.qr-corner{
+  position:absolute;width:36px;height:36px;
+  border:5px solid #1A1008;
+  background:white;
+}
+.qr-corner::after{
+  content:'';position:absolute;
+  top:4px;left:4px;width:18px;height:18px;
+  background:#1A1008;
+}
+.qr-corner-tl{top:-1px;left:-1px}
+.qr-corner-tr{top:-1px;right:-1px}
+.qr-corner-bl{bottom:-1px;left:-1px}
+
+.qr-frame-ornament{
+  position:absolute;inset:-1px;border-radius:17px;
+  background:linear-gradient(135deg,rgba(140,104,16,.2),transparent 40%,transparent 60%,rgba(140,104,16,.1));
+  pointer-events:none;
+}
+
+.qr-name{font-family:var(--f);font-size:22px;font-weight:400;color:var(--text);letter-spacing:.06em;text-align:center}
+.qr-id{font-family:var(--m);font-size:10px;letter-spacing:.12em;color:var(--gold2);text-align:center;margin-top:-14px}
+.qr-instruction{font-size:12px;color:var(--mute);text-align:center;line-height:1.6;font-weight:300;max-width:220px}
+
+.qr-bottom{padding:0 24px 16px;display:flex;flex-direction:column;gap:8px;width:100%}
+.qr-btn{
+  width:100%;padding:14px;
+  border-radius:12px;
+  font-family:var(--m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s, opacity .15s;
+}
+.qr-btn:active{transform:scale(.97);opacity:.85}
+.qr-btn-primary{background:rgba(140,104,16,.1);color:var(--gold);border:1px solid rgba(140,104,16,.2)}
+.qr-btn-soft{background:rgba(26,16,8,.04);color:var(--mute);border:1px solid var(--rule)}
+
+/* ─── SCREEN 3: STATUS ─── */
+.s-status{background:var(--bg)}
+.status-header{padding:44px 24px 20px;display:flex;align-items:center;gap:14px}
+.status-back{
+  width:34px;height:34px;background:rgba(140,104,16,.06);
+  border:1px solid var(--rule);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  cursor:pointer;color:var(--mute);
+}
+.status-head-text h2{font-family:var(--f);font-size:22px;font-weight:400;color:var(--text);margin-bottom:2px}
+.status-head-text p{font-family:var(--m);font-size:9px;letter-spacing:.12em;color:var(--mute);text-transform:uppercase}
+
+.levels-list{padding:0 24px;display:flex;flex-direction:column;flex:1}
+.level-item{
+  display:flex;align-items:center;gap:16px;
+  padding:13px 0;border-bottom:1px solid var(--rule);
+  cursor:pointer;transition:all .2s;
+}
+.level-item:last-child{border-bottom:none}
+.level-icon-wrap{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:15px;border:1px solid;
+  transition:all .3s;position:relative;
+}
+.level-icon-wrap.done{background:rgba(140,104,16,.07);border-color:rgba(140,104,16,.2)}
+.level-icon-wrap.current{background:rgba(140,104,16,.1);border-color:rgba(140,104,16,.35);box-shadow:0 0 0 3px rgba(140,104,16,.08)}
+.level-icon-wrap.locked{background:rgba(26,16,8,.03);border-color:var(--rule)}
+.level-icon-wrap.current::before{
+  content:'';position:absolute;inset:-5px;border-radius:50%;
+  border:1px solid rgba(140,104,16,.18);animation:levelPulse 2.5s infinite;
+}
+@keyframes levelPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0;transform:scale(1.3)}}
+.level-info{flex:1}
+.level-name{font-size:14px;font-weight:400;color:var(--text);margin-bottom:3px;letter-spacing:.01em}
+.level-item.locked .level-name{color:var(--mute)}
+.level-pts{font-family:var(--m);font-size:9px;letter-spacing:.06em;color:var(--mute)}
+.level-item.current .level-pts{color:var(--gold2)}
+.level-right{font-family:var(--m);font-size:9px;color:var(--mute)}
+.level-check{color:var(--gold2);font-size:14px}
+.current-tag{
+  background:rgba(140,104,16,.08);border:1px solid rgba(140,104,16,.18);
+  color:var(--gold);font-family:var(--m);font-size:7px;letter-spacing:.1em;
+  padding:2px 7px;text-transform:uppercase;border-radius:20px;
+}
+
+.next-level-box{
+  margin:0 24px 12px;padding:14px 16px;
+  background:rgba(140,104,16,.05);border:1px solid rgba(140,104,16,.12);border-radius:12px;
+}
+.nl-label{font-family:var(--m);font-size:8px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.nl-bar{height:3px;background:var(--rule);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.nl-fill{height:100%;width:60%;background:linear-gradient(90deg,var(--gold),var(--gold3));border-radius:2px}
+.nl-text{font-family:var(--m);font-size:9px;color:var(--gold2)}
+
+/* ─── SCREEN 4: HISTORY ─── */
+.s-history{background:var(--bg)}
+.history-header{padding:44px 24px 18px;display:flex;align-items:center;justify-content:space-between}
+.hist-back{
+  width:34px;height:34px;background:rgba(140,104,16,.06);
+  border:1px solid var(--rule);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  cursor:pointer;color:var(--mute);
+}
+.history-header h2{font-family:var(--f);font-size:22px;font-weight:400;color:var(--text)}
+.hist-filter{font-family:var(--m);font-size:9px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase;cursor:pointer}
+
+.history-list{padding:0 24px;overflow-y:auto;flex:1;padding-bottom:16px}
+.hist-month{
+  font-family:var(--m);font-size:9px;letter-spacing:.14em;
+  color:var(--mute);text-transform:uppercase;margin:12px 0 8px;
+}
+.hist-entry{
+  display:flex;align-items:center;gap:14px;
+  padding:11px 0;border-bottom:1px solid var(--rule);
+}
+.hist-entry:last-child{border-bottom:none}
+.hist-venue-icon{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.hist-info{flex:1}
+.hist-venue{font-size:13px;font-weight:400;color:var(--text);margin-bottom:2px;opacity:.8}
+.hist-date{font-family:var(--m);font-size:9px;color:var(--mute);letter-spacing:.04em}
+.hist-right{text-align:right}
+.hist-amount{font-family:var(--m);font-size:12px;color:var(--mute);display:block;margin-bottom:2px}
+.hist-pts{font-family:var(--m);font-size:9px;color:var(--gold2)}
+
+/* ─── SCREEN 5: OFFERS ─── */
+.s-offers{background:var(--bg)}
+.offers-header{padding:44px 24px 18px}
+.offers-header h2{font-family:var(--f);font-size:28px;font-weight:300;color:var(--text);margin-bottom:4px}
+.offers-header p{font-family:var(--m);font-size:9px;letter-spacing:.12em;color:var(--mute);text-transform:uppercase}
+
+.offers-list{padding:0 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;padding-bottom:16px}
+.offer-card{
+  border:1px solid var(--rule);border-radius:16px;overflow:hidden;
+  background:rgba(255,255,255,.5);cursor:pointer;
+  transition:transform .2s, border-color .2s, box-shadow .2s;
+  animation:offerSlideUp .5s cubic-bezier(.4,0,.2,1) both;
+  box-shadow:0 2px 8px rgba(100,70,0,.04);
+}
+.offer-card:nth-child(2){animation-delay:.08s}
+.offer-card:nth-child(3){animation-delay:.16s}
+@keyframes offerSlideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.offer-card:active{transform:scale(.98)}
+.offer-card.gold{border-color:rgba(140,104,16,.2);background:rgba(140,104,16,.04)}
+
+.offer-img{
+  height:72px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+}
+.offer-content{padding:12px 16px}
+.offer-venue{font-family:var(--m);font-size:8px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase;margin-bottom:4px}
+.offer-title{font-size:14px;font-weight:400;color:var(--text);margin-bottom:5px;letter-spacing:.01em;opacity:.85}
+.offer-card.gold .offer-title{color:var(--gold)}
+.offer-meta{display:flex;align-items:center;justify-content:space-between}
+.offer-date{font-family:var(--m);font-size:9px;color:var(--mute)}
+.offer-badge{font-family:var(--m);font-size:7px;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:20px}
+.ob-gold{background:rgba(140,104,16,.08);border:1px solid rgba(140,104,16,.18);color:var(--gold)}
+.ob-gray{background:rgba(26,16,8,.04);border:1px solid var(--rule);color:var(--mute)}
+.offer-action{
+  display:flex;align-items:center;gap:8px;padding:10px 16px;
+  border-top:1px solid var(--rule);
+}
+.offer-action-btn{
+  flex:1;padding:9px;border-radius:8px;
+  font-family:var(--m);font-size:8px;letter-spacing:.1em;text-transform:uppercase;
+  border:none;cursor:pointer;transition:all .15s;
+}
+.oa-primary{background:rgba(140,104,16,.1);color:var(--gold);border:1px solid rgba(140,104,16,.18)}
+.oa-ghost{background:rgba(26,16,8,.03);color:var(--mute);border:1px solid var(--rule)}
+
+/* ─── LABELS RIGHT ─── */
+.screen-labels{
+  position:absolute;right:-190px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:8px;
+}
+.screen-label{
+  font-family:var(--m);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;padding:6px 14px;
+  border:1px solid rgba(140,104,16,.15);border-radius:20px;
+  color:var(--mute);transition:all .25s;white-space:nowrap;
+  background:rgba(246,237,212,.6);
+}
+.screen-label.active{
+  color:var(--gold);border-color:rgba(140,104,16,.3);
+  background:rgba(140,104,16,.08);
+}
+.screen-label:hover{color:var(--text);border-color:rgba(140,104,16,.22)}
+
+/* TITLE LEFT */
+.app-title{
+  position:absolute;left:-210px;top:50%;transform:translateY(-50%);
+  text-align:right;
+}
+.app-title h1{
+  font-family:var(--f);font-size:32px;font-weight:300;font-style:italic;
+  color:var(--text);opacity:.55;line-height:1;margin-bottom:8px;letter-spacing:-.01em;
+}
+.app-title p{
+  font-family:var(--m);font-size:8px;letter-spacing:.18em;
+  color:var(--gold);opacity:.6;text-transform:uppercase;line-height:1.6;
+}
+
+/* ─── ENTRY ANIMATIONS ─── */
+.phone-scene{animation:phoneAppear 1.2s cubic-bezier(.4,0,.2,1) both}
+@keyframes phoneAppear{
+  from{opacity:0;transform:perspective(1200px) rotateX(18deg) scale(.87) translateY(36px)}
+  to{opacity:1;transform:perspective(1200px) rotateX(0) scale(1) translateY(0)}
+}
+.screen-labels{animation:labelsAppear .8s .6s cubic-bezier(.4,0,.2,1) both}
+.app-title{animation:titleAppear .8s .3s cubic-bezier(.4,0,.2,1) both}
+@keyframes labelsAppear{from{opacity:0;transform:translateY(-50%) translateX(18px)}to{opacity:1;transform:translateY(-50%) translateX(0)}}
+@keyframes titleAppear{from{opacity:0;transform:translateY(-50%) translateX(-18px)}to{opacity:1;transform:translateY(-50%) translateX(0)}}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  .screen-labels,.app-title{display:none}
+  .stage{padding:20px}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="dot-bg"></div>
+
+  <!-- APP TITLE LEFT -->
+  <div class="app-title">
+    <h1>Great<br>Guest</h1>
+    <p>Приложение<br>MVP · 2026<br>Telegram Mini App</p>
+  </div>
+
+  <!-- PHONE -->
+  <div class="phone-scene" id="phoneScene">
+    <div class="phone-wrapper" id="phoneWrapper">
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span>10:09</span>
+          <span>▲ ● ●●</span>
+        </div>
+
+        <div class="screens">
+
+          <!-- ════ SCREEN 1: HOME ════ -->
+          <div class="screen s-home active" id="screen-home">
+            <div class="s-home-header">
+              <div class="s-home-logo">Great Guest</div>
+              <div class="s-home-bell">🔔</div>
+            </div>
+
+            <div class="card-scene">
+              <div class="membership-card" id="memberCard">
+                <div class="card-face">
+                  <div class="card-inner">
+                    <div class="card-top">
+                      <div class="card-gg">Great Guest Service</div>
+                      <div class="card-chip">
+                        <div class="card-chip-cell"></div><div class="card-chip-cell"></div>
+                        <div class="card-chip-cell"></div><div class="card-chip-cell"></div>
+                      </div>
+                    </div>
+                    <div class="card-mid">
+                      <div class="card-holder-name">Михаил Ковалёв</div>
+                      <div class="card-status-line">
+                        <div class="card-status-dot"></div>
+                        <div class="card-status-text">VIP Member</div>
+                      </div>
+                    </div>
+                    <div class="card-bottom">
+                      <div class="card-id">GG–48271</div>
+                      <div class="card-tier">Since 2025</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="home-progress">
+              <div class="hp-header">
+                <div class="hp-title">До Legend</div>
+                <div class="hp-next">31 800 баллов</div>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="homeBar"></div>
+              </div>
+            </div>
+
+            <div class="home-stats">
+              <div class="stat-box">
+                <span class="stat-val">24</span>
+                <span class="stat-lbl">Визита</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-val">7</span>
+                <span class="stat-lbl">Ресторанов</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-val">48K</span>
+                <span class="stat-lbl">Баллов</span>
+              </div>
+            </div>
+
+            <div class="home-recent">
+              <div class="section-label">Последние визиты</div>
+              <div class="visit-row">
+                <div class="visit-dot" style="background:#C09830"></div>
+                <div class="visit-name">La Piazza</div>
+                <div class="visit-chk">₽4 500</div>
+                <div class="visit-pts">+185 pts</div>
+              </div>
+              <div class="visit-row">
+                <div class="visit-dot" style="background:#C0392B"></div>
+                <div class="visit-name">Steak House</div>
+                <div class="visit-chk">₽12 000</div>
+                <div class="visit-pts">+360 pts</div>
+              </div>
+              <div class="visit-row">
+                <div class="visit-dot" style="background:#27AE60"></div>
+                <div class="visit-name">Wine & Dine</div>
+                <div class="visit-chk">₽7 200</div>
+                <div class="visit-pts">+216 pts</div>
+              </div>
+            </div>
+
+            <div class="bottom-nav">
+              <div class="nav-item active" onclick="goScreen('home')"><div class="nav-ico">⌂</div><div class="nav-lbl">Главная</div></div>
+              <div class="nav-item" onclick="goScreen('qr')"><div class="nav-ico">⊞</div><div class="nav-lbl">QR</div></div>
+              <div class="nav-item" onclick="goScreen('status')"><div class="nav-ico">★</div><div class="nav-lbl">Статус</div></div>
+              <div class="nav-item" onclick="goScreen('history')"><div class="nav-ico">≡</div><div class="nav-lbl">История</div></div>
+              <div class="nav-item" onclick="goScreen('offers')"><div class="nav-ico">✉</div><div class="nav-lbl">Офферы</div></div>
+            </div>
+          </div>
+
+          <!-- ════ SCREEN 2: QR ════ -->
+          <div class="screen s-qr" id="screen-qr">
+            <div class="qr-header">
+              <div class="qr-back" onclick="goScreen('home')">←</div>
+              <div class="qr-title">Мой QR-код</div>
+              <div style="width:34px"></div>
+            </div>
+            <div class="qr-hero">
+              <div class="qr-frame">
+                <div class="qr-code">
+                  <div class="qr-corner qr-corner-tl"></div>
+                  <div class="qr-corner qr-corner-tr"></div>
+                  <div class="qr-corner qr-corner-bl"></div>
+                </div>
+                <div class="qr-frame-ornament"></div>
+              </div>
+              <div class="qr-name">Михаил Ковалёв</div>
+              <div class="qr-id">GG–48271 · VIP</div>
+              <div class="qr-instruction">Покажите QR-код официанту в любом ресторане системы</div>
+            </div>
+            <div class="qr-bottom">
+              <button class="qr-btn qr-btn-primary">⬇ Сохранить в фото</button>
+              <button class="qr-btn qr-btn-soft">👥 Поделиться с друзьями</button>
+            </div>
+            <div class="bottom-nav">
+              <div class="nav-item" onclick="goScreen('home')"><div class="nav-ico">⌂</div><div class="nav-lbl">Главная</div></div>
+              <div class="nav-item active" onclick="goScreen('qr')"><div class="nav-ico">⊞</div><div class="nav-lbl">QR</div></div>
+              <div class="nav-item" onclick="goScreen('status')"><div class="nav-ico">★</div><div class="nav-lbl">Статус</div></div>
+              <div class="nav-item" onclick="goScreen('history')"><div class="nav-ico">≡</div><div class="nav-lbl">История</div></div>
+              <div class="nav-item" onclick="goScreen('offers')"><div class="nav-ico">✉</div><div class="nav-lbl">Офферы</div></div>
+            </div>
+          </div>
+
+          <!-- ════ SCREEN 3: STATUS ════ -->
+          <div class="screen s-status" id="screen-status">
+            <div class="status-header">
+              <div class="status-back" onclick="goScreen('home')">←</div>
+              <div class="status-head-text">
+                <h2>Статус и уровни</h2>
+                <p>Ваш прогресс в системе</p>
+              </div>
+            </div>
+            <div class="next-level-box">
+              <div class="nl-label">До Legend</div>
+              <div class="nl-bar"><div class="nl-fill"></div></div>
+              <div class="nl-text">31 800 баллов · осталось 60%</div>
+            </div>
+            <div class="levels-list">
+              <div class="level-item">
+                <div class="level-icon-wrap done">○</div>
+                <div class="level-info"><div class="level-name">Новый гость</div><div class="level-pts">0 – 1 000 баллов</div></div>
+                <div class="level-check">✓</div>
+              </div>
+              <div class="level-item">
+                <div class="level-icon-wrap done">◆</div>
+                <div class="level-info"><div class="level-name">Regular</div><div class="level-pts">1 000 – 10 000</div></div>
+                <div class="level-check">✓</div>
+              </div>
+              <div class="level-item">
+                <div class="level-icon-wrap done">⬡</div>
+                <div class="level-info"><div class="level-name">Insider</div><div class="level-pts">10 000 – 30 000</div></div>
+                <div class="level-check">✓</div>
+              </div>
+              <div class="level-item">
+                <div class="level-icon-wrap current">★</div>
+                <div class="level-info"><div class="level-name">VIP</div><div class="level-pts">48 200 из 80 000</div></div>
+                <div class="current-tag">Сейчас</div>
+              </div>
+              <div class="level-item">
+                <div class="level-icon-wrap locked">♛</div>
+                <div class="level-info"><div class="level-name" style="opacity:.35">Legend</div><div class="level-pts">80 000+ баллов</div></div>
+                <div class="level-right">🔒</div>
+              </div>
+            </div>
+            <div class="bottom-nav">
+              <div class="nav-item" onclick="goScreen('home')"><div class="nav-ico">⌂</div><div class="nav-lbl">Главная</div></div>
+              <div class="nav-item" onclick="goScreen('qr')"><div class="nav-ico">⊞</div><div class="nav-lbl">QR</div></div>
+              <div class="nav-item active" onclick="goScreen('status')"><div class="nav-ico">★</div><div class="nav-lbl">Статус</div></div>
+              <div class="nav-item" onclick="goScreen('history')"><div class="nav-ico">≡</div><div class="nav-lbl">История</div></div>
+              <div class="nav-item" onclick="goScreen('offers')"><div class="nav-ico">✉</div><div class="nav-lbl">Офферы</div></div>
+            </div>
+          </div>
+
+          <!-- ════ SCREEN 4: HISTORY ════ -->
+          <div class="screen s-history" id="screen-history">
+            <div class="history-header">
+              <div class="hist-back" onclick="goScreen('home')">←</div>
+              <h2>История</h2>
+              <div class="hist-filter">Всё ↓</div>
+            </div>
+            <div class="history-list">
+              <div class="hist-month">Май 2026</div>
+              <div class="hist-entry">
+                <div class="hist-venue-icon" style="background:rgba(192,152,48,.1)">🍕</div>
+                <div class="hist-info"><div class="hist-venue">La Piazza</div><div class="hist-date">21 мая · 19:24</div></div>
+                <div class="hist-right"><span class="hist-amount">₽4 500</span><span class="hist-pts">+185 pts</span></div>
+              </div>
+              <div class="hist-entry">
+                <div class="hist-venue-icon" style="background:rgba(192,57,43,.08)">🥩</div>
+                <div class="hist-info"><div class="hist-venue">Steak House</div><div class="hist-date">15 мая · 20:10</div></div>
+                <div class="hist-right"><span class="hist-amount">₽12 000</span><span class="hist-pts">+360 pts</span></div>
+              </div>
+              <div class="hist-month">Апрель 2026</div>
+              <div class="hist-entry">
+                <div class="hist-venue-icon" style="background:rgba(39,174,96,.08)">🍷</div>
+                <div class="hist-info"><div class="hist-venue">Wine & Dine</div><div class="hist-date">28 апр · 21:00</div></div>
+                <div class="hist-right"><span class="hist-amount">₽7 200</span><span class="hist-pts">+216 pts</span></div>
+              </div>
+              <div class="hist-entry">
+                <div class="hist-venue-icon" style="background:rgba(41,128,185,.08)">🍣</div>
+                <div class="hist-info"><div class="hist-venue">Sushi Bar</div><div class="hist-date">20 апр · 18:45</div></div>
+                <div class="hist-right"><span class="hist-amount">₽3 500</span><span class="hist-pts">+110 pts</span></div>
+              </div>
+              <div class="hist-entry">
+                <div class="hist-venue-icon" style="background:rgba(155,89,182,.08)">☕</div>
+                <div class="hist-info"><div class="hist-venue">Bistro Café</div><div class="hist-date">12 апр · 14:20</div></div>
+                <div class="hist-right"><span class="hist-amount">₽1 800</span><span class="hist-pts">+54 pts</span></div>
+              </div>
+            </div>
+            <div class="bottom-nav">
+              <div class="nav-item" onclick="goScreen('home')"><div class="nav-ico">⌂</div><div class="nav-lbl">Главная</div></div>
+              <div class="nav-item" onclick="goScreen('qr')"><div class="nav-ico">⊞</div><div class="nav-lbl">QR</div></div>
+              <div class="nav-item" onclick="goScreen('status')"><div class="nav-ico">★</div><div class="nav-lbl">Статус</div></div>
+              <div class="nav-item active" onclick="goScreen('history')"><div class="nav-ico">≡</div><div class="nav-lbl">История</div></div>
+              <div class="nav-item" onclick="goScreen('offers')"><div class="nav-ico">✉</div><div class="nav-lbl">Офферы</div></div>
+            </div>
+          </div>
+
+          <!-- ════ SCREEN 5: OFFERS ════ -->
+          <div class="screen s-offers" id="screen-offers">
+            <div class="offers-header">
+              <h2>Предложения</h2>
+              <p>Для вашего уровня VIP</p>
+            </div>
+            <div class="offers-list">
+              <div class="offer-card gold">
+                <div class="offer-img" style="background:linear-gradient(135deg,#F2E8C6,#EAD9A0)">🕯</div>
+                <div class="offer-content">
+                  <div class="offer-venue">La Piazza</div>
+                  <div class="offer-title">Закрытый ужин шефа</div>
+                  <div class="offer-meta">
+                    <div class="offer-date">Пт, 16 мая · 20:00 · 8 мест</div>
+                    <div class="offer-badge ob-gold">VIP+</div>
+                  </div>
+                </div>
+                <div class="offer-action">
+                  <button class="offer-action-btn oa-primary">Записаться</button>
+                  <button class="offer-action-btn oa-ghost">Пропустить</button>
+                </div>
+              </div>
+              <div class="offer-card">
+                <div class="offer-img" style="background:linear-gradient(135deg,#ECEAD6,#E4DFC0)">🍷</div>
+                <div class="offer-content">
+                  <div class="offer-venue">Steak House</div>
+                  <div class="offer-title">Дегустация сезонного меню</div>
+                  <div class="offer-meta">
+                    <div class="offer-date">Сб, 17 мая · 18:00</div>
+                    <div class="offer-badge ob-gray">Insider+</div>
+                  </div>
+                </div>
+                <div class="offer-action">
+                  <button class="offer-action-btn oa-primary">Записаться</button>
+                  <button class="offer-action-btn oa-ghost">Пропустить</button>
+                </div>
+              </div>
+              <div class="offer-card">
+                <div class="offer-img" style="background:linear-gradient(135deg,#EAE6D4,#E2DCC0)">🎶</div>
+                <div class="offer-content">
+                  <div class="offer-venue">Wine & Dine</div>
+                  <div class="offer-title">Открытие летней веранды</div>
+                  <div class="offer-meta">
+                    <div class="offer-date">Вс, 18 мая · 17:00</div>
+                    <div class="offer-badge ob-gray">Все</div>
+                  </div>
+                </div>
+                <div class="offer-action">
+                  <button class="offer-action-btn oa-primary">Принять</button>
+                  <button class="offer-action-btn oa-ghost">Пропустить</button>
+                </div>
+              </div>
+            </div>
+            <div class="bottom-nav">
+              <div class="nav-item" onclick="goScreen('home')"><div class="nav-ico">⌂</div><div class="nav-lbl">Главная</div></div>
+              <div class="nav-item" onclick="goScreen('qr')"><div class="nav-ico">⊞</div><div class="nav-lbl">QR</div></div>
+              <div class="nav-item" onclick="goScreen('status')"><div class="nav-ico">★</div><div class="nav-lbl">Статус</div></div>
+              <div class="nav-item" onclick="goScreen('history')"><div class="nav-ico">≡</div><div class="nav-lbl">История</div></div>
+              <div class="nav-item active" onclick="goScreen('offers')"><div class="nav-ico">✉</div><div class="nav-lbl">Офферы</div></div>
+            </div>
+          </div>
+
+        </div><!-- /screens -->
+      </div><!-- /phone -->
+    </div>
+  </div><!-- /phone-scene -->
+
+  <!-- LABELS RIGHT -->
+  <div class="screen-labels">
+    <div class="screen-label active" id="lbl-home" onclick="goScreen('home')">01 · Главная</div>
+    <div class="screen-label" id="lbl-qr" onclick="goScreen('qr')">02 · QR-код</div>
+    <div class="screen-label" id="lbl-status" onclick="goScreen('status')">03 · Статус</div>
+    <div class="screen-label" id="lbl-history" onclick="goScreen('history')">04 · История</div>
+    <div class="screen-label" id="lbl-offers" onclick="goScreen('offers')">05 · Предложения</div>
+  </div>
+
+</div>
+
+<script>
+const screens=['home','qr','status','history','offers'];
+let current='home';
+let autoTimer;
+
+function goScreen(id){
+  clearTimeout(autoTimer);
+  const prev=document.getElementById('screen-'+current);
+  const next=document.getElementById('screen-'+id);
+  if(current===id)return;
+  prev.classList.remove('active');
+  prev.classList.add('exit-left');
+  setTimeout(()=>prev.classList.remove('exit-left'),500);
+  next.classList.add('active');
+  current=id;
+  document.querySelectorAll('.screen-label').forEach(l=>l.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const lbl=document.getElementById('lbl-'+id);
+  if(lbl)lbl.classList.add('active');
+  if(id==='home'){
+    setTimeout(()=>{const bar=document.getElementById('homeBar');if(bar)bar.style.width='60%';},300);
+  }
+  startAutoAdvance();
+}
+
+function startAutoAdvance(){
+  clearTimeout(autoTimer);
+  autoTimer=setTimeout(()=>{
+    const idx=screens.indexOf(current);
+    goScreen(screens[(idx+1)%screens.length]);
+  },4500);
+}
+
+// init progress bar
+setTimeout(()=>{const bar=document.getElementById('homeBar');if(bar)bar.style.width='60%';},600);
+
+// 3D tilt on mouse move
+const scene=document.getElementById('phoneScene');
+const wrapper=document.getElementById('phoneWrapper');
+document.addEventListener('mousemove',e=>{
+  const rect=scene.getBoundingClientRect();
+  const cx=rect.left+rect.width/2;
+  const cy=rect.top+rect.height/2;
+  const dx=(e.clientX-cx)/window.innerWidth;
+  const dy=(e.clientY-cy)/window.innerHeight;
+  wrapper.style.transform=`rotateX(${dy*-12}deg) rotateY(${dx*10}deg)`;
+});
+document.addEventListener('mouseleave',()=>{wrapper.style.transform='rotateX(0) rotateY(0)'});
+
+// card 3D tilt
+const card=document.getElementById('memberCard');
+if(card){
+  card.addEventListener('mousemove',e=>{
+    const rect=card.getBoundingClientRect();
+    const x=(e.clientX-rect.left)/rect.width-.5;
+    const y=(e.clientY-rect.top)/rect.height-.5;
+    card.style.animation='none';
+    card.style.transform=`perspective(800px) rotateX(${y*-14}deg) rotateY(${x*14}deg) translateZ(6px)`;
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.animation='cardFloat 5s ease-in-out infinite';
+    card.style.transform='';
+  });
+}
+
+startAutoAdvance();
+</script>
+</body>
+</html>
