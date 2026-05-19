@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Great Guest Service — Единая платформа статуса гостей</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Mono:wght@300;400;500&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   ROOT & RESET
+══════════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --ink: #080808;
+  --ink2: #0F0F0F;
+  --paper: #FAFAF7;
+  --amber: #C8963E;
+  --amber-light: #D4A853;
+  --amber-pale: rgba(200,150,62,.08);
+  --amber-glow: rgba(200,150,62,.15);
+  --silver: rgba(255,255,255,.45);
+  --silver2: rgba(255,255,255,.22);
+  --silver3: rgba(255,255,255,.10);
+  --rule: rgba(255,255,255,.07);
+  --f: 'Cormorant Garamond', serif;
+  --m: 'DM Mono', monospace;
+  --n: 'Outfit', sans-serif;
+  --ease: cubic-bezier(.4,0,.2,1);
+  --ease-out: cubic-bezier(0,0,.2,1);
+}
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--n);
+  font-weight: 300;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════
+   NOISE + GRAIN OVERLAY
+══════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9999;
+  pointer-events: none;
+  opacity: .028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ══════════════════════════════════════════
+   SCROLLBAR
+══════════════════════════════════════════ */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb { background: var(--amber); }
+
+/* ══════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  padding: 22px 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: background .4s var(--ease), backdrop-filter .4s;
+}
+nav.scrolled {
+  background: rgba(8,8,8,.88);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--rule);
+}
+.nav-logo {
+  font-family: var(--n);
+  font-weight: 200;
+  font-size: 13px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--paper);
+  text-decoration: none;
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-logo-mark {
+  width: 28px; height: 28px;
+  background: var(--amber);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--m);
+  font-size: 9px; font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+.nav-links {
+  display: flex; align-items: center; gap: 36px;
+  list-style: none;
+}
+.nav-links a {
+  font-family: var(--m);
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--silver); text-decoration: none;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--paper); }
+.nav-cta {
+  display: flex; align-items: center; gap: 14px;
+}
+.btn-ghost {
+  font-family: var(--m); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--paper);
+  border: 1px solid var(--rule); padding: 9px 22px;
+  background: transparent; cursor: pointer;
+  transition: border-color .2s, color .2s;
+  text-decoration: none; display: inline-flex; align-items: center;
+}
+.btn-ghost:hover { border-color: var(--amber); color: var(--amber); }
+.btn-amber {
+  font-family: var(--m); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink);
+  background: var(--amber); border: 1px solid var(--amber);
+  padding: 9px 22px; cursor: pointer;
+  transition: background .2s, opacity .2s;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-amber:hover { opacity: .88; }
+
+/* ══════════════════════════════════════════
+   HERO
+══════════════════════════════════════════ */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 48px 80px;
+  position: relative; overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+}
+/* Radial amber glow at top-right */
+.hero-bg::before {
+  content: '';
+  position: absolute;
+  width: 800px; height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,150,62,.12) 0%, transparent 70%);
+  top: -200px; right: -100px;
+  animation: heroOrb1 20s ease-in-out infinite;
+}
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(120,80,20,.09) 0%, transparent 70%);
+  bottom: 0; left: -100px;
+  animation: heroOrb2 25s ease-in-out infinite;
+}
+@keyframes heroOrb1 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(-60px, 40px) scale(1.1); }
+}
+@keyframes heroOrb2 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.08); }
+}
+/* Fine grid */
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(200,150,62,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,150,62,.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+/* Diagonal accent line */
+.hero-line {
+  position: absolute;
+  top: 0; right: 15%;
+  width: 1px; height: 60%;
+  background: linear-gradient(to bottom, transparent, rgba(200,150,62,.3), transparent);
+  animation: linePulse 4s ease-in-out infinite;
+}
+@keyframes linePulse {
+  0%,100% { opacity: .5; }
+  50% { opacity: 1; }
+}
+
+.hero-eyebrow {
+  font-family: var(--m);
+  font-size: 10px; letter-spacing: .22em;
+  color: var(--amber); text-transform: uppercase;
+  margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+  opacity: 0; transform: translateY(20px);
+  animation: fadeUp .8s var(--ease-out) .3s forwards;
+}
+.hero-eyebrow::before {
+  content: ''; width: 24px; height: 1px; background: var(--amber);
+}
+.hero-h1 {
+  font-family: var(--f);
+  font-size: clamp(56px, 8vw, 120px);
+  font-weight: 300; line-height: .92;
+  letter-spacing: -.03em;
+  max-width: 900px;
+  opacity: 0; transform: translateY(30px);
+  animation: fadeUp 1s var(--ease-out) .5s forwards;
+}
+.hero-h1 em {
+  font-style: italic;
+  background: linear-gradient(135deg, #C8963E 0%, #D4A853 50%, #E8C87A 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  margin-top: 32px;
+  font-size: 16px; color: var(--silver); line-height: 1.7;
+  max-width: 520px; font-weight: 300;
+  opacity: 0; transform: translateY(20px);
+  animation: fadeUp .8s var(--ease-out) .8s forwards;
+}
+.hero-actions {
+  margin-top: 40px;
+  display: flex; align-items: center; gap: 16px;
+  opacity: 0; transform: translateY(20px);
+  animation: fadeUp .8s var(--ease-out) 1s forwards;
+}
+.hero-scroll-hint {
+  position: absolute; bottom: 30px; right: 48px;
+  font-family: var(--m); font-size: 9px; letter-spacing: .16em;
+  color: var(--silver2); text-transform: uppercase;
+  display: flex; align-items: center; gap: 12px;
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  opacity: 0; animation: fadeIn 1s var(--ease-out) 1.5s forwards;
+}
+.hero-scroll-hint::before {
+  content: ''; width: 1px; height: 48px;
+  background: linear-gradient(to top, var(--amber), transparent);
+}
+
+/* QR Visual in hero */
+.hero-visual {
+  position: absolute; right: 10%; top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  opacity: 0; 
+  animation: fadeInRight 1.2s var(--ease-out) .6s forwards;
+}
+.qr-card {
+  width: 180px; height: 180px;
+  background: rgba(15,15,15,.9);
+  border: 1px solid rgba(200,150,62,.25);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  position: relative;
+  box-shadow: 0 40px 80px rgba(0,0,0,.6), 0 0 60px rgba(200,150,62,.06);
+}
+.qr-card::before {
+  content: ''; position: absolute;
+  inset: 6px; border: 1px solid rgba(200,150,62,.1);
+}
+.qr-pattern {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+}
+.qr-cell {
+  width: 8px; height: 8px;
+  background: var(--amber);
+  opacity: 0;
+  animation: qrReveal .05s var(--ease-out) forwards;
+}
+.qr-label {
+  font-family: var(--m); font-size: 8px;
+  letter-spacing: .14em; color: var(--amber); text-transform: uppercase;
+}
+
+/* Status badge floating */
+.status-float {
+  position: absolute; left: -60px; top: -30px;
+  background: rgba(10,10,10,.95);
+  border: 1px solid rgba(200,150,62,.3);
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  min-width: 200px;
+  animation: float 6s ease-in-out infinite;
+  box-shadow: 0 20px 40px rgba(0,0,0,.5);
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+}
+.status-text {
+  font-family: var(--m); font-size: 9px;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.status-text span { color: var(--amber); display: block; margin-bottom: 2px; }
+.status-text small { color: var(--silver2); font-size: 8px; }
+
+.scan-float {
+  position: absolute; right: -50px; bottom: -20px;
+  background: rgba(10,10,10,.95);
+  border: 1px solid var(--rule);
+  padding: 10px 14px;
+  font-family: var(--m); font-size: 8px;
+  letter-spacing: .1em; color: var(--silver2); text-transform: uppercase;
+  animation: float 8s ease-in-out .5s infinite;
+  display: flex; align-items: center; gap: 8px;
+}
+.scan-float::before {
+  content: '◈'; color: var(--amber); font-size: 12px;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(30px) translateY(-50%); }
+  to { opacity: 1; transform: translateX(0) translateY(-50%); }
+}
+
+/* ══════════════════════════════════════════
+   TICKER
+══════════════════════════════════════════ */
+.ticker-wrap {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  background: rgba(200,150,62,.03);
+  overflow: hidden; padding: 14px 0;
+  position: relative; z-index: 2;
+}
+.ticker-inner {
+  display: flex; gap: 0;
+  animation: ticker 30s linear infinite;
+  white-space: nowrap;
+}
+.ticker-item {
+  font-family: var(--m); font-size: 10px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--silver2);
+  padding: 0 40px; display: flex; align-items: center; gap: 14px;
+  flex-shrink: 0;
+}
+.ticker-item strong { color: var(--amber); }
+.ticker-sep { color: var(--amber); opacity: .4; font-size: 14px; }
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ══════════════════════════════════════════
+   SECTIONS COMMON
+══════════════════════════════════════════ */
+section { position: relative; overflow: hidden; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+.section-pad { padding: 120px 0; }
+.eyebrow {
+  font-family: var(--m); font-size: 9px; letter-spacing: .22em;
+  color: var(--amber); text-transform: uppercase;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+}
+.eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--amber); }
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0; transform: translateY(36px);
+  transition: opacity .8s var(--ease-out), transform .8s var(--ease-out);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: .1s; }
+.reveal-delay-2 { transition-delay: .2s; }
+.reveal-delay-3 { transition-delay: .3s; }
+.reveal-delay-4 { transition-delay: .4s; }
+.reveal-delay-5 { transition-delay: .5s; }
+
+/* ══════════════════════════════════════════
+   PROBLEM SECTION
+══════════════════════════════════════════ */
+.problem-section {
+  background: var(--ink2);
+  border-bottom: 1px solid var(--rule);
+}
+.problem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: center;
+}
+.problem-h2 {
+  font-family: var(--f);
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 300; line-height: .95;
+  letter-spacing: -.02em;
+  margin-bottom: 28px;
+}
+.problem-h2 em { font-style: italic; color: rgba(255,255,255,.35); }
+.problem-list {
+  list-style: none; display: flex; flex-direction: column; gap: 0;
+}
+.problem-item {
+  display: flex; gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--rule);
+  transition: border-color .3s;
+}
+.problem-item:first-child { border-top: 1px solid var(--rule); }
+.problem-item:hover { border-bottom-color: rgba(200,150,62,.2); }
+.problem-icon {
+  width: 20px; height: 20px;
+  border: 1px solid rgba(200,80,60,.3);
+  background: rgba(180,60,40,.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: #c0504a; flex-shrink: 0; margin-top: 1px;
+}
+.problem-text { font-size: 14px; color: var(--silver); line-height: 1.6; }
+.problem-text strong { color: rgba(255,255,255,.8); font-weight: 500; }
+
+/* ══════════════════════════════════════════
+   HOW IT WORKS
+══════════════════════════════════════════ */
+.how-section { background: var(--ink); }
+.how-title {
+  font-family: var(--f);
+  font-size: clamp(40px, 5vw, 70px);
+  font-weight: 300; line-height: .95;
+  letter-spacing: -.02em; margin-bottom: 64px;
+}
+.how-title em { font-style: italic; color: var(--amber-light); }
+
+.how-steps {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--rule);
+  border: 1px solid var(--rule);
+  margin-bottom: 80px;
+}
+.how-step {
+  background: var(--ink);
+  padding: 40px 32px;
+  transition: background .3s;
+  cursor: default;
+  position: relative;
+}
+.how-step:hover { background: rgba(200,150,62,.04); }
+.how-step::after {
+  content: attr(data-num);
+  position: absolute; top: 28px; right: 28px;
+  font-family: var(--f); font-size: 48px; font-weight: 300;
+  color: rgba(255,255,255,.04); line-height: 1;
+  pointer-events: none;
+}
+.step-tag {
+  font-family: var(--m); font-size: 8px; letter-spacing: .18em;
+  color: var(--amber); text-transform: uppercase;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.step-tag::before {
+  content: ''; width: 16px; height: 1px; background: var(--amber);
+}
+.step-h3 {
+  font-family: var(--f); font-size: 26px; font-weight: 400;
+  line-height: 1.1; margin-bottom: 12px; color: var(--paper);
+}
+.step-h3 em { font-style: italic; }
+.step-body { font-size: 13px; color: var(--silver); line-height: 1.7; }
+
+/* Visual flow diagram */
+.flow-diagram {
+  display: grid; grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: center; gap: 0;
+  background: rgba(200,150,62,.03);
+  border: 1px solid var(--rule);
+  padding: 36px 40px;
+}
+.flow-node {
+  text-align: center; padding: 20px;
+}
+.flow-icon {
+  width: 56px; height: 56px;
+  border: 1px solid rgba(200,150,62,.2);
+  background: rgba(200,150,62,.05);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px; font-size: 22px;
+}
+.flow-label {
+  font-family: var(--m); font-size: 9px; letter-spacing: .14em;
+  color: var(--silver2); text-transform: uppercase;
+}
+.flow-arrow {
+  font-family: var(--m); font-size: 22px;
+  color: var(--amber); opacity: .4; text-align: center;
+  padding: 0 8px;
+}
+
+/* ══════════════════════════════════════════
+   STATUS LEVELS
+══════════════════════════════════════════ */
+.status-section {
+  background: var(--ink2);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.status-intro {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 80px; margin-bottom: 64px; align-items: end;
+}
+.status-h2 {
+  font-family: var(--f);
+  font-size: clamp(40px, 5vw, 70px);
+  font-weight: 300; line-height: .95;
+  letter-spacing: -.02em;
+}
+.status-h2 em { font-style: italic; color: var(--amber-light); }
+.status-desc { font-size: 15px; color: var(--silver); line-height: 1.75; }
+.status-note {
+  margin-top: 20px;
+  font-family: var(--m); font-size: 10px; letter-spacing: .12em;
+  color: var(--amber); text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+}
+.status-note::before { content: '—'; }
+
+.levels-track {
+  display: flex; gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+.level {
+  flex: 1; padding: 28px 20px 24px;
+  background: var(--ink2);
+  transition: background .3s, flex .4s var(--ease);
+  cursor: pointer; position: relative; overflow: hidden;
+}
+.level:hover { background: rgba(200,150,62,.05); flex: 1.4; }
+.level-num {
+  font-family: var(--m); font-size: 8px; letter-spacing: .16em;
+  color: var(--silver2); text-transform: uppercase; margin-bottom: 16px;
+}
+.level-name {
+  font-family: var(--f); font-size: 22px; font-weight: 400;
+  line-height: 1.1; margin-bottom: 8px; color: var(--paper);
+  white-space: nowrap;
+}
+.level-name em { font-style: italic; }
+.level-bar-wrap {
+  height: 2px; background: var(--rule); margin: 16px 0 10px;
+}
+.level-bar {
+  height: 100%; background: var(--amber);
+  transition: width .4s var(--ease-out);
+}
+.level-visits {
+  font-family: var(--m); font-size: 8px; letter-spacing: .1em;
+  color: var(--silver2); text-transform: uppercase;
+}
+.level-perks {
+  margin-top: 16px; display: none; opacity: 0;
+  flex-direction: column; gap: 4px;
+  transition: opacity .3s;
+}
+.level:hover .level-perks { display: flex; opacity: 1; }
+.level-perk {
+  font-size: 11px; color: var(--silver);
+  display: flex; align-items: center; gap: 6px;
+}
+.level-perk::before { content: '◦'; color: var(--amber); flex-shrink: 0; }
+
+/* Level colors */
+.level-1 .level-bar { background: rgba(200,200,200,.3); width: 20%; }
+.level-2 .level-bar { background: rgba(200,150,62,.5); width: 40%; }
+.level-3 .level-bar { background: rgba(200,150,62,.75); width: 60%; }
+.level-4 .level-bar { background: var(--amber); width: 80%; }
+.level-5 .level-bar {
+  background: linear-gradient(90deg, #C8963E, #D4A853, #E8C87A);
+  width: 100%;
+  box-shadow: 0 0 8px rgba(200,150,62,.4);
+}
+.level-5 .level-name { 
+  background: linear-gradient(135deg, #C8963E, #E8C87A);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ══════════════════════════════════════════
+   FOR RESTAURANTS — PRICING
+══════════════════════════════════════════ */
+.pricing-section { background: var(--ink); }
+.pricing-header {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: end; margin-bottom: 60px;
+}
+.pricing-h2 {
+  font-family: var(--f);
+  font-size: clamp(40px, 5vw, 70px);
+  font-weight: 300; line-height: .95;
+  letter-spacing: -.02em;
+}
+.pricing-h2 em { font-style: italic; color: var(--amber-light); }
+.pricing-sub { font-size: 15px; color: var(--silver); line-height: 1.75; }
+
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+}
+.pricing-card {
+  background: var(--ink);
+  padding: 36px 28px;
+  position: relative;
+  transition: background .3s;
+}
+.pricing-card.featured {
+  background: rgba(200,150,62,.06);
+  border-left: 1px solid rgba(200,150,62,.25);
+  border-right: 1px solid rgba(200,150,62,.25);
+}
+.pricing-card:hover { background: rgba(255,255,255,.02); }
+.pricing-card.featured:hover { background: rgba(200,150,62,.09); }
+.pricing-badge {
+  display: inline-flex;
+  font-family: var(--m); font-size: 8px; letter-spacing: .12em;
+  text-transform: uppercase; padding: 3px 10px;
+  background: var(--amber); color: var(--ink);
+  margin-bottom: 20px;
+}
+.pricing-tier {
+  font-family: var(--m); font-size: 9px; letter-spacing: .18em;
+  color: var(--silver2); text-transform: uppercase; margin-bottom: 20px;
+}
+.pricing-price {
+  font-family: var(--f); font-size: 52px; font-weight: 300;
+  line-height: 1; letter-spacing: -.02em; color: var(--paper);
+  margin-bottom: 4px;
+}
+.pricing-period {
+  font-family: var(--m); font-size: 9px; letter-spacing: .1em;
+  color: var(--silver2); text-transform: uppercase; margin-bottom: 24px;
+}
+.pricing-rule {
+  height: 1px; background: var(--rule); margin: 20px 0;
+}
+.pricing-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.pricing-feat {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13px; color: var(--silver); line-height: 1.5;
+}
+.pricing-feat-icon { color: var(--amber); flex-shrink: 0; margin-top: 1px; font-size: 12px; }
+.pricing-action { margin-top: 28px; }
+
+/* ══════════════════════════════════════════
+   NETWORK EFFECT
+══════════════════════════════════════════ */
+.network-section {
+  background: var(--ink2);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.network-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: center;
+}
+.network-h2 {
+  font-family: var(--f);
+  font-size: clamp(36px, 4.5vw, 64px);
+  font-weight: 300; line-height: .95;
+  letter-spacing: -.02em; margin-bottom: 28px;
+}
+.network-h2 em { font-style: italic; color: var(--amber-light); }
+.network-body { font-size: 15px; color: var(--silver); line-height: 1.75; margin-bottom: 32px; }
+
+.network-stats {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+  margin-top: 40px;
+}
+.net-stat {
+  background: var(--ink2);
+  padding: 24px 20px;
+}
+.net-stat-v {
+  font-family: var(--f); font-size: 40px; font-weight: 300;
+  color: var(--paper); line-height: 1; margin-bottom: 6px;
+  letter-spacing: -.02em;
+}
+.net-stat-v em { font-style: italic; color: var(--amber-light); }
+.net-stat-l {
+  font-family: var(--m); font-size: 8px; letter-spacing: .12em;
+  color: var(--silver2); text-transform: uppercase;
+}
+
+/* Network visual */
+.network-visual {
+  position: relative; height: 400px;
+  display: flex; align-items: center; justify-content: center;
+}
+.net-canvas { width: 100%; height: 100%; }
+.net-center {
+  position: absolute; width: 72px; height: 72px;
+  border: 1px solid var(--amber);
+  background: rgba(200,150,62,.1);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--m); font-size: 9px; letter-spacing: .1em;
+  color: var(--amber); text-transform: uppercase;
+  animation: pulse 3s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(200,150,62,.3); }
+  50% { box-shadow: 0 0 0 20px rgba(200,150,62,0); }
+}
+
+/* Orbiting nodes */
+.orbit {
+  position: absolute;
+  border: 1px solid rgba(200,150,62,.08);
+  border-radius: 50%;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+}
+.orbit-1 { width: 160px; height: 160px; animation: orbitSpin 20s linear infinite; }
+.orbit-2 { width: 270px; height: 270px; animation: orbitSpin 32s linear infinite reverse; }
+.orbit-3 { width: 380px; height: 380px; animation: orbitSpin 45s linear infinite; }
+@keyframes orbitSpin {
+  from { transform: translate(-50%,-50%) rotate(0deg); }
+  to { transform: translate(-50%,-50%) rotate(360deg); }
+}
+.orbit-node {
+  position: absolute;
+  width: 8px; height: 8px;
+  background: var(--amber);
+  border-radius: 50%;
+  top: 0; left: 50%; transform: translate(-50%, -50%);
+  box-shadow: 0 0 6px rgba(200,150,62,.5);
+}
+.orbit-node-sm {
+  width: 5px; height: 5px;
+  background: rgba(200,150,62,.5);
+}
+
+/* ══════════════════════════════════════════
+   MARKET / STATS BAR
+══════════════════════════════════════════ */
+.market-section { background: var(--ink); }
+.market-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+}
+.market-stat {
+  background: var(--ink);
+  padding: 36px 28px;
+  text-align: center;
+  transition: background .3s;
+}
+.market-stat:hover { background: rgba(200,150,62,.04); }
+.ms-value {
+  font-family: var(--f); font-size: 48px; font-weight: 300;
+  color: var(--paper); line-height: 1; letter-spacing: -.02em;
+  margin-bottom: 6px;
+}
+.ms-value em { font-style: italic; color: var(--amber-light); }
+.ms-label {
+  font-family: var(--m); font-size: 8px; letter-spacing: .14em;
+  color: var(--silver2); text-transform: uppercase; line-height: 1.6;
+}
+.ms-trend {
+  margin-top: 8px;
+  font-family: var(--m); font-size: 8px; letter-spacing: .08em;
+  color: #5aad7c;
+}
+
+/* ══════════════════════════════════════════
+   COMPARISON TABLE
+══════════════════════════════════════════ */
+.compare-section {
+  background: var(--ink2);
+  border-top: 1px solid var(--rule);
+}
+.compare-h2 {
+  font-family: var(--f); font-size: clamp(36px, 4.5vw, 64px);
+  font-weight: 300; line-height: .95; letter-spacing: -.02em;
+  margin-bottom: 48px; text-align: center;
+}
+.compare-h2 em { font-style: italic; color: var(--amber-light); }
+
+.compare-table {
+  width: 100%; border-collapse: collapse;
+  border: 1px solid var(--rule);
+}
+.compare-table th {
+  font-family: var(--m); font-size: 8px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--silver2);
+  padding: 16px 20px; background: rgba(255,255,255,.02);
+  border-bottom: 1px solid var(--rule); text-align: left;
+  font-weight: 400;
+}
+.compare-table td {
+  padding: 14px 20px; border-bottom: 1px solid var(--rule);
+  font-size: 13px; color: var(--silver);
+}
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr.gg-row td {
+  background: rgba(200,150,62,.05);
+  color: var(--paper); font-weight: 400;
+}
+.compare-table tr.gg-row td:first-child {
+  color: var(--amber-light);
+  font-family: var(--f); font-size: 16px; font-weight: 500;
+}
+td.yes { color: #5aad7c; font-family: var(--m); font-size: 11px; }
+td.no { color: rgba(180,80,70,.8); font-family: var(--m); font-size: 11px; }
+
+/* ══════════════════════════════════════════
+   CTA / HERO FOOTER
+══════════════════════════════════════════ */
+.cta-section {
+  background: var(--ink);
+  border-top: 1px solid var(--rule);
+  padding: 160px 0;
+  text-align: center; position: relative; overflow: hidden;
+}
+.cta-glow {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 400px;
+  background: radial-gradient(ellipse, rgba(200,150,62,.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-eyebrow {
+  font-family: var(--m); font-size: 9px; letter-spacing: .22em;
+  color: var(--amber); text-transform: uppercase;
+  margin-bottom: 28px; display: flex; align-items: center;
+  justify-content: center; gap: 12px;
+}
+.cta-eyebrow::before, .cta-eyebrow::after {
+  content: ''; width: 32px; height: 1px; background: var(--amber);
+}
+.cta-h2 {
+  font-family: var(--f);
+  font-size: clamp(48px, 7vw, 100px);
+  font-weight: 300; line-height: .9;
+  letter-spacing: -.03em; margin-bottom: 28px;
+}
+.cta-h2 em { font-style: italic; color: var(--amber-light); }
+.cta-sub {
+  font-size: 16px; color: var(--silver); max-width: 480px;
+  margin: 0 auto 48px; line-height: 1.7;
+}
+.cta-actions {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+}
+.btn-amber-lg {
+  font-family: var(--m); font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ink);
+  background: var(--amber); border: none;
+  padding: 16px 36px; cursor: pointer;
+  transition: opacity .2s, transform .2s;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+}
+.btn-amber-lg:hover { opacity: .88; transform: translateY(-1px); }
+.btn-ghost-lg {
+  font-family: var(--m); font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--paper);
+  border: 1px solid var(--rule); padding: 16px 36px;
+  background: transparent; cursor: pointer;
+  transition: border-color .2s;
+  text-decoration: none; display: inline-flex; align-items: center;
+}
+.btn-ghost-lg:hover { border-color: var(--amber); color: var(--amber); }
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+footer {
+  border-top: 1px solid var(--rule);
+  background: var(--ink);
+  padding: 40px 48px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-logo {
+  font-family: var(--n); font-weight: 200;
+  font-size: 12px; letter-spacing: .26em; text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+  display: flex; align-items: center; gap: 10px; text-decoration: none;
+}
+.footer-note {
+  font-family: var(--m); font-size: 9px; letter-spacing: .1em;
+  color: rgba(255,255,255,.18); text-transform: uppercase;
+}
+.footer-links {
+  display: flex; gap: 28px; list-style: none;
+}
+.footer-links a {
+  font-family: var(--m); font-size: 9px; letter-spacing: .12em;
+  color: rgba(255,255,255,.2); text-transform: uppercase;
+  text-decoration: none; transition: color .2s;
+}
+.footer-links a:hover { color: var(--amber); }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  nav { padding: 18px 24px; }
+  .nav-links, .nav-cta .btn-ghost { display: none; }
+  .hero { padding: 0 24px 60px; }
+  .hero-visual { display: none; }
+  .container { padding: 0 24px; }
+  .section-pad { padding: 80px 0; }
+  .problem-grid, .how-steps, .network-grid,
+  .status-intro, .pricing-header, .pricing-grid { grid-template-columns: 1fr; gap: 40px; }
+  .market-grid { grid-template-columns: 1fr 1fr; }
+  .levels-track { flex-direction: column; }
+  .flow-diagram { grid-template-columns: 1fr; }
+  .flow-arrow { display: none; }
+  footer { flex-direction: column; gap: 20px; text-align: center; }
+  .cta-actions { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     NAV
+══════════════════════════════════ -->
+<nav id="main-nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-mark">GG</div>
+    Great Guest
+  </a>
+  <ul class="nav-links">
+    <li><a href="#how">Как работает</a></li>
+    <li><a href="#status">Статусы</a></li>
+    <li><a href="#pricing">Тарифы</a></li>
+    <li><a href="#market">Рынок</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="#pricing" class="btn-ghost">Для ресторанов</a>
+    <a href="#cta" class="btn-amber">Войти через Telegram ↗</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════
+     HERO
+══════════════════════════════════ -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="hero-grid"></div>
+    <div class="hero-line"></div>
+  </div>
+
+  <!-- QR visual -->
+  <div class="hero-visual">
+    <div class="qr-card">
+      <div class="qr-pattern" id="qr-pattern"></div>
+      <div class="qr-label">Ваш статус</div>
+    </div>
+    <div class="status-float">
+      <div class="status-dot"></div>
+      <div class="status-text">
+        <span>VIP — Уровень 4</span>
+        <small>48 ресторанов · Активен</small>
+      </div>
+    </div>
+    <div class="scan-float">Сканирование QR</div>
+  </div>
+
+  <div class="hero-eyebrow">Единая платформа статуса гостей</div>
+  <h1 class="hero-h1">
+    Гость — это<br>
+    <em>актив.</em><br>
+    Его статус переносим.
+  </h1>
+  <p class="hero-sub">Один QR-код. Любой ресторан партнёра видит вашу историю и предлагает именно то, чего вы заслуживаете. Без скачивания. Через Telegram.</p>
+  <div class="hero-actions">
+    <a href="#cta" class="btn-amber">
+      Получить QR ↗
+    </a>
+    <a href="#how" class="btn-ghost">Как это работает</a>
+  </div>
+
+  <div class="hero-scroll-hint">Прокрутите вниз</div>
+</section>
+
+<!-- ══════════════════════════════════
+     TICKER
+══════════════════════════════════ -->
+<div class="ticker-wrap">
+  <div class="ticker-inner" id="ticker">
+    <div class="ticker-item"><strong>₽4.29 трлн</strong> <span class="ticker-sep">·</span> рынок HoReCa в РФ</div>
+    <div class="ticker-item"><strong>8.1%</strong> <span class="ticker-sep">·</span> CAGR роста рынка</div>
+    <div class="ticker-item"><strong>Telegram #1</strong> <span class="ticker-sep">·</span> 64.4% пенетрация в РФ</div>
+    <div class="ticker-item"><strong>Нет приложения</strong> <span class="ticker-sep">·</span> авторизация за 1 клик</div>
+    <div class="ticker-item"><strong>5 уровней</strong> <span class="ticker-sep">·</span> New → Regular → Insider → VIP → Legend</div>
+    <div class="ticker-item"><strong>LTV/CAC &gt;7×</strong> <span class="ticker-sep">·</span> маржа 82%</div>
+    <div class="ticker-item"><strong>Pre-Seed 2026</strong> <span class="ticker-sep">·</span> 15M ₽</div>
+    <!-- duplicate for seamless loop -->
+    <div class="ticker-item"><strong>₽4.29 трлн</strong> <span class="ticker-sep">·</span> рынок HoReCa в РФ</div>
+    <div class="ticker-item"><strong>8.1%</strong> <span class="ticker-sep">·</span> CAGR роста рынка</div>
+    <div class="ticker-item"><strong>Telegram #1</strong> <span class="ticker-sep">·</span> 64.4% пенетрация в РФ</div>
+    <div class="ticker-item"><strong>Нет приложения</strong> <span class="ticker-sep">·</span> авторизация за 1 клик</div>
+    <div class="ticker-item"><strong>5 уровней</strong> <span class="ticker-sep">·</span> New → Regular → Insider → VIP → Legend</div>
+    <div class="ticker-item"><strong>LTV/CAC &gt;7×</strong> <span class="ticker-sep">·</span> маржа 82%</div>
+    <div class="ticker-item"><strong>Pre-Seed 2026</strong> <span class="ticker-sep">·</span> 15M ₽</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PROBLEM
+══════════════════════════════════ -->
+<section class="problem-section section-pad">
+  <div class="container">
+    <div class="problem-grid">
+      <div>
+        <div class="eyebrow reveal">Проблема рынка</div>
+        <h2 class="problem-h2 reveal reveal-delay-1">
+          Рынок переплачивает<br>за то, <em>что не работает</em>
+        </h2>
+        <p class="reveal reveal-delay-2" style="font-size:14px;color:var(--silver);line-height:1.75;margin-top:16px;max-width:420px">
+          Программы лояльности превратились в гонку скидок. Гость привыкает к «дешевле», ресторан теряет маржу, а настоящая ценность — статус — никак не фиксируется.
+        </p>
+      </div>
+      <ul class="problem-list">
+        <li class="problem-item reveal reveal-delay-1">
+          <div class="problem-icon">✗</div>
+          <div class="problem-text"><strong>У гостя 10+ карт лояльности</strong> — каждый ресторан требует своё приложение, свою регистрацию</div>
+        </li>
+        <li class="problem-item reveal reveal-delay-2">
+          <div class="problem-icon">✗</div>
+          <div class="problem-text"><strong>Скидки убивают маржу</strong> — ресторан приучает гостя к «дешевле», а не к ценности опыта</div>
+        </li>
+        <li class="problem-item reveal reveal-delay-3">
+          <div class="problem-icon">✗</div>
+          <div class="problem-text"><strong>CRM не работают</strong> — персонал не использует, ROI не считается, «лучший гость» не идентифицируется</div>
+        </li>
+        <li class="problem-item reveal reveal-delay-4">
+          <div class="problem-icon">✗</div>
+          <div class="problem-text"><strong>Ценность не переносима</strong> — статус в одном ресторане не значит ничего в следующем</div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     HOW IT WORKS
+══════════════════════════════════ -->
+<section class="how-section section-pad" id="how">
+  <div class="container">
+    <div class="eyebrow reveal">Как работает</div>
+    <h2 class="how-title reveal reveal-delay-1">
+      Один QR.<br><em>Вся история.</em>
+    </h2>
+
+    <div class="how-steps">
+      <div class="how-step reveal reveal-delay-1" data-num="01">
+        <div class="step-tag">Гость</div>
+        <h3 class="step-h3">Получает<br><em>персональный QR</em></h3>
+        <p class="step-body">Авторизация через Telegram за 1 клик. Никакого приложения, никакой регистрации. QR привязан к вашему Telegram ID навсегда.</p>
+        <div class="level-bar-wrap" style="margin-top:20px"><div class="level-bar" style="width:100%;background:var(--amber)"></div></div>
+      </div>
+      <div class="how-step reveal reveal-delay-2" data-num="02">
+        <div class="step-tag">Ресторан</div>
+        <h3 class="step-h3">Сканирует QR<br><em>и видит профиль</em></h3>
+        <p class="step-body">Моментально: имя гостя, его статус в системе, история визитов по всем ресторанам партнёрской сети. Встречайте как старого знакомого.</p>
+        <div class="level-bar-wrap" style="margin-top:20px"><div class="level-bar" style="width:100%;background:var(--amber)"></div></div>
+      </div>
+      <div class="how-step reveal reveal-delay-3" data-num="03">
+        <div class="step-tag">Система</div>
+        <h3 class="step-h3">Строит<br><em>единую базу</em></h3>
+        <p class="step-body">Каждый визит повышает статус гостя. Ресторан фильтрует базу и делает адресные предложения нужной аудитории — VIP получают VIP-предложения.</p>
+        <div class="level-bar-wrap" style="margin-top:20px"><div class="level-bar" style="width:100%;background:linear-gradient(90deg,#C8963E,#E8C87A)"></div></div>
+      </div>
+    </div>
+
+    <div class="flow-diagram reveal reveal-delay-2">
+      <div class="flow-node">
+        <div class="flow-icon">📱</div>
+        <div class="flow-label">Telegram Mini App</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-icon">◈</div>
+        <div class="flow-label">QR-код гостя</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-icon">🍽</div>
+        <div class="flow-label">Единая база ресторанов</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     STATUS LEVELS
+══════════════════════════════════ -->
+<section class="status-section section-pad" id="status">
+  <div class="container">
+    <div class="status-intro">
+      <div>
+        <div class="eyebrow reveal">Система статусов</div>
+        <h2 class="status-h2 reveal reveal-delay-1">
+          Статус,<br>а не <em>скидки</em>
+        </h2>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <p class="status-desc">Пять уровней признания, которые накапливаются с каждым визитом в любой ресторан сети. Ваш статус путешествует вместе с вами.</p>
+        <div class="status-note">Без скидок — только привилегии статуса</div>
+      </div>
+    </div>
+
+    <div class="levels-track reveal reveal-delay-2">
+      <div class="level level-1">
+        <div class="level-num">Уровень 01</div>
+        <div class="level-name">New</div>
+        <div class="level-bar-wrap"><div class="level-bar"></div></div>
+        <div class="level-visits">1–5 визитов</div>
+        <div class="level-perks">
+          <div class="level-perk">Базовый профиль</div>
+          <div class="level-perk">QR-карта активна</div>
+        </div>
+      </div>
+      <div class="level level-2">
+        <div class="level-num">Уровень 02</div>
+        <div class="level-name"><em>Regular</em></div>
+        <div class="level-bar-wrap"><div class="level-bar"></div></div>
+        <div class="level-visits">6–20 визитов</div>
+        <div class="level-perks">
+          <div class="level-perk">Приоритетный стол</div>
+          <div class="level-perk">Персональные предложения</div>
+        </div>
+      </div>
+      <div class="level level-3">
+        <div class="level-num">Уровень 03</div>
+        <div class="level-name">Insider</div>
+        <div class="level-bar-wrap"><div class="level-bar"></div></div>
+        <div class="level-visits">21–50 визитов</div>
+        <div class="level-perks">
+          <div class="level-perk">Закрытые мероприятия</div>
+          <div class="level-perk">Комплименты от шефа</div>
+        </div>
+      </div>
+      <div class="level level-4">
+        <div class="level-num">Уровень 04</div>
+        <div class="level-name"><em>VIP</em></div>
+        <div class="level-bar-wrap"><div class="level-bar"></div></div>
+        <div class="level-visits">51–100 визитов</div>
+        <div class="level-perks">
+          <div class="level-perk">Персональный менеджер</div>
+          <div class="level-perk">Резервирование без депозита</div>
+        </div>
+      </div>
+      <div class="level level-5">
+        <div class="level-num">Уровень 05</div>
+        <div class="level-name">Legend</div>
+        <div class="level-bar-wrap"><div class="level-bar"></div></div>
+        <div class="level-visits">100+ визитов</div>
+        <div class="level-perks">
+          <div class="level-perk">Статус навсегда</div>
+          <div class="level-perk">Эксклюзивные привилегии</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     MARKET STATS
+══════════════════════════════════ -->
+<section class="market-section section-pad" id="market">
+  <div class="container">
+    <div class="eyebrow reveal" style="margin-bottom:48px">Рынок и возможность</div>
+    <div class="market-grid">
+      <div class="market-stat reveal reveal-delay-1">
+        <div class="ms-value">₽4.29<em>тлн</em></div>
+        <div class="ms-label">Оборот HoReCa<br>в РФ · 2025</div>
+        <div class="ms-trend">↑ 8.7% за год</div>
+      </div>
+      <div class="market-stat reveal reveal-delay-2">
+        <div class="ms-value">60.7<em>%</em></div>
+        <div class="ms-label">Независимые<br>рестораны без CRM</div>
+        <div class="ms-trend">↑ открыты к решению</div>
+      </div>
+      <div class="market-stat reveal reveal-delay-3">
+        <div class="ms-value">64<em>%</em></div>
+        <div class="ms-label">Пенетрация<br>Telegram в РФ</div>
+        <div class="ms-trend">↑ Лучший в мире</div>
+      </div>
+      <div class="market-stat reveal reveal-delay-4">
+        <div class="ms-value">&gt;7<em>×</em></div>
+        <div class="ms-label">LTV / CAC<br>Маржа ~82%</div>
+        <div class="ms-trend">↑ Unit-экономика</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     PRICING
+══════════════════════════════════ -->
+<section class="pricing-section section-pad" id="pricing"
+  style="border-top:1px solid var(--rule)">
+  <div class="container">
+    <div class="pricing-header">
+      <div>
+        <div class="eyebrow reveal">Тарифы для ресторанов</div>
+        <h2 class="pricing-h2 reveal reveal-delay-1">
+          Один тариф<br>меняет <em>всё</em>
+        </h2>
+      </div>
+      <p class="pricing-sub reveal reveal-delay-2">
+        Подключитесь к единой базе гостей. Каждый ресторан с подпиской видит всю сеть и может делать адресные предложения нужной аудитории. Первый месяц — бесплатно.
+      </p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="pricing-card reveal reveal-delay-1">
+        <div class="pricing-tier">Старт</div>
+        <div class="pricing-price">1 990 <span style="font-size:24px;font-family:var(--m);font-weight:300">₽</span></div>
+        <div class="pricing-period">/месяц · 1 заведение</div>
+        <div class="pricing-rule"></div>
+        <ul class="pricing-features">
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>1 QR-код для сканирования</li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>До 500 гостей в базе</li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>Базовая аналитика визитов</li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>Dashboard ресторана</li>
+        </ul>
+        <div class="pricing-action">
+          <a href="#cta" class="btn-ghost" style="width:100%;justify-content:center">Начать →</a>
+        </div>
+      </div>
+
+      <div class="pricing-card featured reveal reveal-delay-2">
+        <div class="pricing-badge">Популярный</div>
+        <div class="pricing-tier">Профессиональный</div>
+        <div class="pricing-price" style="background:linear-gradient(135deg,#C8963E,#E8C87A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">2 990 <span style="font-size:24px;font-family:var(--m);font-weight:300">₽</span></div>
+        <div class="pricing-period">/месяц · полный доступ</div>
+        <div class="pricing-rule" style="background:rgba(200,150,62,.2)"></div>
+        <ul class="pricing-features">
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>3 QR-кода для персонала</li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span><strong style="color:rgba(255,255,255,.8)">Вся единая база гостей</strong></li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>Предложения по уровню статуса</li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>Расширенная аналитика и CRM</li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>Рассылки по сегментам</li>
+        </ul>
+        <div class="pricing-action">
+          <a href="#cta" class="btn-amber" style="width:100%;justify-content:center">Подключить ресторан →</a>
+        </div>
+      </div>
+
+      <div class="pricing-card reveal reveal-delay-3">
+        <div class="pricing-tier">White-Label / Сети</div>
+        <div class="pricing-price" style="font-size:36px;padding-top:12px">По<br>запросу</div>
+        <div class="pricing-period">/месяц · сети и франшизы</div>
+        <div class="pricing-rule"></div>
+        <ul class="pricing-features">
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>API-интеграция</li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>Собственный бренд и дизайн</li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>Выделенный менеджер</li>
+          <li class="pricing-feat"><span class="pricing-feat-icon">◦</span>SLA и поддержка 24/7</li>
+        </ul>
+        <div class="pricing-action">
+          <a href="#cta" class="btn-ghost" style="width:100%;justify-content:center">Связаться →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     NETWORK EFFECT
+══════════════════════════════════ -->
+<section class="network-section section-pad">
+  <div class="container">
+    <div class="network-grid">
+      <div>
+        <div class="eyebrow reveal">Сетевой эффект</div>
+        <h2 class="network-h2 reveal reveal-delay-1">
+          2× ресторанов =<br><em>4× ценность</em>
+        </h2>
+        <p class="network-body reveal reveal-delay-2">
+          Накопленная единая база гостей — нельзя скопировать. Первый игрок с 1000+ ресторанами создаёт непреодолимый барьер для входа. Ценность платформы растёт нелинейно.
+        </p>
+        <div class="network-stats reveal reveal-delay-3">
+          <div class="net-stat">
+            <div class="net-stat-v">500<em>+</em></div>
+            <div class="net-stat-l">Ресторанов к мес. 12</div>
+          </div>
+          <div class="net-stat">
+            <div class="net-stat-v">50K<em>+</em></div>
+            <div class="net-stat-l">Гостей в базе</div>
+          </div>
+          <div class="net-stat">
+            <div class="net-stat-v">2K<em>+</em></div>
+            <div class="net-stat-l">Ресторанов к мес. 18</div>
+          </div>
+          <div class="net-stat">
+            <div class="net-stat-v">200K<em>+</em></div>
+            <div class="net-stat-l">Гостей к мес. 18</div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="network-visual">
+          <div class="orbit orbit-3">
+            <div class="orbit-node orbit-node-sm" style="top:0;left:50%"></div>
+            <div class="orbit-node orbit-node-sm" style="top:50%;right:0;transform:translate(50%,-50%)"></div>
+            <div class="orbit-node orbit-node-sm" style="bottom:0;left:30%"></div>
+            <div class="orbit-node orbit-node-sm" style="top:30%;left:0;transform:translate(-50%,-50%)"></div>
+          </div>
+          <div class="orbit orbit-2">
+            <div class="orbit-node" style="top:0;left:50%"></div>
+            <div class="orbit-node" style="top:50%;right:0;transform:translate(50%,-50%)"></div>
+            <div class="orbit-node" style="bottom:0;left:50%"></div>
+          </div>
+          <div class="orbit orbit-1">
+            <div class="orbit-node" style="top:0;left:50%"></div>
+            <div class="orbit-node" style="bottom:0;left:50%"></div>
+          </div>
+          <div class="net-center">GG</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     COMPARISON
+══════════════════════════════════ -->
+<section class="compare-section section-pad">
+  <div class="container">
+    <h2 class="compare-h2 reveal">
+      Первые <em>и единственные</em>
+    </h2>
+    <div class="reveal reveal-delay-1">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Решение</th>
+            <th>Единый профиль</th>
+            <th>Без приложения</th>
+            <th>Telegram</th>
+            <th>Сетевой эффект</th>
+            <th>Предложения по базе</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Классические CRM</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+          </tr>
+          <tr>
+            <td>Программы баллов</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+          </tr>
+          <tr>
+            <td>Отдельные приложения</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+            <td class="no">✗ Нет</td>
+          </tr>
+          <tr class="gg-row">
+            <td>Great Guest ★</td>
+            <td class="yes">✓ Да</td>
+            <td class="yes">✓ Да</td>
+            <td class="yes">✓ Да</td>
+            <td class="yes">✓ Да</td>
+            <td class="yes">✓ Да</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     CTA
+══════════════════════════════════ -->
+<section class="cta-section" id="cta">
+  <div class="cta-glow"></div>
+  <div class="container" style="position:relative;z-index:1">
+    <div class="cta-eyebrow reveal">Присоединяйтесь</div>
+    <h2 class="cta-h2 reveal reveal-delay-1">
+      Ваш статус<br>
+      <em>уже ждёт вас</em>
+    </h2>
+    <p class="cta-sub reveal reveal-delay-2">
+      Станьте частью единой сети ресторанов. Один QR — и каждый ресторан встречает вас как VIP-гостя.
+    </p>
+    <div class="cta-actions reveal reveal-delay-3">
+      <a href="#" class="btn-amber-lg">Получить QR через Telegram ↗</a>
+      <a href="#pricing" class="btn-ghost-lg">Подключить ресторан</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     FOOTER
+══════════════════════════════════ -->
+<footer>
+  <a class="footer-logo" href="#">
+    <div class="nav-logo-mark">GG</div>
+    Great Guest Service
+  </a>
+  <ul class="footer-links">
+    <li><a href="#">Для ресторанов</a></li>
+    <li><a href="#">Для гостей</a></li>
+    <li><a href="#">Инвесторам</a></li>
+  </ul>
+  <div class="footer-note">© 2026 Great Guest Service · Pre-Seed</div>
+</footer>
+
+<!-- ══════════════════════════════════
+     SCRIPTS
+══════════════════════════════════ -->
+<script>
+// ── NAV SCROLL
+window.addEventListener('scroll', () => {
+  document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// ── REVEAL ON SCROLL
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── QR PATTERN GENERATE
+const qrEl = document.getElementById('qr-pattern');
+const pattern = [
+  1,1,1,0,1,0,1,
+  1,0,1,0,1,0,1,
+  1,1,1,1,0,1,0,
+  0,0,0,0,1,0,0,
+  1,0,1,1,1,0,1,
+  0,1,0,0,1,1,0,
+  1,1,1,0,0,0,1
+];
+pattern.forEach((bit, i) => {
+  const cell = document.createElement('div');
+  cell.className = 'qr-cell';
+  if (bit) {
+    cell.style.opacity = '1';
+    cell.style.animationDelay = (Math.random() * 0.8 + 0.6) + 's';
+    cell.style.animation = `qrReveal 0.05s ease-out ${(Math.random() * 0.8 + 0.6)}s forwards`;
+  } else {
+    cell.style.opacity = '0';
+    cell.style.background = 'transparent';
+  }
+  qrEl.appendChild(cell);
+});
+
+// CSS for qrReveal
+const style = document.createElement('style');
+style.textContent = `@keyframes qrReveal { from{opacity:0;transform:scale(0)} to{opacity:1;transform:scale(1)} }`;
+document.head.appendChild(style);
+
+// ── SMOOTH ANCHOR SCROLL
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+});
+
+// ── PARALLAX HERO BG subtle
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  const heroGrid = document.querySelector('.hero-grid');
+  if (heroGrid) heroGrid.style.transform = `translateY(${y * .15}px)`;
+});
+</script>
+</body>
+</html>
