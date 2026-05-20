@@ -1,0 +1,22 @@
+{
+  "name": "great-guest",
+  "version": "1.0.0",
+  "description": "Loyalty system for restaurants via Telegram bot",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "dev": "nodemon src/bot.js",
+    "web": "node src/web/server.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "qrcode": "^1.5.4",
+    "@supabase/supabase-js": "^2.49.4",
+    "express": "^4.21.2",
+    "dotenv": "^16.5.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
