@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1920px; height:1080px; background:#0C0B09; overflow:hidden; }
+
+  .scene {
+    position:relative; width:100%; height:100%;
+  }
+
+  /* Hands background image */
+  .bg {
+    position:absolute; inset:0;
+    background-image: url('https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* Dark overlay for depth */
+  .overlay {
+    position:absolute; inset:0;
+    background: linear-gradient(
+      105deg,
+      rgba(12,11,9,0.55) 0%,
+      rgba(12,11,9,0.15) 45%,
+      rgba(12,11,9,0.4) 100%
+    );
+  }
+
+  /* Phone frame */
+  .phone-wrap {
+    position:absolute;
+    right: 22%;
+    top: 50%;
+    transform: translateY(-50%) perspective(1200px) rotateY(-8deg) rotateX(2deg);
+    width: 260px;
+    filter: drop-shadow(0 40px 80px rgba(0,0,0,0.8)) drop-shadow(0 0 40px rgba(201,169,110,0.12));
+  }
+
+  .phone-frame {
+    width:260px; height:563px;
+    background: #0A0908;
+    border-radius: 38px;
+    border: 1.5px solid rgba(201,169,110,0.25);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Notch */
+  .phone-frame::before {
+    content:'';
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:90px; height:26px;
+    background:#0A0908;
+    border-radius:0 0 18px 18px;
+    z-index:10;
+  }
+
+  /* Screen reflection */
+  .phone-frame::after {
+    content:'';
+    position:absolute; inset:0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 40%);
+    z-index:5; pointer-events:none;
+    border-radius: 38px;
+  }
+
+  .phone-screen {
+    width:100%; height:100%;
+    overflow:hidden;
+    position:relative;
+  }
+
+  .phone-screen iframe {
+    width:375px; height:812px;
+    border:none;
+    transform: scale(0.6933);
+    transform-origin: top left;
+    pointer-events:none;
+  }
+
+  /* Gold particles */
+  .particle {
+    position:absolute;
+    width:3px; height:3px;
+    background: radial-gradient(circle, #C9A96E, transparent);
+    border-radius:50%;
+    animation: float linear infinite;
+    opacity:0;
+  }
+  @keyframes float {
+    0% { opacity:0; transform:translateY(0) scale(0); }
+    20% { opacity:0.8; transform:translateY(-20px) scale(1); }
+    80% { opacity:0.4; transform:translateY(-80px) scale(0.7); }
+    100% { opacity:0; transform:translateY(-120px) scale(0); }
+  }
+
+  /* Left text block */
+  .text-block {
+    position:absolute;
+    left: 8%;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #F5F0E8;
+  }
+  .text-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; letter-spacing:0.18em; text-transform:uppercase;
+    color: #C9A96E; margin-bottom:16px;
+  }
+  .text-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 62px; line-height:1.05; font-weight:400;
+    margin-bottom: 24px;
+    color: #F5F0E8;
+  }
+  .text-headline em {
+    font-style:italic; color:#C9A96E;
+  }
+  .text-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px; line-height:1.6;
+    color: rgba(245,240,232,0.55);
+    max-width:380px;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400&display=swap');
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="bg"></div>
+  <div class="overlay"></div>
+
+  <!-- Gold scan particles around phone -->
+  <div class="particle" style="right:30%;top:30%;animation-duration:3s;animation-delay:0s;width:4px;height:4px;"></div>
+  <div class="particle" style="right:26%;top:55%;animation-duration:4s;animation-delay:0.7s;"></div>
+  <div class="particle" style="right:33%;top:65%;animation-duration:3.5s;animation-delay:1.4s;width:2px;height:2px;"></div>
+  <div class="particle" style="right:20%;top:40%;animation-duration:5s;animation-delay:0.3s;"></div>
+  <div class="particle" style="right:28%;top:72%;animation-duration:2.8s;animation-delay:1.1s;width:5px;height:5px;"></div>
+
+  <!-- Text -->
+  <div class="text-block">
+    <div class="text-eyebrow">Loyalty 2.0 · HoReCa</div>
+    <div class="text-headline">Он ещё не сказал<br>ни слова.<br><em>Ресторан уже знает.</em></div>
+    <div class="text-sub">Great Guest узнаёт гостя по QR в Telegram —<br>без приложений, без карточек, без регистрации.</div>
+  </div>
+
+  <!-- Phone with Great Guest screen -->
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <iframe src="mockup-screen.html"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
