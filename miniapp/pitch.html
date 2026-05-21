@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Great Guest — MVP-прототип для инвестора</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAF7F1;
+    --bg-2: #FDFBF6;
+    --surface: #FFFFFF;
+    --surface-2: #F4EEDF;
+    --border: #E6DFCC;
+    --border-strong: #D4CBB3;
+    --text: #1A1A28;
+    --text-strong: #0E0E18;
+    --muted: #6E6B62;
+    --muted-2: #8F8B7E;
+    --gold: #A47C3F;
+    --gold-2: #C49958;
+    --gold-soft: rgba(164,124,63,.08);
+    --gold-line: rgba(164,124,63,.22);
+    --wine: #9A2A33;
+    --wine-soft: rgba(154,42,51,.07);
+    --success: #2E7D52;
+    --success-soft: rgba(46,125,82,.08);
+    --warn: #B36A1F;
+    --warn-soft: rgba(179,106,31,.08);
+    --ai: #4B3FB0;
+    --ai-2: #6E59E6;
+    --ai-soft: rgba(75,63,176,.07);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 8px rgba(40,30,10,.04), 0 12px 32px rgba(40,30,10,.05);
+    --shadow-sm: 0 1px 3px rgba(40,30,10,.05);
+    --serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+  body { min-height: 100vh; font-family: var(--sans); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  button, input, select, textarea { font-family: inherit; }
+
+  /* TOP NAV */
+  .topnav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(16px) saturate(1.1);
+    background: rgba(250,247,241,.85);
+    border-bottom: 1px solid var(--border);
+  }
+  .topnav-inner {
+    max-width: 1280px; margin: 0 auto;
+    padding: 18px 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  }
+  .logo {
+    font-family: var(--serif);
+    font-weight: 700; font-size: 22px; letter-spacing: -.01em;
+    display: flex; align-items: center; gap: 12px;
+    color: var(--text-strong);
+  }
+  .logo-mark {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-2));
+    display: grid; place-items: center;
+    color: #FFFFFF; font-weight: 700; font-size: 13px;
+    font-family: var(--sans); letter-spacing: 0;
+    box-shadow: 0 2px 6px rgba(164,124,63,.3);
+  }
+  .tabs { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; flex-wrap: wrap; }
+  .tabs li {
+    padding: 8px 14px; border-radius: 999px; cursor: pointer;
+    color: var(--muted); font-size: 13.5px; font-weight: 500;
+    transition: all .2s;
+  }
+  .tabs li:hover { color: var(--text-strong); background: var(--surface-2); }
+  .tabs li.active { color: #FFFFFF; background: var(--text-strong); }
+
+  /* SECTIONS */
+  .container { max-width: 1280px; margin: 0 auto; padding: 56px 28px; }
+  section.tab-section { display: none; animation: fade .3s ease; }
+  section.tab-section.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  h1, h2 { font-family: var(--serif); color: var(--text-strong); margin: 0; }
+  h1 { font-size: 56px; line-height: 1.05; letter-spacing: -.02em; font-weight: 600; }
+  h2 { font-size: 36px; line-height: 1.15; letter-spacing: -.01em; font-weight: 600; margin-bottom: 8px; }
+  h3, h4 { font-family: var(--sans); color: var(--text-strong); margin: 0; }
+  h3 { font-size: 18px; font-weight: 600; letter-spacing: -.005em; }
+  p { margin: 0; color: var(--muted); line-height: 1.6; }
+  .lead { font-size: 18px; color: #3A3A48; max-width: 720px; line-height: 1.55; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 12px 22px; border-radius: 999px;
+    border: 1px solid transparent; cursor: pointer;
+    font-weight: 500; font-size: 14px;
+    transition: all .15s; line-height: 1;
+  }
+  .btn-primary { background: var(--text-strong); color: #FFFFFF; }
+  .btn-primary:hover { background: #2B2B3A; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(14,14,24,.18); }
+  .btn-secondary {
+    background: var(--surface); color: var(--text-strong);
+    border-color: var(--border-strong);
+  }
+  .btn-secondary:hover { border-color: var(--text-strong); }
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-2));
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(164,124,63,.25);
+  }
+  .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(164,124,63,.32); }
+  .btn-ghost { background: transparent; color: var(--muted); }
+  .btn-ghost:hover { color: var(--text-strong); background: var(--surface-2); }
+  .btn-ai {
+    background: linear-gradient(135deg, var(--ai), var(--ai-2));
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(75,63,176,.22);
+  }
+  .btn-ai:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(75,63,176,.32); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 26px;
+    box-shadow: var(--shadow-sm);
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 500; line-height: 1.4;
+    background: var(--surface-2); color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .badge-gold { background: var(--gold-soft); color: var(--gold); border-color: var(--gold-line); }
+  .badge-success { background: var(--success-soft); color: var(--success); border-color: rgba(46,125,82,.22); }
+  .badge-warn { background: var(--warn-soft); color: var(--warn); border-color: rgba(179,106,31,.25); }
+  .badge-wine { background: var(--wine-soft); color: var(--wine); border-color: rgba(154,42,51,.22); }
+  .badge-ai { background: var(--ai-soft); color: var(--ai); border-color: rgba(75,63,176,.2); }
+
+  /* ========== HOME ========== */
+  .hero {
+    display: grid; grid-template-columns: 1.15fr 1fr;
+    gap: 64px; align-items: center;
+    padding: 40px 0 56px;
+  }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 999px;
+    background: var(--gold-soft);
+    border: 1px solid var(--gold-line);
+    color: var(--gold); font-size: 12.5px; font-weight: 500;
+    margin-bottom: 24px;
+    letter-spacing: .03em;
+  }
+  .hero h1 { margin-bottom: 22px; }
+  .hero p.lead { margin-bottom: 32px; }
+  .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .hero-visual {
+    aspect-ratio: 4/3.4; border-radius: var(--radius);
+    background:
+      radial-gradient(circle at 25% 20%, rgba(164,124,63,.12), transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(75,63,176,.08), transparent 50%),
+      var(--surface);
+    border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+    display: grid; place-items: center;
+    box-shadow: var(--shadow);
+  }
+  .hero-visual::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(164,124,63,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(164,124,63,.045) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .hero-mock {
+    position: relative; z-index: 1;
+    display: grid; gap: 12px; padding: 20px;
+  }
+  .hero-mock-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+    min-width: 260px;
+    box-shadow: var(--shadow);
+  }
+  .qr-mini {
+    width: 52px; height: 52px; border-radius: 8px;
+    background-image:
+      repeating-linear-gradient(0deg, var(--text-strong) 0 4px, transparent 4px 8px),
+      repeating-linear-gradient(90deg, var(--text-strong) 0 4px, transparent 4px 8px);
+    background-color: white;
+    border: 1px solid var(--border);
+  }
+  .hero-mock-card.ai {
+    background: linear-gradient(135deg, var(--ai-soft), var(--wine-soft));
+    border-color: rgba(75,63,176,.18);
+  }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin: 40px 0;
+  }
+  .stat { padding: 24px; }
+  .stat .num { font-family: var(--serif); font-size: 36px; font-weight: 600; color: var(--text-strong); letter-spacing: -.02em; line-height: 1; }
+  .stat .num.gold { color: var(--gold); }
+  .stat .lbl { font-size: 13px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
+
+  .three-up { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
+  .three-up .card h3 { margin-bottom: 8px; }
+  .three-up .card .icon {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: var(--gold-soft);
+    display: grid; place-items: center;
+    color: var(--gold); margin-bottom: 16px;
+    font-size: 20px;
+  }
+
+  /* SECTION HEADERS */
+  .section-head { margin-bottom: 32px; max-width: 720px; }
+  .section-head .kicker { color: var(--gold); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 12px; }
+
+  /* ========== PITCH ========== */
+  .pitch-cta {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px; padding: 36px 40px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+  }
+  .pitch-cta h3 { font-family: var(--serif); font-size: 26px; font-weight: 600; }
+
+  .deck-modal {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(20,18,12,.55);
+    backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .deck-modal.open { display: flex; }
+  .deck {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px;
+    width: 100%; max-width: 960px; max-height: 92vh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(20,18,12,.25);
+  }
+  .deck-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .deck-header h3 { font-family: var(--serif); font-size: 17px; font-weight: 600; }
+  .deck-body {
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, var(--bg-2), var(--surface));
+    padding: 64px; overflow: auto;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .deck-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 24px; border-top: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+  .slide { display: none; }
+  .slide.active { display: block; animation: fade .25s; }
+  .slide .kicker { color: var(--gold); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 14px; }
+  .slide h2 { font-size: 42px; margin-bottom: 18px; }
+  .slide p { font-size: 17px; color: #2B2B3A; }
+  .slide .slide-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 28px; }
+  .slide .slide-stat { padding: 18px 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; }
+  .slide .slide-stat .v { font-family: var(--serif); font-size: 30px; font-weight: 600; color: var(--text-strong); letter-spacing: -.01em; }
+  .slide .slide-stat .v.gold { color: var(--gold); }
+  .slide ul { padding-left: 22px; color: #2B2B3A; line-height: 1.85; font-size: 16px; }
+  .slide ul b { color: var(--text-strong); }
+  .slide-dots { display: flex; gap: 6px; }
+  .slide-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); cursor: pointer; transition: all .15s; }
+  .slide-dots span:hover { background: var(--muted); }
+  .slide-dots span.active { background: var(--gold); width: 22px; border-radius: 999px; }
+
+  /* ========== RESTAURANT ========== */
+  .restaurant-grid {
+    display: grid; grid-template-columns: 244px 1fr;
+    gap: 24px; margin-top: 8px;
+  }
+  .sidebar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    height: fit-content; position: sticky; top: 92px;
+    box-shadow: var(--shadow-sm);
+  }
+  .side-brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 8px 16px;
+    border-bottom: 1px solid var(--border); margin-bottom: 14px;
+  }
+  .side-brand .av {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-2));
+    color: #FFFFFF; font-weight: 600; display: grid; place-items: center; font-size: 13px;
+  }
+  .side-brand .meta .n { font-weight: 600; font-size: 14px; color: var(--text-strong); }
+  .side-brand .meta .r { color: var(--muted); font-size: 12px; }
+  .side-menu { display: grid; gap: 2px; }
+  .side-menu button {
+    background: transparent; border: 0; text-align: left;
+    color: var(--muted); padding: 9px 12px; border-radius: 8px;
+    cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; gap: 10px;
+    transition: all .15s;
+  }
+  .side-menu button:hover { background: var(--surface-2); color: var(--text-strong); }
+  .side-menu button.active { background: var(--text-strong); color: #FFFFFF; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+    box-shadow: var(--shadow-sm);
+  }
+  .kpi .ttl { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 500; }
+  .kpi .val { font-family: var(--serif); font-size: 34px; font-weight: 600; color: var(--text-strong); margin-top: 8px; letter-spacing: -.02em; line-height: 1; }
+  .kpi .delta { font-size: 12.5px; margin-top: 10px; color: var(--success); font-weight: 500; }
+  .kpi .delta.neg { color: var(--wine); }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+  .panel-header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .panel-header h3 { font-size: 16px; font-weight: 600; }
+  .panel-body { padding: 22px 24px; }
+
+  .insight {
+    padding: 18px; border-radius: 12px;
+    background: var(--ai-soft);
+    border: 1px solid rgba(75,63,176,.18);
+    margin-bottom: 14px;
+  }
+  .insight:last-child { margin-bottom: 0; }
+  .insight.warn { background: var(--warn-soft); border-color: rgba(179,106,31,.22); }
+  .insight .ai-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #FFFFFF; color: var(--ai);
+    padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+    margin-bottom: 10px;
+    border: 1px solid rgba(75,63,176,.2);
+    letter-spacing: .02em;
+  }
+  .insight.warn .ai-tag { color: var(--warn); border-color: rgba(179,106,31,.25); }
+  .insight p { color: #2B2B3A; font-size: 14.5px; line-height: 1.55; }
+  .insight p b { color: var(--text-strong); }
+  .insight .actions { display: flex; gap: 8px; margin-top: 14px; }
+  .insight .actions .btn { padding: 8px 14px; font-size: 12.5px; }
+
+  .guests-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .guests-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 11.5px; padding: 12px 10px; text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid var(--border); }
+  .guests-table td { padding: 14px 10px; border-bottom: 1px solid var(--border); color: var(--text-strong); }
+  .guests-table tr:last-child td { border-bottom: 0; }
+  .guests-table tr:hover td { background: var(--bg-2); }
+  .av-sm { width: 34px; height: 34px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 12px; font-weight: 600; color: #FFFFFF; }
+  .av-vip { background: linear-gradient(135deg, var(--gold), var(--gold-2)); }
+  .av-ins { background: linear-gradient(135deg, var(--ai), var(--ai-2)); }
+  .av-reg { background: linear-gradient(135deg, #4A8BA8, #6BA8C2); }
+  .av-new { background: var(--surface-2); color: var(--muted); }
+
+  .offers-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .offer-card {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px;
+    transition: all .15s;
+  }
+  .offer-card:hover { border-color: var(--border-strong); }
+  .offer-card h4 { font-size: 15px; margin-bottom: 6px; font-weight: 600; }
+  .offer-card .meta { font-size: 12px; color: var(--muted); }
+  .offer-card .desc { font-size: 13.5px; color: #3A3A48; margin: 10px 0 12px; line-height: 1.5; }
+  .offer-card .row { display: flex; justify-content: space-between; align-items: center; }
+  .offer-card.ai-draft {
+    background: linear-gradient(135deg, var(--ai-soft), var(--bg-2));
+    border-color: rgba(75,63,176,.2);
+  }
+
+  .dashboard-section { display: none; }
+  .dashboard-section.active { display: block; }
+
+  /* ========== GUEST / PHONE ========== */
+  .guest-wrap { display: grid; grid-template-columns: 1fr 380px; gap: 64px; align-items: start; }
+  .guest-info p { margin-bottom: 14px; }
+
+  .phone {
+    width: 380px; aspect-ratio: 9/19;
+    background: #1a1a28; border-radius: 44px;
+    padding: 12px; box-shadow: 0 24px 60px rgba(20,18,12,.18), 0 4px 12px rgba(20,18,12,.08);
+    position: sticky; top: 96px;
+  }
+  .phone-screen {
+    background: #FAF7F1; color: var(--text-strong);
+    width: 100%; height: 100%; border-radius: 32px;
+    overflow: hidden; display: flex; flex-direction: column;
+    position: relative;
+  }
+  .phone-notch {
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    width: 92px; height: 22px; background: #1a1a28; border-radius: 999px; z-index: 3;
+  }
+  .tg-header {
+    background: #FFFFFF; color: var(--text-strong);
+    padding: 40px 16px 14px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tg-header .back { font-size: 18px; color: var(--gold); }
+  .tg-header .ttl { font-weight: 600; font-size: 14px; }
+  .tg-header .sub { font-size: 11px; color: var(--muted); }
+  .mini-app { padding: 16px; flex: 1; overflow: auto; background: var(--bg); }
+  .status-card {
+    background: linear-gradient(135deg, var(--text-strong) 0%, #2C2A20 100%);
+    color: #FFFFFF; border-radius: 16px;
+    padding: 18px; position: relative; overflow: hidden;
+  }
+  .status-card::after {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, rgba(196,153,88,.3), transparent 70%);
+  }
+  .status-row { display: flex; justify-content: space-between; align-items: center; }
+  .status-label { font-size: 11px; color: var(--gold-2); text-transform: uppercase; letter-spacing: .12em; font-weight: 500; }
+  .status-level { font-family: var(--serif); font-size: 28px; font-weight: 600; margin-top: 4px; letter-spacing: -.01em; }
+  .status-hint { font-size: 12px; color: #DDD6C2; margin-top: 14px; }
+  .status-progress { height: 4px; background: rgba(255,255,255,.12); border-radius: 999px; margin-top: 10px; overflow: hidden; }
+  .status-progress span { display: block; height: 100%; width: 72%; background: linear-gradient(90deg, var(--gold), var(--gold-2)); border-radius: 999px; }
+  .qr-block {
+    background: #FFFFFF; border-radius: 16px; padding: 18px; margin-top: 14px;
+    text-align: center; box-shadow: 0 1px 3px rgba(40,30,10,.04); border: 1px solid var(--border);
+  }
+  .qr-square {
+    width: 160px; height: 160px; margin: 0 auto 10px;
+    background-image:
+      repeating-linear-gradient(45deg, var(--text-strong) 0 6px, transparent 6px 12px),
+      white;
+    background-color: white;
+    border-radius: 10px; position: relative;
+    border: 1px solid var(--border);
+  }
+  .qr-square::before, .qr-square::after, .qr-square > .qr-cor {
+    content: ''; position: absolute; width: 30px; height: 30px;
+    border: 5px solid var(--text-strong); background: white; border-radius: 5px;
+  }
+  .qr-square::before { top: 8px; left: 8px; }
+  .qr-square::after { top: 8px; right: 8px; }
+  .qr-square .qr-cor { bottom: 8px; left: 8px; }
+  .qr-caption { font-size: 11px; color: var(--muted); }
+  .mini-section-title { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text-strong); margin: 20px 0 10px; }
+  .mini-offer {
+    background: #FFFFFF; border: 1px solid var(--border); border-radius: 12px; padding: 12px;
+    margin-bottom: 8px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .mini-offer .em { font-size: 22px; }
+  .mini-offer .body .t { font-size: 13.5px; font-weight: 600; color: var(--text-strong); }
+  .mini-offer .body .d { font-size: 11.5px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .mini-offer .body .rest { font-size: 11px; color: var(--gold); margin-top: 4px; font-weight: 500; }
+  .mini-rec {
+    background: linear-gradient(135deg, var(--ai-soft), #FFFFFF);
+    border: 1px dashed rgba(75,63,176,.3);
+    border-radius: 12px; padding: 12px; margin-bottom: 8px;
+  }
+  .mini-rec .ai-mini { font-size: 10px; color: var(--ai); font-weight: 700; letter-spacing: .08em; }
+  .mini-rec .t { font-size: 13.5px; font-weight: 600; color: var(--text-strong); margin-top: 4px; }
+  .mini-rec .d { font-size: 11.5px; color: #555; margin-top: 4px; }
+  .tg-tabs {
+    display: flex; background: #FFFFFF; border-top: 1px solid var(--border);
+    padding: 6px 0 4px;
+  }
+  .tg-tabs button {
+    flex: 1; background: transparent; border: 0; padding: 6px; cursor: pointer;
+    font-size: 10px; color: var(--muted);
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .tg-tabs button .em { font-size: 18px; }
+  .tg-tabs button.active { color: var(--gold); }
+
+  /* ========== AI FEATURES ========== */
+  .ai-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .ai-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); transition: all .15s; }
+  .ai-card:hover { border-color: var(--border-strong); }
+  .ai-card.mvp { border-color: var(--gold-line); background: linear-gradient(135deg, var(--gold-soft), var(--surface) 60%); }
+  .ai-card .head { display: flex; align-items: flex-start; gap: 14px; }
+  .ai-card .num {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--ai-soft); color: var(--ai);
+    font-weight: 700; display: grid; place-items: center; flex-shrink: 0; font-size: 15px;
+  }
+  .ai-card.mvp .num { background: var(--gold-soft); color: var(--gold); }
+  .ai-card h3 { font-size: 17px; }
+  .ai-card .tagline { font-size: 13.5px; color: var(--gold); margin-top: 4px; font-style: italic; }
+  .ai-card .body { margin-top: 14px; }
+  .ai-card .body p { font-size: 14.5px; color: #2B2B3A; line-height: 1.55; }
+  .ai-card .meta-row { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+  .ai-card .actions { margin-top: 16px; display: flex; gap: 8px; }
+
+  /* ========== MODAL ========== */
+  .modal {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(20,18,12,.5);
+    backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal.open { display: flex; }
+  .modal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; width: 100%; max-width: 600px;
+    max-height: 88vh; overflow: auto;
+    box-shadow: 0 24px 80px rgba(20,18,12,.2);
+  }
+  .modal-card.lg { max-width: 760px; }
+  .modal-header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h3 { display: flex; align-items: center; gap: 8px; font-family: var(--serif); font-size: 20px; font-weight: 600; }
+  .modal-header .close { background: transparent; border: 0; color: var(--muted); cursor: pointer; font-size: 22px; padding: 4px 10px; border-radius: 6px; }
+  .modal-header .close:hover { background: var(--surface-2); color: var(--text-strong); }
+  .modal-body { padding: 24px; }
+  .modal-body > p { color: #3A3A48; margin-bottom: 18px; font-size: 14.5px; }
+
+  .gen-result {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 10px;
+  }
+  .gen-result .tone { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; font-weight: 600; }
+  .gen-result p { color: var(--text-strong); margin: 0; font-size: 14.5px; line-height: 1.55; }
+
+  .typing { display: inline-flex; gap: 4px; align-items: center; }
+  .typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--ai); animation: bounce 1.4s infinite ease-in-out; }
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes bounce { 0%,80%,100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+  /* Pitch grid */
+  .pitch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 32px; }
+  .pitch-grid button.card {
+    cursor: pointer; text-align: left; color: var(--text-strong);
+    padding: 18px; transition: all .15s;
+  }
+  .pitch-grid button.card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .pitch-grid .pn { font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--gold); margin-bottom: 4px; }
+  .pitch-grid .pt { font-weight: 600; font-size: 13.5px; }
+
+  /* Banner / footer */
+  .footer { padding: 48px 28px; text-align: center; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 80px; background: var(--bg-2); }
+  .footer .logo { justify-content: center; margin-bottom: 12px; }
+
+  @media (max-width: 980px) {
+    .hero { grid-template-columns: 1fr; }
+    .stats, .kpis, .three-up, .offers-grid, .ai-grid { grid-template-columns: 1fr 1fr; }
+    .restaurant-grid { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    .guest-wrap { grid-template-columns: 1fr; justify-items: center; gap: 32px; }
+    .phone { position: static; }
+    h1 { font-size: 42px; }
+    .pitch-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .container { padding: 36px 18px; }
+    .stats, .kpis, .three-up, .offers-grid, .ai-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 34px; }
+    h2 { font-size: 28px; }
+    .deck-body { padding: 32px; }
+    .slide h2 { font-size: 26px; }
+    .slide p { font-size: 15px; }
+    .pitch-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ TOP NAV ============ -->
+<nav class="topnav">
+  <div class="topnav-inner">
+    <div class="logo">
+      <div class="logo-mark">GG</div>
+      Great Guest
+    </div>
+    <ul class="tabs">
+      <li data-tab="home" class="active">Главная</li>
+      <li data-tab="pitch">Питч</li>
+      <li data-tab="restaurant">Кабинет ресторана</li>
+      <li data-tab="guest">Кабинет гостя</li>
+      <li data-tab="ai">AI Фичи</li>
+      <li data-tab="demo">Live Demo</li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ============ HOME ============ -->
+<section id="home" class="tab-section active">
+  <div class="container">
+    <div class="hero">
+      <div>
+        <div class="hero-tag">SaaS · HoReCa · Telegram Mini App</div>
+        <h1>Единая лояльность ресторанного рынка</h1>
+        <p class="lead">Гость получает персональный QR в Telegram. Ресторан сканирует — видит профиль и историю по всей сети партнёров. Без отдельного приложения. С AI-слоем, который сам решает, кому и что предложить.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary" onclick="openModal('pitch-modal')">Посмотреть питч →</button>
+          <button class="btn btn-secondary" onclick="setTab('restaurant')">Кабинет ресторана</button>
+          <button class="btn btn-ghost" onclick="setTab('guest')">Кабинет гостя</button>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-mock">
+          <div class="hero-mock-card">
+            <div class="qr-mini"></div>
+            <div>
+              <div style="font-weight:600;font-size:14px;color:var(--text-strong);">Анна К. · VIP</div>
+              <div style="color:var(--muted);font-size:12px;margin-top:2px;">12 визитов · 4 ресторана сети</div>
+            </div>
+          </div>
+          <div class="hero-mock-card ai">
+            <div style="font-size:22px;">✨</div>
+            <div>
+              <div style="font-weight:700;font-size:11px;color:var(--ai);letter-spacing:.08em;">AI INSIGHT</div>
+              <div style="font-size:12.5px;color:var(--text-strong);margin-top:3px;line-height:1.4;">В пятницу VIP тратят на 40% больше — запустить ужин шефа</div>
+            </div>
+          </div>
+          <div class="hero-mock-card">
+            <div style="font-size:22px;">📈</div>
+            <div>
+              <div style="font-weight:600;font-size:13px;color:var(--text-strong);">Повторных визитов</div>
+              <div style="font-family:var(--serif);font-size:24px;font-weight:600;color:var(--gold);margin-top:2px;line-height:1;">+34%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat card">
+        <div class="num gold">1990–2990 ₽</div>
+        <div class="lbl">подписка в месяц с ресторана</div>
+      </div>
+      <div class="stat card">
+        <div class="num">0</div>
+        <div class="lbl">барьер установки — Telegram уже есть у гостя</div>
+      </div>
+      <div class="stat card">
+        <div class="num">5</div>
+        <div class="lbl">статусных уровней: New → Legend</div>
+      </div>
+      <div class="stat card">
+        <div class="num">8</div>
+        <div class="lbl">AI-фич в продуктовой дорожной карте</div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <div class="kicker">Что внутри MVP</div>
+      <h2>Три кита продукта</h2>
+    </div>
+    <div class="three-up">
+      <div class="card">
+        <div class="icon">🍽</div>
+        <h3>Единая база гостей</h3>
+        <p>Ресторан-партнёр сразу видит историю гостя по всей сети — не нужно «знакомиться» заново.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🤖</div>
+        <h3>AI-слой решений</h3>
+        <p>Модель сама придумывает оффер, ловит отток и переводит цифры в простые рекомендации.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🪪</div>
+        <h3>Без приложения</h3>
+        <p>Telegram Mini App — гость получает QR за 10 секунд, без AppStore и без барьеров.</p>
+      </div>
+    </div>
+
+    <!-- COMPETITOR COMPARISON -->
+    <div class="section-head" style="margin-top:72px;">
+      <div class="kicker">Конкурентное поле</div>
+      <h2>Чем Great Guest отличается</h2>
+      <p class="lead">На рынке РФ есть чаевые-сервисы, POS-системы и enterprise-лояльность. Никто не делает сетевую лояльность через Telegram с AI. Это — наша ниша.</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-sm);">
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:760px;font-size:14px;">
+          <thead>
+            <tr style="background:var(--surface-2);">
+              <th style="text-align:left;padding:16px 18px;font-weight:600;color:var(--text-strong);font-size:13px;text-transform:uppercase;letter-spacing:.06em;">Что важно ресторатору</th>
+              <th style="padding:16px 14px;color:var(--muted);font-weight:500;font-size:12.5px;">tips.tips · Нетмонет · Kleek</th>
+              <th style="padding:16px 14px;color:var(--muted);font-weight:500;font-size:12.5px;">Restik · iiko · r_keeper</th>
+              <th style="padding:16px 14px;color:var(--muted);font-weight:500;font-size:12.5px;">iikoCard · Plazius</th>
+              <th style="padding:16px 14px;background:var(--gold-soft);color:var(--gold);font-weight:700;font-size:13px;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">Great Guest</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:14px 18px;border-top:1px solid var(--border);color:var(--text-strong);font-weight:500;">Единый профиль гостя по сети ресторанов</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">Только своя сеть</td>
+              <td style="text-align:center;border-top:1px solid var(--border);background:var(--gold-soft);color:var(--gold);font-weight:600;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">✓</td>
+            </tr>
+            <tr>
+              <td style="padding:14px 18px;border-top:1px solid var(--border);color:var(--text-strong);font-weight:500;">Доступ через Telegram (без приложения)</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);background:var(--gold-soft);color:var(--gold);font-weight:600;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">✓</td>
+            </tr>
+            <tr>
+              <td style="padding:14px 18px;border-top:1px solid var(--border);color:var(--text-strong);font-weight:500;">AI для работы с гостем</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">Только для склада/продаж</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);background:var(--gold-soft);color:var(--gold);font-weight:600;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">8 фич</td>
+            </tr>
+            <tr>
+              <td style="padding:14px 18px;border-top:1px solid var(--border);color:var(--text-strong);font-weight:500;">Прогноз оттока + автоматический Win-back</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">Вручную</td>
+              <td style="text-align:center;border-top:1px solid var(--border);background:var(--gold-soft);color:var(--gold);font-weight:600;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">Авто</td>
+            </tr>
+            <tr>
+              <td style="padding:14px 18px;border-top:1px solid var(--border);color:var(--text-strong);font-weight:500;">Генерация офферов и текстов AI</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">Restik — частично</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);background:var(--gold-soft);color:var(--gold);font-weight:600;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">✓</td>
+            </tr>
+            <tr>
+              <td style="padding:14px 18px;border-top:1px solid var(--border);color:var(--text-strong);font-weight:500;">Чаевые персоналу</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--success);font-weight:600;">✓</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">Частично</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">—</td>
+              <td style="text-align:center;border-top:1px solid var(--border);background:var(--gold-soft);color:var(--gold);font-weight:600;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">Roadmap</td>
+            </tr>
+            <tr>
+              <td style="padding:14px 18px;border-top:1px solid var(--border);color:var(--text-strong);font-weight:500;">Время до запуска</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">1–2 дня</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">Дни — недели</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">Недели</td>
+              <td style="text-align:center;border-top:1px solid var(--border);background:var(--gold-soft);color:var(--gold);font-weight:600;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">15 минут</td>
+            </tr>
+            <tr>
+              <td style="padding:14px 18px;border-top:1px solid var(--border);color:var(--text-strong);font-weight:500;">Цена для одиночного ресторана</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">Бесплатно</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">от 3 000 ₽</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">от 30 000 ₽</td>
+              <td style="text-align:center;border-top:1px solid var(--border);background:var(--gold-soft);color:var(--gold);font-weight:600;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">от 0 ₽</td>
+            </tr>
+            <tr>
+              <td style="padding:14px 18px;border-top:1px solid var(--border);color:var(--text-strong);font-weight:500;">Интеграция с iiko / r_keeper</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--success);font-weight:600;">✓</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--muted);">Сама касса</td>
+              <td style="text-align:center;border-top:1px solid var(--border);color:var(--success);font-weight:600;">✓</td>
+              <td style="text-align:center;border-top:1px solid var(--border);background:var(--gold-soft);color:var(--gold);font-weight:600;border-left:1px solid var(--gold-line);border-right:1px solid var(--gold-line);">Q2 2026</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:14px;">Анализ открытых сайтов конкурентов на май 2026. Подробный разбор — в файле STRATEGY.md в папке проекта.</p>
+  </div>
+</section>
+
+<!-- ============ PITCH ============ -->
+<section id="pitch" class="tab-section">
+  <div class="container">
+    <div class="section-head">
+      <div class="kicker">Investor materials</div>
+      <h2>Питч-дек</h2>
+      <p class="lead">10 слайдов о Great Guest. Открывается по кнопке — листайте стрелками, точками или клавишами ← →.</p>
+    </div>
+
+    <div class="pitch-cta">
+      <div>
+        <h3>Great Guest · Seed Pitch Deck</h3>
+        <p style="margin-top:6px;color:var(--muted);">Проблема → решение → рынок → продукт → AI → бизнес-модель → traction → команда → ask</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="openModal('pitch-modal'); setSlide(0)">▶ Открыть деку</button>
+        <button class="btn btn-secondary" onclick="alert('PDF-версия будет добавлена после финального обновления слайдов.')">Скачать PDF</button>
+      </div>
+    </div>
+
+    <div class="pitch-grid">
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(0)"><div class="pn">01</div><div class="pt">Обложка</div></button>
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(1)"><div class="pn">02</div><div class="pt">Проблема</div></button>
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(2)"><div class="pn">03</div><div class="pt">Решение</div></button>
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(3)"><div class="pn">04</div><div class="pt">Рынок</div></button>
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(4)"><div class="pn">05</div><div class="pt">Продукт</div></button>
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(5)"><div class="pn">06</div><div class="pt">AI-слой</div></button>
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(6)"><div class="pn">07</div><div class="pt">Бизнес-модель</div></button>
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(7)"><div class="pn">08</div><div class="pt">Traction</div></button>
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(8)"><div class="pn">09</div><div class="pt">Команда</div></button>
+      <button class="card" onclick="openModal('pitch-modal'); setSlide(9)"><div class="pn">10</div><div class="pt">Ask</div></button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESTAURANT CABINET ============ -->
+<section id="restaurant" class="tab-section">
+  <div class="container">
+    <div class="section-head">
+      <div class="kicker">Restaurant dashboard</div>
+      <h2>Кабинет ресторана</h2>
+      <p class="lead">Что видит ресторатор после входа. Слева — меню разделов, в центре — данные. Все кнопки кликабельны.</p>
+    </div>
+
+    <div class="restaurant-grid">
+      <aside class="sidebar">
+        <div class="side-brand">
+          <div class="av">SH</div>
+          <div class="meta">
+            <div class="n">Steak House</div>
+            <div class="r">Москва · Тверская</div>
+          </div>
+        </div>
+        <div class="side-menu">
+          <button data-dash="overview" class="active">📊 Обзор</button>
+          <button data-dash="guests">👥 Гости</button>
+          <button data-dash="offers">🎁 Офферы</button>
+          <button data-dash="analytics">📈 Аналитика</button>
+          <button data-dash="settings">⚙️ Настройки</button>
+        </div>
+      </aside>
+
+      <div>
+        <!-- OVERVIEW -->
+        <div class="dashboard-section active" data-dash-section="overview">
+          <div class="kpis">
+            <div class="kpi"><div class="ttl">Гостей сегодня</div><div class="val">47</div><div class="delta">↑ 12% к прошлой пятнице</div></div>
+            <div class="kpi"><div class="ttl">Средний чек</div><div class="val">4 820 ₽</div><div class="delta">↑ 8%</div></div>
+            <div class="kpi"><div class="ttl">Повторных визитов</div><div class="val">68%</div><div class="delta">↑ 5 п.п.</div></div>
+            <div class="kpi"><div class="ttl">VIP активны</div><div class="val">23</div><div class="delta neg">↓ 3 за неделю</div></div>
+          </div>
+
+          <div class="panel" style="margin-top:20px;">
+            <div class="panel-header">
+              <h3>✨ AI Insights · что сделать на этой неделе</h3>
+              <span class="badge badge-gold">обновлено 2 ч назад</span>
+            </div>
+            <div class="panel-body">
+              <div class="insight">
+                <div class="ai-tag">✨ Insight #1</div>
+                <p>В пятницу вечером ваши VIP-гости тратят на <b>40%</b> больше среднего. Запустите закрытый ужин шефа в пятницу — потенциал <b>+120 000 ₽</b> выручки в неделю.</p>
+                <div class="actions">
+                  <button class="btn btn-ai" onclick="openModal('ai-offer-modal')">Создать оффер</button>
+                  <button class="btn btn-secondary" onclick="alert('Инсайт отложен.')">Позже</button>
+                </div>
+              </div>
+              <div class="insight warn">
+                <div class="ai-tag">⚠️ Churn alert</div>
+                <p>3 VIP-гостя не были у вас более 6 недель: <b>Анна К., Дмитрий П., Виктория М.</b> Модель оценивает риск ухода как высокий. Запустить Win-back автоматически?</p>
+                <div class="actions">
+                  <button class="btn btn-ai" onclick="openModal('ai-churn-modal')">Запустить Win-back</button>
+                  <button class="btn btn-secondary" onclick="document.querySelector('[data-dash=guests]').click()">Посмотреть гостей</button>
+                </div>
+              </div>
+              <div class="insight">
+                <div class="ai-tag">📊 Тренд</div>
+                <p>Гости в статусе Regular чаще переходят в Insider, если получают <b>персональный комплимент в 3-й визит</b>. Сейчас это срабатывает только у 22% — добавьте автоматическое правило.</p>
+                <div class="actions"><button class="btn btn-secondary" onclick="alert('Открываю автоматизацию...')">Настроить автоматизацию</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:20px;">
+            <div class="panel-header">
+              <h3>Последние визиты</h3>
+              <button class="btn btn-ghost" onclick="document.querySelector('[data-dash=guests]').click()">Все гости →</button>
+            </div>
+            <div class="panel-body" style="padding:0 14px 8px;">
+              <table class="guests-table">
+                <thead><tr><th></th><th>Гость</th><th>Статус</th><th>Чек</th><th>Визитов</th><th>Последний</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="av-sm av-vip">АК</span></td><td>Анна К.</td><td><span class="badge badge-gold">VIP</span></td><td>6 800 ₽</td><td>12</td><td>Сегодня, 19:45</td></tr>
+                  <tr><td><span class="av-sm av-ins">ДП</span></td><td>Дмитрий П.</td><td><span class="badge badge-ai">Insider</span></td><td>4 200 ₽</td><td>7</td><td>Сегодня, 14:20</td></tr>
+                  <tr><td><span class="av-sm av-reg">ИС</span></td><td>Игорь С.</td><td><span class="badge">Regular</span></td><td>2 950 ₽</td><td>3</td><td>Вчера, 21:10</td></tr>
+                  <tr><td><span class="av-sm av-new">ЕН</span></td><td>Елена Н.</td><td><span class="badge">New</span></td><td>1 900 ₽</td><td>1</td><td>Вчера, 13:00</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- GUESTS -->
+        <div class="dashboard-section" data-dash-section="guests">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>База гостей · 247 человек</h3>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-secondary" onclick="alert('Открываю фильтр...')">Фильтр</button>
+                <button class="btn btn-ai" onclick="openModal('ai-churn-modal')">✨ Найти уходящих</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding:0 14px 8px;">
+              <table class="guests-table">
+                <thead><tr><th></th><th>Гость</th><th>Статус</th><th>Сеть · визитов</th><th>Средний чек</th><th>Риск ухода</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><span class="av-sm av-vip">АК</span></td><td>Анна К.<div style="color:var(--muted);font-size:12px;">@anna_k · с 2024</div></td><td><span class="badge badge-gold">VIP</span></td><td>4 ресторана · 28 визитов</td><td>6 800 ₽</td><td><span class="badge badge-warn">средний</span></td><td><button class="btn btn-ghost" onclick="alert('Профиль: Анна К.\\n\\n• 28 визитов с 2024\\n• 4 ресторана сети\\n• Любимое блюдо: рибай medium\\n• Аллергии: нет\\n• Заметки персонала: «гость с собакой, столик у окна»')">Открыть</button></td></tr>
+                  <tr><td><span class="av-sm av-vip">ВМ</span></td><td>Виктория М.<div style="color:var(--muted);font-size:12px;">@vmgrn · с 2024</div></td><td><span class="badge badge-gold">VIP</span></td><td>3 ресторана · 19 визитов</td><td>7 400 ₽</td><td><span class="badge badge-wine">высокий</span></td><td><button class="btn btn-ghost" onclick="alert('Профиль: Виктория М.')">Открыть</button></td></tr>
+                  <tr><td><span class="av-sm av-ins">ДП</span></td><td>Дмитрий П.<div style="color:var(--muted);font-size:12px;">@dmpv · с 2025</div></td><td><span class="badge badge-ai">Insider</span></td><td>2 ресторана · 11 визитов</td><td>4 200 ₽</td><td><span class="badge badge-success">низкий</span></td><td><button class="btn btn-ghost" onclick="alert('Профиль: Дмитрий П.')">Открыть</button></td></tr>
+                  <tr><td><span class="av-sm av-ins">МР</span></td><td>Михаил Р.</td><td><span class="badge badge-ai">Insider</span></td><td>1 ресторан · 8 визитов</td><td>3 800 ₽</td><td><span class="badge badge-warn">средний</span></td><td><button class="btn btn-ghost" onclick="alert('Профиль: Михаил Р.')">Открыть</button></td></tr>
+                  <tr><td><span class="av-sm av-reg">ИС</span></td><td>Игорь С.</td><td><span class="badge">Regular</span></td><td>1 ресторан · 4 визита</td><td>2 950 ₽</td><td><span class="badge badge-success">низкий</span></td><td><button class="btn btn-ghost" onclick="alert('Профиль: Игорь С.')">Открыть</button></td></tr>
+                  <tr><td><span class="av-sm av-new">ЕН</span></td><td>Елена Н.</td><td><span class="badge">New</span></td><td>1 ресторан · 1 визит</td><td>1 900 ₽</td><td><span class="badge">—</span></td><td><button class="btn btn-ghost" onclick="alert('Профиль: Елена Н.')">Открыть</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- OFFERS -->
+        <div class="dashboard-section" data-dash-section="offers">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Офферы</h3>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-secondary" onclick="alert('Создание оффера: что → кому → когда.')">+ Новый оффер</button>
+                <button class="btn btn-ai" onclick="openModal('ai-offer-modal')">✨ Сгенерировать AI</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="offers-grid">
+                <div class="offer-card">
+                  <div class="row"><h4>Ужин шефа · пятница</h4><span class="badge badge-gold">VIP</span></div>
+                  <div class="meta">Активен · до 30 мая</div>
+                  <div class="desc">Закрытый ужин из 5 курсов от шефа с парингом вин. Приглашаются 12 гостей.</div>
+                  <div class="row"><span style="font-size:12px;color:var(--success);font-weight:500;">▲ 8 откликов</span><button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;" onclick="alert('Открываю детали')">Детали</button></div>
+                </div>
+                <div class="offer-card">
+                  <div class="row"><h4>+1 десерт в подарок</h4><span class="badge">Regular</span></div>
+                  <div class="meta">Активен · постоянно</div>
+                  <div class="desc">При визите в будний день — десерт в подарок к основному блюду.</div>
+                  <div class="row"><span style="font-size:12px;color:var(--success);font-weight:500;">▲ 34 отклика</span><button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;" onclick="alert('Открываю детали')">Детали</button></div>
+                </div>
+                <div class="offer-card ai-draft">
+                  <div class="row"><h4>Win-back · «Скучаем»</h4><span class="badge badge-ai">AI-генерация</span></div>
+                  <div class="meta">Черновик · ожидает запуска</div>
+                  <div class="desc">Персональное сообщение трём VIP-гостям, которые не были 6+ недель, с приглашением на дегустацию.</div>
+                  <div class="row"><span class="badge badge-warn">3 получателя</span><button class="btn btn-primary" style="padding:7px 14px;font-size:12px;" onclick="alert('Оффер запущен. Сообщения уйдут через Telegram в течение 5 минут.')">Запустить</button></div>
+                </div>
+                <div class="offer-card">
+                  <div class="row"><h4>Завтрак для New гостей</h4><span class="badge">New</span></div>
+                  <div class="meta">Активен · постоянно</div>
+                  <div class="desc">Кофе с круассаном к основному блюду при первом визите.</div>
+                  <div class="row"><span style="font-size:12px;color:var(--success);font-weight:500;">▲ 12 откликов</span><button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;" onclick="alert('Открываю детали')">Детали</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ANALYTICS -->
+        <div class="dashboard-section" data-dash-section="analytics">
+          <div class="kpis">
+            <div class="kpi"><div class="ttl">Выручка месяца</div><div class="val">2.8 М ₽</div><div class="delta">↑ 14%</div></div>
+            <div class="kpi"><div class="ttl">LTV гостя</div><div class="val">38 500 ₽</div><div class="delta">↑ 6%</div></div>
+            <div class="kpi"><div class="ttl">Retention 60 дн.</div><div class="val">61%</div><div class="delta">↑ 9 п.п.</div></div>
+            <div class="kpi"><div class="ttl">Новых гостей</div><div class="val">42</div><div class="delta">↑ 21%</div></div>
+          </div>
+          <div class="panel" style="margin-top:20px;">
+            <div class="panel-header">
+              <h3>Динамика визитов · последние 14 дней</h3>
+              <button class="btn btn-ai" onclick="alert('AI-объяснение:\\n\\nРост визитов на 21% за последние 14 дней связан с двумя факторами:\\n\\n1. Запуск оффера «Завтрак для New» увеличил приток новых гостей на 38%\\n2. Win-back-кампания вернула 4 спящих VIP\\n\\nРекомендация: продлить «Завтрак» ещё на месяц и расширить Win-back на Insider-гостей.')">✨ Объяснить тренд</button>
+            </div>
+            <div class="panel-body">
+              <div style="height:220px;display:flex;align-items:flex-end;gap:6px;">
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:35%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:42%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:48%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:45%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:52%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:58%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:54%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:62%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:68%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:72%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:78%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:82%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:88%;border-radius:6px 6px 0 0;"></div>
+                <div style="flex:1;background:linear-gradient(180deg, var(--gold), var(--gold-soft));height:94%;border-radius:6px 6px 0 0;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="dashboard-section" data-dash-section="settings">
+          <div class="panel">
+            <div class="panel-header"><h3>Настройки ресторана</h3></div>
+            <div class="panel-body">
+              <div style="display:grid;gap:24px;">
+                <div>
+                  <div style="font-weight:600;margin-bottom:8px;color:var(--text-strong);">Название</div>
+                  <input value="Steak House" style="background:var(--bg-2);border:1px solid var(--border);color:var(--text-strong);padding:11px 14px;border-radius:8px;width:100%;max-width:400px;font-size:14px;font-family:inherit;" />
+                </div>
+                <div>
+                  <div style="font-weight:600;margin-bottom:8px;color:var(--text-strong);">Тариф</div>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="alert('Выбран Start')">Start · 1 990 ₽</button>
+                    <button class="btn btn-gold" onclick="alert('Текущий тариф Pro')">Pro · 2 490 ₽ ✓</button>
+                    <button class="btn btn-secondary" onclick="alert('Выбран Network')">Network · 2 990 ₽</button>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-weight:600;margin-bottom:8px;color:var(--text-strong);">AI-фичи</div>
+                  <div style="display:grid;gap:8px;color:var(--text);font-size:14px;">
+                    <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" checked /> AI Insights в Dashboard</label>
+                    <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" checked /> Генерация текстов офферов</label>
+                    <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" /> Churn Prediction <span class="badge">бета</span></label>
+                    <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" /> Умные офферы <span class="badge">скоро</span></label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GUEST CABINET ============ -->
+<section id="guest" class="tab-section">
+  <div class="container">
+    <div class="section-head">
+      <div class="kicker">Telegram Mini App</div>
+      <h2>Кабинет гостя</h2>
+      <p class="lead">Это то, что гость открывает прямо в Telegram. Без AppStore, без регистрации, без скачивания. Один тап — и QR готов к показу официанту.</p>
+    </div>
+
+    <div class="guest-wrap">
+      <div class="guest-info">
+        <div class="card" style="margin-bottom:18px;">
+          <h3 style="margin-bottom:10px;">⚡ За 10 секунд</h3>
+          <p>Гость открывает бота Great Guest в Telegram → жмёт «Старт» → видит свой QR. Никаких форм регистрации — Telegram уже знает имя и номер.</p>
+        </div>
+        <div class="card" style="margin-bottom:18px;">
+          <h3 style="margin-bottom:10px;">🏆 5 уровней</h3>
+          <p>New → Regular → Insider → VIP → Legend. Прогресс растёт автоматически при каждом сканировании QR в любом ресторане сети.</p>
+        </div>
+        <div class="card" style="margin-bottom:18px;">
+          <h3 style="margin-bottom:10px;">🎁 Персональные офферы</h3>
+          <p>Лента приглашений от ресторанов сети. С AI — рекомендации новых заведений: «Вам может понравиться» по схожим гостям.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:10px;">🔔 Push прямо в Telegram</h3>
+          <p>Уведомления о новых офферах приходят как обычные сообщения. Никаких отдельных push-разрешений.</p>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="setTab('demo')">🚀 Запустить как настоящий бот →</button>
+        </div>
+      </div>
+
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="tg-header">
+            <div class="back">‹</div>
+            <div>
+              <div class="ttl">Great Guest</div>
+              <div class="sub">bot · мини-приложение</div>
+            </div>
+          </div>
+          <div class="mini-app" id="mini-app-content">
+            <div data-mini="home">
+              <div class="status-card">
+                <div class="status-row">
+                  <div>
+                    <div class="status-label">Ваш статус</div>
+                    <div class="status-level">VIP</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-size:11px;color:#DDD6C2;">Анна К.</div>
+                    <div style="font-family:var(--serif);font-size:22px;font-weight:600;color:var(--gold-2);margin-top:2px;line-height:1;">12 визитов</div>
+                  </div>
+                </div>
+                <div class="status-hint">До статуса <b style="color:var(--gold-2)">Legend</b> — ещё 3 визита</div>
+                <div class="status-progress"><span></span></div>
+              </div>
+
+              <div class="qr-block">
+                <div class="qr-square"><div class="qr-cor"></div></div>
+                <div style="font-weight:600;font-size:13px;color:var(--text-strong);">Покажите QR официанту</div>
+                <div class="qr-caption">Код обновляется автоматически</div>
+              </div>
+
+              <div class="mini-section-title">Ваши приглашения</div>
+              <div class="mini-offer">
+                <div class="em">🥂</div>
+                <div class="body">
+                  <div class="t">Ужин шефа · пятница</div>
+                  <div class="d">5 курсов от Антона Б. с парингом вин</div>
+                  <div class="rest">Steak House · до 30 мая</div>
+                </div>
+              </div>
+              <div class="mini-offer">
+                <div class="em">☕</div>
+                <div class="body">
+                  <div class="t">Кофе в подарок</div>
+                  <div class="d">К каждому второму завтраку до конца месяца</div>
+                  <div class="rest">Café Bianco · ваш VIP</div>
+                </div>
+              </div>
+
+              <div class="mini-section-title">Вам может понравиться</div>
+              <div class="mini-rec">
+                <div class="ai-mini">AI · ПО ВАШИМ ВИЗИТАМ</div>
+                <div class="t">Sakura Omakase</div>
+                <div class="d">Гости с похожим вкусом дают 4.8 ★. Первый ужин — комплимент от шефа.</div>
+              </div>
+              <div class="mini-rec">
+                <div class="ai-mini">AI · РЕКОМЕНДАЦИЯ</div>
+                <div class="t">Vino & Co</div>
+                <div class="d">Винный бар с авторской кухней. 78% похожих гостей возвращаются.</div>
+              </div>
+            </div>
+
+            <div data-mini="history" style="display:none;">
+              <div class="mini-section-title">История визитов</div>
+              <div class="mini-offer"><div class="em">🍽</div><div class="body"><div class="t">Steak House</div><div class="d">19 мая · 6 800 ₽ · +1 уровень прогресса</div></div></div>
+              <div class="mini-offer"><div class="em">☕</div><div class="body"><div class="t">Café Bianco</div><div class="d">12 мая · 1 900 ₽</div></div></div>
+              <div class="mini-offer"><div class="em">🍝</div><div class="body"><div class="t">Pasta Vera</div><div class="d">5 мая · 3 200 ₽</div></div></div>
+              <div class="mini-offer"><div class="em">🥂</div><div class="body"><div class="t">Steak House</div><div class="d">28 апреля · 7 100 ₽</div></div></div>
+            </div>
+
+            <div data-mini="network" style="display:none;">
+              <div class="mini-section-title">Сеть Great Guest</div>
+              <div class="mini-offer"><div class="em">🥩</div><div class="body"><div class="t">Steak House</div><div class="d">Тверская · ваш статус VIP</div></div></div>
+              <div class="mini-offer"><div class="em">☕</div><div class="body"><div class="t">Café Bianco</div><div class="d">Покровка · ваш статус Insider</div></div></div>
+              <div class="mini-offer"><div class="em">🍝</div><div class="body"><div class="t">Pasta Vera</div><div class="d">Патриаршие · Regular</div></div></div>
+              <div class="mini-offer"><div class="em">🍣</div><div class="body"><div class="t">Sakura Omakase</div><div class="d">Якиманка · новый партнёр</div></div></div>
+              <div class="mini-offer"><div class="em">🍷</div><div class="body"><div class="t">Vino & Co</div><div class="d">Никольская · новый партнёр</div></div></div>
+            </div>
+
+            <div data-mini="profile" style="display:none;">
+              <div class="mini-section-title">Профиль</div>
+              <div class="status-card">
+                <div class="status-row"><div><div class="status-label">Анна К.</div><div class="status-level">VIP</div></div></div>
+                <div class="status-hint">@anna_k · с 2024 года</div>
+              </div>
+              <div class="mini-section-title">Предпочтения</div>
+              <div class="mini-offer"><div class="em">🍷</div><div class="body"><div class="t">Красное вино</div><div class="d">Указано в профиле</div></div></div>
+              <div class="mini-offer"><div class="em">🥩</div><div class="body"><div class="t">Стейк medium rare</div><div class="d">По истории заказов</div></div></div>
+              <div class="mini-offer"><div class="em">🚫</div><div class="body"><div class="t">Без морепродуктов</div><div class="d">Аллергия — учитывается во всех ресторанах сети</div></div></div>
+            </div>
+          </div>
+          <div class="tg-tabs">
+            <button data-mini-tab="home" class="active"><span class="em">🏠</span>Главная</button>
+            <button data-mini-tab="history"><span class="em">📅</span>Визиты</button>
+            <button data-mini-tab="network"><span class="em">🗺</span>Сеть</button>
+            <button data-mini-tab="profile"><span class="em">👤</span>Профиль</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AI FEATURES ============ -->
+<section id="ai" class="tab-section">
+  <div class="container">
+    <div class="section-head">
+      <div class="kicker">AI Layer</div>
+      <h2>8 AI-фич: что и когда</h2>
+      <p class="lead">Каждая фича — отдельная задача, которую закрывает ИИ. Нажмите «Демо», чтобы увидеть, как фича работает в продукте.</p>
+    </div>
+
+    <div class="ai-grid">
+      <div class="ai-card">
+        <div class="head"><div class="num">1</div><div>
+          <h3>Умная система офферов</h3>
+          <div class="tagline">Модель сама предсказывает, какой оффер примет гость</div>
+        </div></div>
+        <div class="body"><p>Анализирует историю визитов (время, заведения, чек, частоту) и формирует персонализированные офферы под каждый сегмент. Ресторан жмёт «Сгенерировать» — получает готовый список.</p></div>
+        <div class="meta-row"><span class="badge badge-warn">Мес. 4–6</span><span class="badge">Средняя сложность</span><span class="badge badge-success">Очень высокая ценность</span></div>
+        <div class="actions"><button class="btn btn-ai" onclick="openModal('ai-offer-modal')">▶ Демо</button></div>
+      </div>
+
+      <div class="ai-card">
+        <div class="head"><div class="num">2</div><div>
+          <h3>Предсказание оттока (Churn)</h3>
+          <div class="tagline">Автоматический Win-back до того, как гость потерян</div>
+        </div></div>
+        <div class="body"><p>Модель замечает «гость ходил каждые 2 недели, а уже 6 недель нет» и отправляет персональное приглашение через Telegram. Удержание без ручного мониторинга.</p></div>
+        <div class="meta-row"><span class="badge badge-warn">Мес. 4–6</span><span class="badge">Средняя сложность</span><span class="badge badge-success">Очень высокая ценность</span></div>
+        <div class="actions"><button class="btn btn-ai" onclick="openModal('ai-churn-modal')">▶ Демо</button></div>
+      </div>
+
+      <div class="ai-card mvp">
+        <div class="head"><div class="num">3</div><div>
+          <h3>AI Insights в Dashboard <span class="badge badge-gold" style="margin-left:6px;">MVP</span></h3>
+          <div class="tagline">Текстовые инсайты вместо таблиц</div>
+        </div></div>
+        <div class="body"><p>«В пятницу VIP тратят на 40% больше — запустите ужин шефа в пятницу». ИИ переводит данные в готовые решения. Запускается на Claude API поверх существующей аналитики.</p></div>
+        <div class="meta-row"><span class="badge badge-gold">🔥 Сейчас (MVP)</span><span class="badge badge-success">Низкая сложность</span><span class="badge badge-success">Высокая ценность</span></div>
+        <div class="actions"><button class="btn btn-ai" onclick="openModal('ai-insight-modal')">▶ Демо</button></div>
+      </div>
+
+      <div class="ai-card">
+        <div class="head"><div class="num">4</div><div>
+          <h3>AI-ассистент онбординга</h3>
+          <div class="tagline">Бот настраивает первые офферы за 5 вопросов</div>
+        </div></div>
+        <div class="body"><p>Telegram-бот спрашивает: средний чек, аудитория, цель — и автоматически настраивает первые офферы, сегменты и пороги статусов. Снижение CAC и Time-to-Value.</p></div>
+        <div class="meta-row"><span class="badge">Бэклог</span><span class="badge">Средняя сложность</span><span class="badge">Высокая ценность</span></div>
+        <div class="actions"><button class="btn btn-ai" onclick="openModal('ai-onboarding-modal')">▶ Демо</button></div>
+      </div>
+
+      <div class="ai-card mvp">
+        <div class="head"><div class="num">5</div><div>
+          <h3>Генерация текстов офферов <span class="badge badge-gold" style="margin-left:6px;">MVP</span></h3>
+          <div class="tagline">Несколько тонов — люкс, демократично, событийно</div>
+        </div></div>
+        <div class="body"><p>Кнопка «Сгенерировать текст» — ИИ создаёт варианты описания оффера в нужном тоне с учётом статуса гостя. Для VIP одни слова, для Regular — другие.</p></div>
+        <div class="meta-row"><span class="badge badge-gold">🔥 Сейчас (MVP)</span><span class="badge badge-success">Низкая сложность</span><span class="badge badge-success">Высокая ценность</span></div>
+        <div class="actions"><button class="btn btn-ai" onclick="openModal('ai-text-modal')">▶ Демо</button></div>
+      </div>
+
+      <div class="ai-card">
+        <div class="head"><div class="num">6</div><div>
+          <h3>Скоринг следующего визита</h3>
+          <div class="tagline">Модель предсказывает, куда и когда пойдёт гость</div>
+        </div></div>
+        <div class="body"><p>Гость видит: «Вы посещаете рестораны по пятницам — в этот раз Steak House предлагает вам особый стол». Проактивное вовлечение увеличивает частоту визитов.</p></div>
+        <div class="meta-row"><span class="badge">Бэклог</span><span class="badge">Средняя сложность</span><span class="badge">Высокая ценность</span></div>
+        <div class="actions"><button class="btn btn-ai" onclick="openModal('ai-score-modal')">▶ Демо</button></div>
+      </div>
+
+      <div class="ai-card">
+        <div class="head"><div class="num">7</div><div>
+          <h3>Антифрод</h3>
+          <div class="tagline">Защита от накрутки статусов</div>
+        </div></div>
+        <div class="body"><p>Модель замечает аномалии — 10 сканирований за час, нетипично крупные чеки в нерабочее время — и флагует подозрительные сессии. Защита целостности базы.</p></div>
+        <div class="meta-row"><span class="badge badge-wine">Мес. 7–12</span><span class="badge">Средняя сложность</span><span class="badge badge-wine">Критичная ценность</span></div>
+        <div class="actions"><button class="btn btn-ai" onclick="openModal('ai-fraud-modal')">▶ Демо</button></div>
+      </div>
+
+      <div class="ai-card">
+        <div class="head"><div class="num">8</div><div>
+          <h3>Рекомендации ресторанов гостю</h3>
+          <div class="tagline">Коллаборативная фильтрация — как Netflix</div>
+        </div></div>
+        <div class="body"><p>В Mini App — секция «Вам может понравиться» с рекомендациями ресторанов-партнёров на основе истории схожих гостей. Расширяет охват сети.</p></div>
+        <div class="meta-row"><span class="badge badge-wine">Мес. 7–12</span><span class="badge">Высокая сложность</span><span class="badge">Высокая ценность</span></div>
+        <div class="actions"><button class="btn btn-ai" onclick="setTab('guest')">▶ Посмотреть в Mini App</button></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:32px;background:linear-gradient(135deg, var(--gold-soft), var(--surface));border-color:var(--gold-line);">
+      <h3 style="color:var(--gold);margin-bottom:10px;">⚡ Быстрая победа для MVP</h3>
+      <p>Фичи <b style="color:var(--text-strong);">#3 (AI Insights)</b> и <b style="color:var(--text-strong);">#5 (Генерация текстов)</b> можно запустить уже на MVP — они требуют только Claude API поверх существующей логики офферов и аналитики. Покажут AI как ценность ещё до накопления большой базы данных.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LIVE DEMO (Telegram WebApp) ============ -->
+<section id="demo" class="tab-section">
+  <div class="container">
+    <div class="section-head">
+      <div class="kicker">Live · Telegram Mini App</div>
+      <h2>Открыть продукт в Telegram</h2>
+      <p class="lead">Это не макет — это работающий бот. Откройте Telegram на телефоне, отсканируйте QR или нажмите кнопку — и увидите Great Guest на реальном устройстве.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;box-shadow:var(--shadow);">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--success-soft);border:1px solid rgba(46,125,82,.22);color:var(--success);font-size:12.5px;font-weight:500;margin-bottom:18px;">● Бот в эфире</div>
+        <h3 style="font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.01em;margin-bottom:10px;">@great_guest_bot</h3>
+        <p style="margin-bottom:22px;color:#3A3A48;">Откройте бота — Telegram автоматически запустит Mini App. Имя, фамилия и Telegram ID подтягиваются сами. Никакой регистрации.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;">
+          <a href="https://t.me/great_guest_bot/directlink" target="_blank" class="btn btn-primary" style="text-decoration:none;">▶ Открыть в Telegram</a>
+          <a href="https://t.me/great_guest_bot" target="_blank" class="btn btn-secondary" style="text-decoration:none;">Профиль бота</a>
+          <button class="btn btn-ghost" onclick="navigator.clipboard.writeText('https://t.me/great_guest_bot/directlink');this.textContent='✓ Скопировано'">Скопировать ссылку</button>
+        </div>
+        <div style="display:grid;gap:10px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:#3A3A48;"><span style="color:var(--gold);">→</span><div><b style="color:var(--text-strong);">Карта статуса VIP</b><div style="color:var(--muted);font-size:12.5px;">Прогресс до следующего уровня и количество визитов</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:#3A3A48;"><span style="color:var(--gold);">→</span><div><b style="color:var(--text-strong);">QR гостя на весь экран</b><div style="color:var(--muted);font-size:12.5px;">Покажите официанту — он отсканирует</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:#3A3A48;"><span style="color:var(--gold);">→</span><div><b style="color:var(--text-strong);">AI-рекомендации ресторанов</b><div style="color:var(--muted);font-size:12.5px;">«Вам может понравиться» по схожим гостям</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:#3A3A48;"><span style="color:var(--gold);">→</span><div><b style="color:var(--text-strong);">История визитов и сеть партнёров</b><div style="color:var(--muted);font-size:12.5px;">Всё, что гость сделал в сети</div></div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+        <div style="background:#FFFFFF;padding:18px;border-radius:18px;border:1px solid var(--border);box-shadow:var(--shadow);">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&data=https%3A%2F%2Ft.me%2Fgreat_guest_bot%2Fdirectlink" alt="QR · t.me/great_guest_bot" width="240" height="240" style="display:block;border-radius:6px;" />
+        </div>
+        <div style="text-align:center;">
+          <div style="font-weight:600;color:var(--text-strong);font-size:14px;">Отсканируйте с телефона</div>
+          <div style="color:var(--muted);font-size:12.5px;margin-top:4px;">или откройте <code style="background:var(--surface-2);padding:1px 8px;border-radius:4px;font-size:12px;">t.me/great_guest_bot</code></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="three-up" style="margin-top:32px;">
+      <div class="card">
+        <div class="icon">📱</div>
+        <h3 style="margin-bottom:8px;">Готово для пилота</h3>
+        <p>Бот можно показать первому пилотному ресторану уже сегодня. Все экраны работают.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🎬</div>
+        <h3 style="margin-bottom:8px;">Следующий шаг — видео</h3>
+        <p>Записать 60-секундное демо для питча и Reels. Сценарий готовлю отдельно.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🚀</div>
+        <h3 style="margin-bottom:8px;">Скоро — бэкенд</h3>
+        <p>Supabase + Vercel: реальные визиты, реальные офферы, реальные данные. Не моки.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  <div class="logo"><div class="logo-mark">GG</div>Great Guest</div>
+  MVP-прототип · sergei.shpak@spiro.vc · <span id="build-date"></span>
+</div>
+
+<!-- ============ MODAL: PITCH DECK ============ -->
+<div class="deck-modal" id="pitch-modal">
+  <div class="deck">
+    <div class="deck-header">
+      <h3>Great Guest · Seed Pitch Deck</h3>
+      <button class="close" onclick="closeModal('pitch-modal')" style="background:transparent;border:0;color:var(--muted);font-size:22px;cursor:pointer;padding:4px 10px;border-radius:6px;">×</button>
+    </div>
+    <div class="deck-body">
+      <div class="slide active" data-slide="0">
+        <div class="kicker">01 · Обложка</div>
+        <h2>Great Guest</h2>
+        <p style="font-size:22px;color:var(--gold);font-style:italic;margin-top:8px;">Единая лояльность ресторанного рынка через Telegram</p>
+        <p style="margin-top:28px;">SaaS-платформа, которая превращает рестораны в одну сеть для гостя. С AI-слоем, который сам принимает решения.</p>
+        <div class="slide-grid">
+          <div class="slide-stat"><div class="v gold">Seed</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">раунд</div></div>
+          <div class="slide-stat"><div class="v">B2B SaaS</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">HoReCa · РФ</div></div>
+        </div>
+      </div>
+      <div class="slide" data-slide="1">
+        <div class="kicker">02 · Проблема</div>
+        <h2>Рестораны не знают своих гостей</h2>
+        <ul>
+          <li>CRM есть у 1 из 5 ресторанов, но пользуется ~10% персонала — «непонятно и долго»</li>
+          <li>Программы лояльности фрагментированы: у каждого ресторана своя карта, гость их не носит</li>
+          <li>VIP-гость уходит — никто не замечает, пока не появится дыра в выручке</li>
+          <li>Маркетинговые рассылки идут «всем подряд» — конверсия 1–3%</li>
+        </ul>
+      </div>
+      <div class="slide" data-slide="2">
+        <div class="kicker">03 · Решение</div>
+        <h2>Один QR в Telegram — для всей сети</h2>
+        <p>Гость открывает бота → получает QR. Ресторан сканирует — видит профиль и историю по всей сети. 5 уровней статуса растут автоматически.</p>
+        <div class="slide-grid">
+          <div class="slide-stat"><div class="v gold">10 сек</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">от старта до QR</div></div>
+          <div class="slide-stat"><div class="v gold">0 ₽</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">барьер для гостя</div></div>
+        </div>
+      </div>
+      <div class="slide" data-slide="3">
+        <div class="kicker">04 · Рынок</div>
+        <h2>HoReCa РФ</h2>
+        <ul>
+          <li><b>~80 000</b> ресторанов и кафе в РФ (Росстат, 2024)</li>
+          <li><b>~5–7%</b> используют современные CRM-системы</li>
+          <li>SAM (Москва + СПб + города-миллионники): <b>~25 000</b> заведений</li>
+          <li>При ARPU 2 490 ₽/мес и 5% проникновении SAM — выручка <b>~37 М ₽/мес</b></li>
+        </ul>
+      </div>
+      <div class="slide" data-slide="4">
+        <div class="kicker">05 · Продукт</div>
+        <h2>Три ключевые поверхности</h2>
+        <ul>
+          <li><b>Telegram Mini App</b> — QR, статусы, офферы, рекомендации</li>
+          <li><b>Кабинет ресторана</b> — Dashboard, гости, офферы, аналитика, настройки</li>
+          <li><b>Скан-приложение для официанта</b> — открывается на любом устройстве, QR → профиль за 2 сек</li>
+        </ul>
+      </div>
+      <div class="slide" data-slide="5">
+        <div class="kicker">06 · AI-слой</div>
+        <h2>8 фич — продукт сам принимает решения</h2>
+        <ul>
+          <li><b>#3 AI Insights</b> и <b>#5 Генерация офферов</b> — в MVP (Claude API)</li>
+          <li><b>#1 Умные офферы</b> и <b>#2 Churn Prediction</b> — мес. 4–6</li>
+          <li><b>#7 Антифрод</b> и <b>#8 Рекомендации</b> — мес. 7–12</li>
+          <li>AI — не отдельный продукт, а слой, который делает каждый интерфейс умнее</li>
+        </ul>
+      </div>
+      <div class="slide" data-slide="6">
+        <div class="kicker">07 · Бизнес-модель</div>
+        <h2>B2B SaaS · подписка с ресторана</h2>
+        <div class="slide-grid">
+          <div class="slide-stat"><div class="v gold">1 990 ₽</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">Start · 1 точка</div></div>
+          <div class="slide-stat"><div class="v gold">2 490 ₽</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">Pro · AI-фичи</div></div>
+          <div class="slide-stat"><div class="v gold">2 990 ₽</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">Network · сеть</div></div>
+          <div class="slide-stat"><div class="v">+оборот</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">% от партнёрских офферов (опц.)</div></div>
+        </div>
+      </div>
+      <div class="slide" data-slide="7">
+        <div class="kicker">08 · Traction</div>
+        <h2>Где мы сейчас</h2>
+        <ul>
+          <li>MVP в разработке, запуск пилотов с 5–10 ресторанами Москвы — Q3 2026</li>
+          <li>LOI от 3 ресторанных групп (≈12 точек суммарно)</li>
+          <li>Технологический стек — Telegram Mini App + Claude API (готов к интеграции)</li>
+          <li>Цель к концу 2026 — 100 платных ресторанов, MRR 250 000 ₽</li>
+        </ul>
+      </div>
+      <div class="slide" data-slide="8">
+        <div class="kicker">09 · Команда</div>
+        <h2>Кто строит</h2>
+        <ul>
+          <li><b>Сергей Шпак</b> — основатель, продукт и стратегия</li>
+          <li>Инженерная команда формируется — Telegram-разработчик, ML-инженер для AI-фич</li>
+          <li>Эдвайзеры из ресторанной индустрии (объявим после раунда)</li>
+        </ul>
+      </div>
+      <div class="slide" data-slide="9">
+        <div class="kicker">10 · Ask</div>
+        <h2>Что просим у инвестора</h2>
+        <p>Seed-раунд для запуска пилотов в Москве и СПб, развития AI-слоя (фичи #1, #2) и выхода на 500 платных ресторанов в горизонте 18 месяцев.</p>
+        <div class="slide-grid">
+          <div class="slide-stat"><div class="v gold">$300–500K</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">размер раунда</div></div>
+          <div class="slide-stat"><div class="v gold">18 мес.</div><div style="color:var(--muted);font-size:13px;margin-top:6px;">runway</div></div>
+        </div>
+        <div style="margin-top:28px;padding:16px 18px;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:10px;color:var(--gold);font-weight:500;">
+          sergei.shpak@spiro.vc · поговорим
+        </div>
+      </div>
+    </div>
+    <div class="deck-footer">
+      <button class="btn btn-ghost" onclick="prevSlide()">← Назад</button>
+      <div class="slide-dots" id="slide-dots"></div>
+      <button class="btn btn-primary" onclick="nextSlide()">Вперёд →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: AI OFFER ============ -->
+<div class="modal" id="ai-offer-modal">
+  <div class="modal-card lg">
+    <div class="modal-header">
+      <h3>✨ Сгенерировать офферы AI</h3>
+      <button class="close" onclick="closeModal('ai-offer-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Выберите сегмент — модель проанализирует историю визитов гостей этого сегмента и предложит 3 готовых оффера с прогнозом отклика.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="btn btn-secondary" onclick="runOfferGen('VIP')">VIP-гости</button>
+        <button class="btn btn-secondary" onclick="runOfferGen('Insider')">Insider</button>
+        <button class="btn btn-secondary" onclick="runOfferGen('Regular')">Regular</button>
+        <button class="btn btn-secondary" onclick="runOfferGen('Уходящие')">Уходящие VIP</button>
+      </div>
+      <div id="offer-gen-output"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: AI INSIGHT ============ -->
+<div class="modal" id="ai-insight-modal">
+  <div class="modal-card lg">
+    <div class="modal-header">
+      <h3>✨ AI Insights · как это работает</h3>
+      <button class="close" onclick="closeModal('ai-insight-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Каждое утро AI просматривает данные ресторана за последние 30 дней и формирует 3–5 инсайтов на простом языке. Никаких графиков «найди разницу» — только готовые рекомендации.</p>
+      <div class="insight">
+        <div class="ai-tag">✨ Insight · пятница, 22:00</div>
+        <p><b>Что я заметил:</b> VIP-гости в пятницу вечером тратят на 40% больше среднего чека. Пятничный вечер у вас всегда забронирован за 2–3 дня.</p>
+        <p style="margin-top:8px;"><b>Что предлагаю:</b> запустите закрытый «Ужин шефа» только для VIP — пятница, 5 курсов, 12 мест. Прогноз дополнительной выручки: <b>+120 000 ₽/неделю</b>.</p>
+      </div>
+      <div class="insight">
+        <div class="ai-tag">⚠️ Insight · сегмент Regular</div>
+        <p><b>Что я заметил:</b> 78% гостей Regular не получают комплимент в 3-й визит. Те, кто получает, в 2.3 раза чаще становятся Insider.</p>
+        <p style="margin-top:8px;"><b>Что предлагаю:</b> создать автоправило «комплимент в 3-й визит». Прогноз: +18 Insider-гостей за квартал.</p>
+      </div>
+      <div class="insight">
+        <div class="ai-tag">📊 Insight · тренд недели</div>
+        <p>Средний чек растёт на 8%, но количество новых гостей выросло на 21%. Это значит, что новые гости приходят в более дорогое время — продолжайте оффер «Завтрак для New», он работает.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: AI TEXT ============ -->
+<div class="modal" id="ai-text-modal">
+  <div class="modal-card lg">
+    <div class="modal-header">
+      <h3>✨ Генерация текста оффера</h3>
+      <button class="close" onclick="closeModal('ai-text-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Выберите тон — модель сгенерирует 3 варианта текста под этот тон и статус гостя.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="btn btn-secondary" onclick="runTextGen('lux')">Люкс · для VIP</button>
+        <button class="btn btn-secondary" onclick="runTextGen('demo')">Демократично · для Regular</button>
+        <button class="btn btn-secondary" onclick="runTextGen('event')">Событийно · для всех</button>
+      </div>
+      <div id="text-gen-output"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: CHURN ============ -->
+<div class="modal" id="ai-churn-modal">
+  <div class="modal-card lg">
+    <div class="modal-header">
+      <h3>⚠️ Churn Prediction · кто уходит</h3>
+      <button class="close" onclick="closeModal('ai-churn-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Модель отслеживает интервал между визитами каждого гостя. Если интервал в 2× больше обычного — гость попадает в зону риска. Прогноз с точностью 78%.</p>
+      <div class="insight warn">
+        <div class="ai-tag">⚠️ Высокий риск ухода</div>
+        <table style="width:100%;font-size:14px;color:var(--text-strong);border-collapse:collapse;">
+          <tr><td style="padding:10px 0;"><b>Анна К.</b> · VIP</td><td style="text-align:right;color:var(--muted);">не была 6 нед. (обычно — 2)</td></tr>
+          <tr><td style="padding:10px 0;border-top:1px solid var(--border);"><b>Виктория М.</b> · VIP</td><td style="text-align:right;color:var(--muted);border-top:1px solid var(--border);">не была 8 нед. (обычно — 3)</td></tr>
+          <tr><td style="padding:10px 0;border-top:1px solid var(--border);"><b>Дмитрий П.</b> · Insider</td><td style="text-align:right;color:var(--muted);border-top:1px solid var(--border);">не был 5 нед. (обычно — 2)</td></tr>
+        </table>
+        <div style="margin-top:16px;">
+          <button class="btn btn-ai" onclick="alert('Win-back-кампания запущена. Сообщения уйдут через Telegram Mini App в течение 5 минут.\\n\\n• Анна К. — приглашение на закрытый ужин шефа\\n• Виктория М. — комплимент от шефа + парный десерт\\n• Дмитрий П. — кофе + десерт в любой будний день')">Запустить Win-back для всех</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: ONBOARDING ============ -->
+<div class="modal" id="ai-onboarding-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>🤖 AI-онбординг · диалог с ботом</h3>
+      <button class="close" onclick="closeModal('ai-onboarding-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:18px;display:grid;gap:10px;">
+        <div style="background:#229ED9;color:white;padding:10px 14px;border-radius:14px 14px 14px 4px;align-self:flex-start;max-width:80%;font-size:14px;">Привет! Я настрою Great Guest за 2 минуты. Какой у вас средний чек?</div>
+        <div style="background:var(--surface);padding:10px 14px;border-radius:14px 14px 4px 14px;align-self:flex-end;max-width:80%;font-size:14px;border:1px solid var(--border);">~4 800 ₽</div>
+        <div style="background:#229ED9;color:white;padding:10px 14px;border-radius:14px 14px 14px 4px;align-self:flex-start;max-width:80%;font-size:14px;">Понял. Цель — увеличить частоту визитов или средний чек?</div>
+        <div style="background:var(--surface);padding:10px 14px;border-radius:14px 14px 4px 14px;align-self:flex-end;max-width:80%;font-size:14px;border:1px solid var(--border);">Частоту</div>
+        <div style="background:#229ED9;color:white;padding:10px 14px;border-radius:14px 14px 14px 4px;align-self:flex-start;max-width:80%;font-size:14px;">Отлично. Я настроил:<br><br>• Пороги статусов под ваш средний чек<br>• Оффер «Завтрак» для New<br>• Win-back для уходящих VIP<br>• 3 шаблона офферов под Regular/Insider/VIP<br><br>Готов запустить?</div>
+        <div style="background:var(--surface);padding:10px 14px;border-radius:14px 14px 4px 14px;align-self:flex-end;max-width:80%;font-size:14px;border:1px solid var(--border);">Запускай 🚀</div>
+      </div>
+      <p style="margin-top:16px;font-size:13.5px;">Time-to-Value: <b style="color:var(--gold)">2 минуты</b> вместо часа разбираться в админке.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: SCORING ============ -->
+<div class="modal" id="ai-score-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>🎯 Прогноз следующего визита</h3>
+      <button class="close" onclick="closeModal('ai-score-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Модель смотрит на день недели, время, заведение и предсказывает, куда и когда гость пойдёт. Ресторан получает шанс приготовиться.</p>
+      <div class="insight">
+        <div class="ai-tag">🎯 Прогноз</div>
+        <p><b>Анна К.</b> с вероятностью <b>74%</b> придёт в Steak House в пятницу вечером (3 из последних 4 пятниц).</p>
+        <p style="margin-top:8px;">Действие в Mini App: отправить персональное сообщение в четверг вечером — «Ваш любимый столик зарезервирован для вас в эту пятницу».</p>
+      </div>
+      <div class="insight">
+        <div class="ai-tag">🎯 Прогноз</div>
+        <p><b>Дмитрий П.</b> ходит в Café Bianco по утрам в понедельник. На этой неделе пропустил — модель ставит риск пропуска 38%. Действие: проактивный комплимент-оффер в воскресенье вечером.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: FRAUD ============ -->
+<div class="modal" id="ai-fraud-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>🛡 Антифрод · аномалии</h3>
+      <button class="close" onclick="closeModal('ai-fraud-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Защита целостности базы — главного актива платформы. Модель замечает паттерны, которые ломают доверие к данным.</p>
+      <div class="insight warn">
+        <div class="ai-tag">⚠️ Подозрительный паттерн</div>
+        <p>Café Bianco · 14 мая · <b>10 сканирований QR за 47 минут</b> с разных аккаунтов, но все — на одном устройстве официанта.</p>
+        <div class="actions"><button class="btn btn-secondary" onclick="alert('Открыты детали аномалии. Сессии помечены как требующие проверки.')">Открыть детали</button></div>
+      </div>
+      <div class="insight warn">
+        <div class="ai-tag">⚠️ Аномальный чек</div>
+        <p>Steak House · 02:14 · чек 48 000 ₽ — в 6× выше типичного для этого времени. Сессия флагнута, ожидает подтверждения.</p>
+        <div class="actions"><button class="btn btn-secondary" onclick="alert('Сессия отправлена на ручную проверку.')">Проверить</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setTab(name) {
+    document.querySelectorAll('section.tab-section').forEach(s => s.classList.toggle('active', s.id === name));
+    document.querySelectorAll('.tabs li').forEach(li => li.classList.toggle('active', li.dataset.tab === name));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.querySelectorAll('.tabs li').forEach(li => li.addEventListener('click', () => setTab(li.dataset.tab)));
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+  document.querySelectorAll('.modal, .deck-modal').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('open'); document.body.style.overflow = ''; } });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal.open, .deck-modal.open').forEach(m => m.classList.remove('open'));
+      document.body.style.overflow = '';
+    }
+    if (document.getElementById('pitch-modal').classList.contains('open')) {
+      if (e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    }
+  });
+
+  let currentSlide = 0;
+  const totalSlides = document.querySelectorAll('.slide').length;
+  function setSlide(i) {
+    currentSlide = Math.max(0, Math.min(totalSlides - 1, i));
+    document.querySelectorAll('.slide').forEach((s, idx) => s.classList.toggle('active', idx === currentSlide));
+    renderDots();
+  }
+  function nextSlide() { setSlide(currentSlide + 1); }
+  function prevSlide() { setSlide(currentSlide - 1); }
+  function renderDots() {
+    const dots = document.getElementById('slide-dots');
+    dots.innerHTML = '';
+    for (let i = 0; i < totalSlides; i++) {
+      const s = document.createElement('span');
+      if (i === currentSlide) s.classList.add('active');
+      s.addEventListener('click', () => setSlide(i));
+      dots.appendChild(s);
+    }
+  }
+  renderDots();
+
+  document.querySelectorAll('.side-menu button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.side-menu button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      document.querySelectorAll('.dashboard-section').forEach(s => s.classList.toggle('active', s.dataset.dashSection === b.dataset.dash));
+    });
+  });
+
+  document.querySelectorAll('[data-mini-tab]').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('[data-mini-tab]').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      document.querySelectorAll('[data-mini]').forEach(s => s.style.display = s.dataset.mini === b.dataset.miniTab ? '' : 'none');
+    });
+  });
+
+  const offerLibrary = {
+    'VIP': [
+      { title: 'Ужин шефа с парингом вин', conv: 64, body: 'Закрытый ужин из 5 курсов от шефа, пятница 20:00. 12 мест. Прогноз отклика — 64%.' },
+      { title: 'Дегустация авторских коктейлей', conv: 52, body: 'Закрытое мероприятие, 18 мест. Гости-VIP получают приглашение за неделю.' },
+      { title: 'Парный сет + комплимент', conv: 48, body: 'Особый сет на двоих по будням. Шеф добавляет комплимент за столик.' }
+    ],
+    'Insider': [
+      { title: 'Закрытый винный четверг', conv: 41, body: 'Тематическая дегустация раз в месяц. Скидка 15% на бутылочную карту.' },
+      { title: 'Бизнес-ланч с собственником', conv: 38, body: 'Раз в квартал — обед в небольшой группе с владельцем ресторана.' },
+      { title: 'Десерт-комплимент во второй визит недели', conv: 34, body: 'Стимулирует частоту визитов в будние дни.' }
+    ],
+    'Regular': [
+      { title: 'Кофе + десерт по будням', conv: 28, body: 'Простой оффер, повышает частоту утренних визитов.' },
+      { title: 'Завтрак вдвоём — по цене одного', conv: 31, body: 'Активирует визиты с компанией, расширяет базу.' },
+      { title: 'Скидка 20% на основное блюдо', conv: 22, body: 'Классика, работает на быстрое возвращение.' }
+    ],
+    'Уходящие': [
+      { title: '«Мы скучаем» — комплимент от шефа', conv: 47, body: 'Персональное сообщение в Telegram + бесплатный десерт при следующем визите.' },
+      { title: 'Закрытое мероприятие только для вас', conv: 39, body: 'Приглашение на узкий формат — дегустацию или встречу с шефом.' },
+      { title: 'Возвращайтесь — стол готов', conv: 33, body: 'Простое тёплое сообщение + бронь любимого столика на удобное время.' }
+    ]
+  };
+
+  function runOfferGen(segment) {
+    const out = document.getElementById('offer-gen-output');
+    out.innerHTML = '<div style="display:flex;align-items:center;gap:10px;color:var(--ai);padding:14px 16px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;font-size:13.5px;">Анализирую '+segment+'-сегмент <span class="typing"><span></span><span></span><span></span></span></div>';
+    setTimeout(() => {
+      const items = offerLibrary[segment];
+      out.innerHTML = items.map(it => `
+        <div class="gen-result">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div style="flex:1;">
+              <div class="tone">${segment} · прогноз отклика ${it.conv}%</div>
+              <p style="font-weight:600;margin-bottom:6px;">${it.title}</p>
+              <p style="color:var(--muted);font-size:13px;">${it.body}</p>
+            </div>
+            <button class="btn btn-primary" style="padding:8px 14px;font-size:12px;flex-shrink:0;" onclick="alert('Оффер сохранён как черновик.')">Сохранить</button>
+          </div>
+        </div>`).join('');
+    }, 900);
+  }
+
+  const textLibrary = {
+    'lux': [
+      'Дорогая Анна, шеф приготовил для вас исключительный ужин — пять курсов, паринг винами Бордо. Пятница, 20:00. Ваш столик ждёт.',
+      'Для вас, как для одного из наших избранных гостей — закрытый ужин шефа в эту пятницу. Просим подтвердить присутствие.',
+      'Анна, мы давно мечтали угостить вас новым меню от шефа. Будем рады видеть вас в пятницу — особый стол уже забронирован.'
+    ],
+    'demo': [
+      'Привет! У нас на этой неделе крутой завтрак — кофе с круассаном в подарок к основному. Заглядывайте 🥐',
+      'Скучаем по вам! С понедельника по пятницу — десерт за наш счёт. Приходите ☕',
+      'Эй! Возвращайтесь — у нас новое меню и десерт в подарок при заказе от 1500 ₽.'
+    ],
+    'event': [
+      '🎉 В эту пятницу — закрытый ужин шефа. 5 курсов, паринг вин, 12 мест. Регистрация открыта.',
+      '🥂 Дегустация авторских коктейлей — четверг, 20:00. Только по приглашениям.',
+      '🍷 Винный четверг возвращается. Тема — Тоскана. Приходите попробовать 6 позиций.'
+    ]
+  };
+  const toneLabels = { lux: 'Люкс', demo: 'Демократично', event: 'Событийно' };
+
+  function runTextGen(tone) {
+    const out = document.getElementById('text-gen-output');
+    out.innerHTML = '<div style="display:flex;align-items:center;gap:10px;color:var(--ai);padding:14px 16px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;font-size:13.5px;">Генерирую варианты в тоне «'+toneLabels[tone]+'» <span class="typing"><span></span><span></span><span></span></span></div>';
+    setTimeout(() => {
+      const items = textLibrary[tone];
+      out.innerHTML = items.map((t, i) => `
+        <div class="gen-result">
+          <div class="tone">Вариант ${i+1} · ${toneLabels[tone]}</div>
+          <p>${t}</p>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-primary" style="padding:7px 14px;font-size:12px;" onclick="alert('Текст добавлен к черновику оффера.')">Использовать</button>
+            <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px;" onclick="runTextGen('${tone}')">Ещё вариант</button>
+          </div>
+        </div>`).join('');
+    }, 900);
+  }
+
+  document.getElementById('build-date').textContent = new Date().toLocaleDateString('ru-RU');
+</script>
+</body>
+</html>

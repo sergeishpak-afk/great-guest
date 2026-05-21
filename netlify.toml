@@ -1,0 +1,27 @@
+[build]
+  publish = "miniapp"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["src/status.js"]
+
+[[redirects]]
+  from = "/api/guest-preview/*"
+  to = "/.netlify/functions/guest-preview/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/confirm-visit"
+  to = "/.netlify/functions/confirm-visit"
+  status = 200
+
+[[redirects]]
+  from = "/api/webapp-init"
+  to = "/.netlify/functions/webapp-init"
+  status = 200
+
+[[redirects]]
+  from = "/api/create-qr"
+  to = "/.netlify/functions/create-qr"
+  status = 200

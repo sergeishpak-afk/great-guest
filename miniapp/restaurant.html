@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Great Guest — Панель ресторана</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #c9a96e;
+      --bg:   #0f0f0f;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --muted: #888;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 16px;
+    }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px;
+      width: 100%; max-width: 480px;
+    }
+
+    .logo { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .logo span { color: var(--gold); }
+    .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+
+    select, input {
+      width: 100%; background: #111; border: 1px solid #333;
+      border-radius: 12px; color: var(--text); font-size: 16px;
+      padding: 14px 16px; outline: none; transition: border-color .2s;
+      margin-bottom: 16px; appearance: none;
+    }
+    select:focus, input:focus { border-color: var(--gold); }
+
+    /* Scan button row */
+    .scan-row {
+      display: flex; gap: 10px; margin-bottom: 16px;
+    }
+    .scan-row input {
+      flex: 1; margin-bottom: 0;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%; border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 600; padding: 16px;
+      cursor: pointer; transition: opacity .2s, transform .1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .4; cursor: default; }
+    .btn-gold  { background: var(--gold); color: var(--bg); }
+    .btn-gold:hover:not(:disabled) { opacity: .88; }
+    .btn-green { background: #2d7a2d; color: #fff; margin-top: 14px; width: 100%; }
+    .btn-green:hover:not(:disabled) { opacity: .88; }
+    .btn-dark  { background: #2a2a2a; color: var(--text); margin-top: 8px; width: 100%; }
+    .btn-dark:hover { background: #333; }
+
+    /* Camera trigger button */
+    .btn-cam {
+      flex-shrink: 0; width: 52px; height: 52px; padding: 0;
+      background: #222; border: 1px solid #333; border-radius: 12px;
+      cursor: pointer; font-size: 22px; display: flex;
+      align-items: center; justify-content: center;
+      transition: border-color .2s, background .2s;
+    }
+    .btn-cam:hover { border-color: var(--gold); background: #2a2510; }
+
+    /* Result card */
+    .result { margin-top: 20px; padding: 20px; border-radius: 14px; display: none; }
+    .result.success { background: #1a2e1a; border: 1px solid #2d5a2d; }
+    .result.error   { background: #2e1a1a; border: 1px solid #5a2d2d; }
+
+    .guest-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .guest-meta { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+    .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; }
+    .badge-bronze   { background: #3d2e1a; color: #cd7f32; }
+    .badge-silver   { background: #1e2630; color: #a8b8c8; }
+    .badge-gold     { background: #2e2a10; color: #ffd700; }
+    .badge-platinum { background: #1e1e2e; color: #b8b8e8; }
+    .error-msg { color: #e88; font-size: 15px; }
+
+    /* ── QR Scanner Overlay ── */
+    #scanOverlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,.95);
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px;
+    }
+    #scanOverlay.active { display: flex; }
+
+    .scan-header {
+      font-size: 17px; font-weight: 600; color: var(--text);
+      letter-spacing: -.01em;
+    }
+    .scan-hint {
+      font-size: 13px; color: var(--muted); text-align: center;
+      max-width: 280px; line-height: 1.5;
+    }
+
+    .scanner-wrap {
+      position: relative;
+      width: min(320px, 90vw);
+      height: min(320px, 90vw);
+    }
+
+    #scanVideo {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: 20px;
+      display: block;
+    }
+
+    /* Corner brackets */
+    .scan-corners {
+      position: absolute; inset: 0; pointer-events: none;
+    }
+    .scan-corners::before,
+    .scan-corners::after {
+      content: '';
+      position: absolute;
+      width: 36px; height: 36px;
+      border-color: var(--gold);
+      border-style: solid;
+    }
+    .scan-corners::before {
+      top: 12px; left: 12px;
+      border-width: 3px 0 0 3px;
+      border-radius: 4px 0 0 0;
+    }
+    .scan-corners::after {
+      top: 12px; right: 12px;
+      border-width: 3px 3px 0 0;
+      border-radius: 0 4px 0 0;
+    }
+
+    /* Bottom corners via extra div */
+    .scan-corners-b::before,
+    .scan-corners-b::after {
+      content: '';
+      position: absolute;
+      width: 36px; height: 36px;
+      border-color: var(--gold);
+      border-style: solid;
+    }
+    .scan-corners-b::before {
+      bottom: 12px; left: 12px;
+      border-width: 0 0 3px 3px;
+      border-radius: 0 0 0 4px;
+    }
+    .scan-corners-b::after {
+      bottom: 12px; right: 12px;
+      border-width: 0 3px 3px 0;
+      border-radius: 0 0 4px 0;
+    }
+
+    /* Scan line */
+    .scan-line {
+      position: absolute;
+      left: 14px; right: 14px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      border-radius: 2px;
+      animation: scanLine 2s ease-in-out infinite;
+      opacity: .8;
+    }
+    @keyframes scanLine {
+      0%   { top: 14px; }
+      50%  { top: calc(100% - 14px); }
+      100% { top: 14px; }
+    }
+
+    /* Status indicator */
+    .scan-status {
+      font-size: 13px; color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .scan-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #555;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .scan-dot.active { background: var(--gold); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    #btnCloseScanner {
+      background: #222; color: var(--text);
+      border: 1px solid #333; border-radius: 12px;
+      padding: 14px 32px; font-size: 15px;
+      font-weight: 500; cursor: pointer;
+      transition: border-color .2s;
+    }
+    #btnCloseScanner:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* Success flash */
+    @keyframes successFlash {
+      0%   { background: rgba(45,122,45,.6); }
+      100% { background: rgba(45,122,45,0); }
+    }
+    .scanner-wrap.found { animation: successFlash .4s ease-out; }
+
+    @media(max-width: 480px) {
+      .card { padding: 24px 20px; border-radius: 16px; }
+      .logo { font-size: 22px; }
+      select, input { font-size: 16px; padding: 13px 14px; }
+      .btn { padding: 15px; font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- QR Scanner Overlay -->
+<div id="scanOverlay">
+  <div class="scan-header">Наведите камеру на QR-код гостя</div>
+  <div class="scanner-wrap" id="scannerWrap">
+    <video id="scanVideo" autoplay playsinline muted></video>
+    <div class="scan-corners"></div>
+    <div class="scan-corners-b" style="position:absolute;inset:0;pointer-events:none;"></div>
+    <div class="scan-line" id="scanLine"></div>
+  </div>
+  <div class="scan-status">
+    <div class="scan-dot active" id="scanDot"></div>
+    <span id="scanStatusText">Сканирую...</span>
+  </div>
+  <div class="scan-hint">QR-код из Telegram Mini App гостя</div>
+  <button id="btnCloseScanner" onclick="stopScanner()">✕ Закрыть</button>
+</div>
+
+<!-- Main card -->
+<div class="card">
+  <div class="logo">Great<span>Guest</span></div>
+  <div class="subtitle">Панель ресторана</div>
+
+  <label for="restaurantSelect">Ресторан</label>
+  <select id="restaurantSelect"><option value="">Загрузка...</option></select>
+
+  <label>QR-код гостя</label>
+  <div class="scan-row">
+    <input id="token" type="text" placeholder="Введите или отсканируйте код" />
+    <button class="btn-cam" onclick="startScanner()" title="Сканировать QR камерой">📷</button>
+  </div>
+
+  <button class="btn btn-gold" onclick="checkGuest()">Проверить гостя</button>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wjlhaizrygeyeishbycp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentToken = null;
+let scanStream    = null;
+let scanAnimId    = null;
+let scanCanvas    = null;
+
+// ── Restaurants ──
+async function loadRestaurants() {
+  const { data } = await db.from('restaurants').select('id, name').order('name');
+  const sel = document.getElementById('restaurantSelect');
+  if (data && data.length) {
+    sel.innerHTML = data.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+  } else {
+    sel.innerHTML = '<option value="">Нет ресторанов</option>';
+  }
+}
+
+// ── Extract token from URL or raw UUID ──
+function extractToken(raw) {
+  raw = raw.trim();
+  try {
+    const url = new URL(raw);
+    const t = url.searchParams.get('token');
+    if (t) return t;
+  } catch {}
+  // raw UUID
+  if (/^[0-9a-f-]{36}$/i.test(raw)) return raw;
+  return raw;
+}
+
+// ── Check guest ──
+async function checkGuest() {
+  const raw = document.getElementById('token').value.trim();
+  if (!raw) return;
+  const token = extractToken(raw);
+  currentToken = token;
+
+  const btn = document.querySelector('.btn-gold');
+  btn.disabled = true;
+  btn.textContent = 'Проверяю...';
+
+  try {
+    const res  = await fetch(`/api/guest-preview/${token}`);
+    const data = await res.json();
+    if (!res.ok) return showError(data.error || 'Токен не найден или уже использован');
+    showGuest(data.guest);
+  } catch {
+    showError('Ошибка соединения');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Проверить гостя';
+  }
+}
+
+// ── Confirm visit ──
+async function confirmVisit() {
+  const restaurantId = document.getElementById('restaurantSelect').value;
+  if (!restaurantId) { showError('Выберите ресторан'); return; }
+  const btn = document.getElementById('result').querySelector('.confirm-btn');
+  btn.disabled = true; btn.textContent = 'Подтверждаю...';
+
+  try {
+    const res  = await fetch('/api/confirm-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: currentToken, restaurantId }),
+    });
+    const data = await res.json();
+    if (!res.ok) return showError(data.error || 'Ошибка подтверждения');
+    showSuccess(data.guest);
+  } catch {
+    showError('Ошибка соединения');
+  }
+}
+
+// ── Badge helper ──
+function badge(n) {
+  if (n >= 30) return { label: '💎 Platinum', cls: 'badge-platinum' };
+  if (n >= 15) return { label: '🥇 Gold',     cls: 'badge-gold'     };
+  if (n >= 5)  return { label: '🥈 Silver',   cls: 'badge-silver'   };
+  return               { label: '🥉 Bronze',  cls: 'badge-bronze'   };
+}
+
+function showGuest(g) {
+  const b = badge(g.visit_count);
+  const r = document.getElementById('result');
+  r.className = 'result success'; r.style.display = 'block';
+  r.innerHTML = `
+    <div class="guest-name">${g.first_name}${g.last_name ? ' ' + g.last_name : ''}</div>
+    <div class="guest-meta">Визитов всего: <strong>${g.visit_count}</strong></div>
+    <span class="badge ${b.cls}">${b.label}</span>
+    <button class="btn btn-green confirm-btn" onclick="confirmVisit()">✅ Подтвердить визит</button>`;
+}
+
+function showSuccess(g) {
+  const b = badge(g.visits);
+  const r = document.getElementById('result');
+  r.innerHTML = `
+    <div class="guest-name">✅ Визит записан!</div>
+    <div class="guest-meta">${g.name} — итого ${g.visits} визитов</div>
+    <span class="badge ${b.cls}">${b.label}</span>
+    <button class="btn btn-dark next-btn" onclick="reset()">👤 Следующий гость</button>`;
+}
+
+function showError(msg) {
+  const r = document.getElementById('result');
+  r.className = 'result error'; r.style.display = 'block';
+  r.innerHTML = `<div class="error-msg">❌ ${msg}</div>
+    <button class="btn btn-dark" style="margin-top:12px" onclick="reset()">Попробовать снова</button>`;
+}
+
+function reset() {
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('token').value = '';
+  document.getElementById('token').focus();
+  currentToken = null;
+}
+
+// ── QR Scanner ──
+async function startScanner() {
+  const overlay = document.getElementById('scanOverlay');
+  const video   = document.getElementById('scanVideo');
+  const dot     = document.getElementById('scanDot');
+  const status  = document.getElementById('scanStatusText');
+
+  // Check support
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Камера недоступна. Введите токен вручную.');
+    return;
+  }
+
+  overlay.classList.add('active');
+  status.textContent = 'Запрашиваю доступ к камере...';
+  dot.classList.remove('active');
+
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+    });
+    video.srcObject = scanStream;
+    await video.play();
+
+    dot.classList.add('active');
+    status.textContent = 'Сканирую...';
+
+    // Canvas for jsQR
+    scanCanvas = document.createElement('canvas');
+    startDecode(video, scanCanvas);
+  } catch (err) {
+    status.textContent = 'Нет доступа к камере';
+    dot.classList.remove('active');
+    console.error(err);
+  }
+}
+
+function startDecode(video, canvas) {
+  const ctx = canvas.getContext('2d');
+
+  function tick() {
+    if (!scanStream) return; // scanner closed
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert'
+      });
+      if (code) {
+        onQRFound(code.data);
+        return;
+      }
+    }
+    scanAnimId = requestAnimationFrame(tick);
+  }
+  scanAnimId = requestAnimationFrame(tick);
+}
+
+function onQRFound(data) {
+  // Flash success
+  document.getElementById('scannerWrap').classList.add('found');
+  setTimeout(() => document.getElementById('scannerWrap').classList.remove('found'), 400);
+
+  const token = extractToken(data);
+  document.getElementById('scanStatusText').textContent = '✅ QR найден!';
+  document.getElementById('scanDot').classList.remove('active');
+
+  // Haptic feedback on mobile
+  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+  setTimeout(() => {
+    stopScanner();
+    document.getElementById('token').value = token;
+    checkGuest();
+  }, 500);
+}
+
+function stopScanner() {
+  cancelAnimationFrame(scanAnimId);
+  if (scanStream) {
+    scanStream.getTracks().forEach(t => t.stop());
+    scanStream = null;
+  }
+  const video = document.getElementById('scanVideo');
+  video.srcObject = null;
+  document.getElementById('scanOverlay').classList.remove('active');
+  document.getElementById('scanStatusText').textContent = 'Сканирую...';
+  document.getElementById('scanDot').classList.add('active');
+}
+
+// ── Keyboard ──
+document.getElementById('token').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkGuest();
+});
+
+// ── Auto-fill from URL: restaurant.html?token=UUID ──
+const urlToken = new URLSearchParams(window.location.search).get('token');
+if (urlToken) {
+  document.getElementById('token').value = urlToken;
+  loadRestaurants().then(() => checkGuest());
+} else {
+  loadRestaurants();
+}
+</script>
+</body>
+</html>

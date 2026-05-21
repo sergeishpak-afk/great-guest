@@ -251,19 +251,15 @@ async function init() {
     return;
   }
 
-  // Upsert guest
-  const { data: guest, error } = await db
-    .from('guests')
-    .upsert({
-      telegram_id: String(tgUser.id),
-      first_name: tgUser.first_name || '',
-      last_name: tgUser.last_name || '',
-      username: tgUser.username || '',
-    }, { onConflict: 'telegram_id' })
-    .select()
-    .single();
-
-  if (error) { showError('Ошибка загрузки профиля'); return; }
+  // ✅ Server-side HMAC validation + upsert (replaces direct Supabase call)
+  const res = await fetch('/api/webapp-init', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: tg.initData }),
+  });
+  const payload = await res.json();
+  if (!res.ok || !payload.guest) { showError(payload.error || 'Ошибка загрузки профиля'); return; }
+  const guest = payload.guest;
 
   document.getElementById('greeting').textContent = `Привет, ${guest.first_name}! 👋`;
   renderStatus(guest.visit_count);
@@ -314,17 +310,18 @@ async function renderHistory(telegramId) {
 }
 
 async function getQR() {
-  const tgUser = tg?.initDataUnsafe?.user;
-  if (!tgUser?.id) return;
+  if (!tg?.initData) return;
 
-  const token = crypto.randomUUID();
-  const { error } = await db.from('pending_visits').insert({
-    token,
-    telegram_id: String(tgUser.id),
+  // ✅ Server creates QR token after HMAC validation
+  const res = await fetch('/api/create-qr', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: tg.initData }),
   });
-  if (error) { alert('Ошибка создания QR'); return; }
+  const data = await res.json();
+  if (!res.ok || !data.visitUrl) { alert(data.error || 'Ошибка создания QR'); return; }
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${token}&ecc=H`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.visitUrl)}&ecc=H`;
   document.getElementById('qr-img').src = qrUrl;
   document.getElementById('qr-display').style.display = 'block';
 }

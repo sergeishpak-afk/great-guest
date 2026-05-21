@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=375, initial-scale=1.0"/>
+<title>Great Guest – mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    width: 375px; height: 812px;
+    background: #0C0B09;
+    font-family: 'DM Sans', sans-serif;
+    color: #F5F0E8;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Subtle grain */
+  body::before {
+    content:''; position:absolute; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:0;
+  }
+
+  .screen { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:0 20px; }
+
+  /* Header */
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 52px 0 20px;
+  }
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight:500; letter-spacing:0.04em;
+    color: #C9A96E;
+  }
+  .logo span { color: #F5F0E8; font-style:italic; }
+  .avatar {
+    width:36px; height:36px; border-radius:50%;
+    background: linear-gradient(135deg, #C9A96E 0%, #8B6A3E 100%);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:600; color:#0C0B09;
+  }
+
+  /* Welcome */
+  .welcome {
+    font-size: 13px; color: #8A7A65; letter-spacing:0.06em; text-transform:uppercase;
+    margin-bottom: 4px;
+  }
+  .guest-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight:500; letter-spacing:0.02em;
+    color: #F5F0E8;
+    margin-bottom: 24px;
+  }
+
+  /* Level card */
+  .level-card {
+    background: linear-gradient(135deg, #1A1710 0%, #221E14 50%, #1A1710 100%);
+    border: 1px solid rgba(201,169,110,0.3);
+    border-radius: 20px;
+    padding: 24px 24px 20px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .level-card::before {
+    content:'';
+    position:absolute; top:-60px; right:-40px;
+    width:160px; height:160px; border-radius:50%;
+    background: radial-gradient(circle, rgba(201,169,110,0.12) 0%, transparent 70%);
+  }
+  .level-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .level-badge {
+    display:flex; align-items:center; gap:8px;
+  }
+  .crown-icon {
+    width:32px; height:32px; background: linear-gradient(135deg, #C9A96E, #E8C98A);
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:16px;
+  }
+  .level-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size:24px; font-weight:600; color:#C9A96E; letter-spacing:0.04em;
+  }
+  .visits-count {
+    text-align:right;
+  }
+  .visits-num {
+    font-family:'Cormorant Garamond',serif;
+    font-size:32px; font-weight:500; color:#F5F0E8; line-height:1;
+  }
+  .visits-label { font-size:11px; color:#8A7A65; text-transform:uppercase; letter-spacing:0.08em; }
+
+  /* Progress bar */
+  .progress-wrap { margin-bottom:6px; }
+  .progress-track {
+    height:3px; background:rgba(201,169,110,0.15); border-radius:2px; overflow:hidden;
+  }
+  .progress-fill {
+    height:100%; width:68%;
+    background: linear-gradient(90deg, #8B6A3E, #C9A96E, #E8C98A);
+    border-radius:2px;
+  }
+  .progress-hint {
+    display:flex; justify-content:space-between;
+    font-size:11px; color:#6A5A45; margin-top:6px;
+  }
+
+  /* QR Button */
+  .btn-qr {
+    width:100%; padding:16px;
+    background: linear-gradient(135deg, #C9A96E 0%, #B8945A 100%);
+    border:none; border-radius:14px;
+    font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500;
+    color:#0C0B09; letter-spacing:0.02em;
+    cursor:pointer; margin-bottom:16px;
+    position:relative; overflow:hidden;
+  }
+  .btn-qr::after {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg,rgba(255,255,255,0.12) 0%,transparent 50%);
+  }
+
+  /* History */
+  .section-title {
+    font-size:11px; color:#6A5A45; text-transform:uppercase; letter-spacing:0.1em;
+    margin-bottom:12px;
+  }
+  .visit-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(201,169,110,0.08);
+  }
+  .visit-left { display:flex; align-items:center; gap:12px; }
+  .visit-dot {
+    width:8px; height:8px; border-radius:50%;
+    background: linear-gradient(135deg,#C9A96E,#8B6A3E);
+    flex-shrink:0;
+  }
+  .visit-place { font-size:14px; font-weight:400; color:#D4C5A9; }
+  .visit-time { font-size:12px; color:#6A5A45; }
+  .visit-pts {
+    font-size:12px; color:#C9A96E; font-weight:500;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    margin-top:auto; padding-bottom:32px;
+    display:flex; justify-content:space-around;
+    border-top:1px solid rgba(201,169,110,0.1);
+    padding-top:16px;
+  }
+  .nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .nav-icon { font-size:20px; opacity:0.5; }
+  .nav-icon.active { opacity:1; filter:drop-shadow(0 0 4px rgba(201,169,110,0.6)); }
+  .nav-label { font-size:10px; color:#6A5A45; letter-spacing:0.06em; text-transform:uppercase; }
+  .nav-label.active { color:#C9A96E; }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="header">
+    <div class="logo">Great<span>Guest</span></div>
+    <div class="avatar">АС</div>
+  </div>
+
+  <div class="welcome">Добро пожаловать</div>
+  <div class="guest-name">Александр С.</div>
+
+  <div class="level-card">
+    <div class="level-row">
+      <div class="level-badge">
+        <div class="crown-icon">👑</div>
+        <div class="level-name">Gold</div>
+      </div>
+      <div class="visits-count">
+        <div class="visits-num">23</div>
+        <div class="visits-label">визита</div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill"></div></div>
+      <div class="progress-hint">
+        <span>Gold</span>
+        <span>7 визитов до Platinum</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-qr">Получить QR для визита</button>
+
+  <div class="section-title">Последние визиты</div>
+  <div class="visit-item">
+    <div class="visit-left">
+      <div class="visit-dot"></div>
+      <div>
+        <div class="visit-place">Кофейня Noir</div>
+        <div class="visit-time">сегодня, 19:45</div>
+      </div>
+    </div>
+    <div class="visit-pts">+1 визит</div>
+  </div>
+  <div class="visit-item">
+    <div class="visit-left">
+      <div class="visit-dot"></div>
+      <div>
+        <div class="visit-place">Bistro 32</div>
+        <div class="visit-time">вчера, 21:10</div>
+      </div>
+    </div>
+    <div class="visit-pts">+1 визит</div>
+  </div>
+  <div class="visit-item">
+    <div class="visit-left">
+      <div class="visit-dot"></div>
+      <div>
+        <div class="visit-place">Sushi Point</div>
+        <div class="visit-time">3 дня назад</div>
+      </div>
+    </div>
+    <div class="visit-pts">+1 визит</div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <div class="nav-icon active">⭐</div>
+      <div class="nav-label active">Статус</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">🏛</div>
+      <div class="nav-label">Рестораны</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Профиль</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
