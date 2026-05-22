@@ -6,7 +6,6 @@
   <title>Great Guest — Лояльность нового поколения</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160/build/three.min.js"></script>
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   <style>
     :root {
@@ -87,21 +86,6 @@
     /* Canvas particles */
     #hero-canvas { position:absolute; inset:0; pointer-events:none; z-index:0; }
 
-    /* 3D depth layer */
-    .hero-3d { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
-
-    /* spinCube kept for CTA decoration */
-    @keyframes spinCube {
-      0%   { transform:rotateX(15deg) rotateY(0deg); }
-      100% { transform:rotateX(15deg) rotateY(360deg); }
-    }
-
-    /* Floating rings */
-    .ring-deco { position:absolute; border-radius:50%; border:1px solid rgba(201,169,110,.12); animation:floatRing 6s ease-in-out infinite; pointer-events:none; }
-    .ring-deco.r1 { width:300px; height:300px; top:10%; left:-80px; animation-delay:0s; transform:rotateX(65deg); }
-    .ring-deco.r2 { width:180px; height:180px; top:55%; right:5%; animation-delay:2s; transform:rotateX(50deg); }
-    .ring-deco.r3 { width:90px; height:90px; bottom:15%; left:45%; animation-delay:4s; transform:rotateX(30deg); }
-    @keyframes floatRing { 0%,100%{transform:rotateX(65deg) translateY(0px)} 50%{transform:rotateX(65deg) translateY(-12px)} }
 
     /* Dot grid */
     .dot-grid {
@@ -354,16 +338,6 @@
     }
     #cta::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(201,169,110,.10) 0%,transparent 65%); pointer-events:none; }
 
-    /* 3D spinning QR in CTA */
-    .cta-3d { position:absolute; right:8%; top:50%; transform:translateY(-50%); perspective:500px; opacity:.15; pointer-events:none; }
-    .qr-cube { width:120px; height:120px; transform-style:preserve-3d; animation:spinCube 15s linear infinite; }
-    .qr-face { position:absolute; width:120px; height:120px; border:1px solid rgba(201,169,110,.6); display:flex; align-items:center; justify-content:center; font-size:32px; }
-    .qr-face.ft { transform:translateZ(60px); }
-    .qr-face.bk { transform:rotateY(180deg) translateZ(60px); }
-    .qr-face.lt { transform:rotateY(-90deg) translateZ(60px); }
-    .qr-face.rt { transform:rotateY(90deg) translateZ(60px); }
-    .qr-face.tp { transform:rotateX(90deg) translateZ(60px); }
-    .qr-face.bt { transform:rotateX(-90deg) translateZ(60px); }
 
     .cta-lbl { margin-bottom:22px; justify-content:center; }
     #cta .sec-title { text-align:center; margin:0 auto 14px; max-width:680px; }
@@ -457,39 +431,6 @@
       .story-visual-inner { height: 160px; }
     }
 
-    /* ── Three.js canvases ── */
-    .three-canvas {
-      position: absolute;
-      pointer-events: none;
-      z-index: 1;
-      opacity: 0;
-      animation: fadeInThree 1.4s var(--ease) .6s forwards;
-    }
-    @keyframes fadeInThree { to { opacity: 1; } }
-
-    #c-glass {
-      right: 4%;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 200px; height: 340px;
-      mix-blend-mode: screen;
-    }
-    #c-crown {
-      right: 3%;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 160px; height: 160px;
-    }
-    #c-diamond {
-      right: 6%;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 180px; height: 220px;
-      mix-blend-mode: screen;
-    }
-    @media(max-width: 900px) {
-      #c-glass, #c-crown, #c-diamond { display: none; }
-    }
 
     /* ── Hamburger ──────── */
     .ham {
@@ -760,15 +701,7 @@
 <section id="hero">
   <canvas id="hero-canvas"></canvas>
 
-  <!-- 3D depth layer -->
-  <div class="hero-3d">
-    <div class="dot-grid"></div>
-
-    <!-- Floating rings -->
-    <div class="ring-deco r1"></div>
-    <div class="ring-deco r2"></div>
-    <div class="ring-deco r3"></div>
-  </div>
+  <div class="hero-3d"><div class="dot-grid"></div></div>
 
   <div class="hero-left">
     <div class="hero-eyebrow">Loyalty 2.0 · HoReCa</div>
@@ -965,9 +898,8 @@
 
 <!-- NUMBERS -->
 <section id="numbers" style="position:relative;overflow:hidden">
-  <!-- Three.js crown -->
-  <canvas id="c-crown" class="three-canvas"></canvas>
-  <!-- 3D floating shapes in background -->
+  <!-- decorative hex -->
+
   <div class="hex" style="bottom:0;left:50%;transform:translateX(-50%);opacity:.04">
     <svg width="200" height="230" viewBox="0 0 80 92"><polygon points="40,2 78,22 78,70 40,90 2,70 2,22" fill="none" stroke="#C9A96E" stroke-width="1"/></svg>
   </div>
@@ -1026,16 +958,6 @@
 
 <!-- CTA -->
 <section id="cta" style="position:relative;overflow:hidden">
-  <!-- Three.js diamond -->
-  <canvas id="c-diamond" class="three-canvas"></canvas>
-  <!-- 3D spinning cube decoration -->
-  <div class="cta-3d">
-    <div class="qr-cube">
-      <div class="qr-face ft"></div><div class="qr-face bk"></div>
-      <div class="qr-face lt"></div><div class="qr-face rt"></div>
-      <div class="qr-face tp"></div><div class="qr-face bt"></div>
-    </div>
-  </div>
   <div class="sec-lbl cta-lbl reveal">Начать сейчас</div>
   <h2 class="sec-title reveal rd1">Первый пилотный<br><em>ресторан — бесплатно</em></h2>
   <p class="cta-sub reveal rd2">Подключите Great Guest и за 15 минут начните узнавать своих лучших гостей. На период пилота — без оплаты.</p>
@@ -1229,10 +1151,10 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 
-/* ── Three.js 3D Objects ── */
+/* ── Three.js 3D Objects ── (removed) */
 (function init3D() {
-  if (!window.THREE) return;
-  if (window.matchMedia('(hover: none)').matches) return; // skip touch devices
+  return; // 3D objects removed
+  if (window.matchMedia('(hover: none)').matches) return;
 
   const T = THREE;
   const GOLD  = 0xC9A96E;

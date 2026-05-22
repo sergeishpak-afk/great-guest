@@ -56,6 +56,14 @@
     padding: 18px 28px;
     display: flex; align-items: center; justify-content: space-between; gap: 24px;
   }
+  .back-home {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 500; color: var(--muted);
+    text-decoration: none; padding: 7px 14px;
+    border: 1px solid var(--border); border-radius: 999px;
+    transition: all .15s;
+  }
+  .back-home:hover { color: var(--text-strong); border-color: var(--border-strong); background: var(--surface-2); }
   .logo {
     font-family: var(--serif);
     font-weight: 700; font-size: 22px; letter-spacing: -.01em;
@@ -586,10 +594,10 @@
 <!-- ============ TOP NAV ============ -->
 <nav class="topnav">
   <div class="topnav-inner">
-    <div class="logo">
+    <a href="/" class="logo" style="text-decoration:none;color:inherit;">
       <div class="logo-mark">GG</div>
       Great Guest
-    </div>
+    </a>
     <ul class="tabs">
       <li data-tab="home" class="active">Главная</li>
       <li data-tab="pitch">Питч</li>
@@ -598,6 +606,7 @@
       <li data-tab="ai">AI Фичи</li>
       <li data-tab="demo">Live Demo</li>
     </ul>
+    <a href="/" class="back-home">← На лендинг</a>
   </div>
 </nav>
 
