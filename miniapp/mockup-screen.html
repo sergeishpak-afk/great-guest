@@ -157,6 +157,45 @@
   .nav-icon.active { opacity:1; filter:drop-shadow(0 0 4px rgba(201,169,110,0.6)); }
   .nav-label { font-size:10px; color:#6A5A45; letter-spacing:0.06em; text-transform:uppercase; }
   .nav-label.active { color:#C9A96E; }
+
+  /* ── Compact: 220px phone ── */
+  @media (max-width: 230px) {
+    .btn-full { display: none; }
+    .btn-short { display: inline !important; }
+    .screen { padding: 0 14px; }
+    .header { padding: 28px 0 12px; }
+    .logo { font-size: 16px; }
+    .avatar { width: 28px; height: 28px; font-size: 11px; }
+    .welcome { font-size: 10px; margin-bottom: 2px; }
+    .guest-name { font-size: 20px; margin-bottom: 14px; }
+    .level-card { padding: 14px 14px 12px; margin-bottom: 10px; }
+    .crown-icon { width: 24px; height: 24px; font-size: 12px; }
+    .level-name { font-size: 18px; }
+    .visits-num { font-size: 22px; }
+    .visits-label { font-size: 9px; }
+    .progress-hint { font-size: 9px; }
+    .btn-qr { padding: 12px 8px; font-size: 12px; margin-bottom: 10px; }
+    .section-title { font-size: 9px; margin-bottom: 8px; }
+    .visit-item { padding: 8px 0; }
+    .visit-place { font-size: 12px; }
+    .visit-time { font-size: 10px; }
+    .visit-pts { font-size: 10px; }
+    .bottom-nav { padding-top: 10px; padding-bottom: 12px; }
+    .nav-icon { font-size: 16px; }
+    .nav-label { font-size: 8px; }
+  }
+
+  /* ── Very compact: 200px phone ── */
+  @media (max-width: 210px) {
+    .screen { padding: 0 12px; }
+    .header { padding: 24px 0 10px; }
+    .level-card { padding: 12px 12px 10px; }
+    .level-name { font-size: 16px; }
+    .visits-num { font-size: 18px; }
+    .progress-hint { display: none; }
+    .btn-qr { font-size: 11px; padding: 10px 6px; }
+    .visit-pts { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -189,7 +228,10 @@
     </div>
   </div>
 
-  <button class="btn-qr">Получить QR для визита</button>
+  <button class="btn-qr">
+    <span class="btn-full">Получить QR для визита</span>
+    <span class="btn-short" style="display:none">Получить QR</span>
+  </button>
 
   <div class="section-title">Последние визиты</div>
   <div class="visit-item">
