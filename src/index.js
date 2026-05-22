@@ -13,10 +13,13 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const MINI_APP_URL = 'https://great-guest.vercel.app/app.html';
 
 const mainKeyboard = Markup.keyboard([
-  [{ text: '🚀 Открыть приложение', web_app: { url: MINI_APP_URL } }],
   ['🎫 Получить QR для визита'],
   ['⭐ Мой статус', '📋 История визитов'],
 ]).resize();
+
+const appInlineBtn = Markup.inlineKeyboard([
+  [Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP_URL)]
+]);
 
 bot.start(async (ctx) => {
   const tgUser = ctx.from;
@@ -37,14 +40,8 @@ bot.start(async (ctx) => {
   );
 });
 
-// Fallback: если клиент не поддерживает web_app кнопку — отправляет текст
-bot.hears('🚀 Открыть приложение', async (ctx) => {
-  await ctx.reply(
-    '👆 Нажми кнопку ниже чтобы открыть приложение:',
-    Markup.inlineKeyboard([
-      [Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP_URL)]
-    ])
-  );
+bot.command('app', async (ctx) => {
+  await ctx.reply('👇 Нажми чтобы открыть:', appInlineBtn);
 });
 
 bot.hears('🎫 Получить QR для визита', async (ctx) => {
