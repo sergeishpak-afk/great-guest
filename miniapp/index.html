@@ -183,7 +183,15 @@
     @keyframes mq { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
     /* ── Problem ────────── */
-    #problem { padding:120px 48px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+    #problem {
+      padding:120px 48px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center;
+      background-image:
+        linear-gradient(100deg, rgba(12,11,9,1) 0%, rgba(12,11,9,1) 38%, rgba(12,11,9,0.82) 62%, rgba(12,11,9,0.38) 100%),
+        url('https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg');
+      background-size: cover;
+      background-position: right 25%;
+      background-attachment: fixed;
+    }
     .sec-lbl { font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:18px; display:flex; align-items:center; gap:10px; }
     .sec-lbl::before { content:''; width:22px; height:1px; background:var(--gold); }
     .sec-title { font-family:'Cormorant Garamond',serif; font-size:clamp(34px,4vw,54px); font-weight:400; line-height:1.12; letter-spacing:-.01em; }
@@ -237,10 +245,10 @@
     .feat-tag { display:inline-block; margin-top:14px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); background:var(--goldDim); padding:4px 11px; border-radius:2px; }
 
     /* ── Numbers ─────────── */
-    #numbers { padding:90px 48px; background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
-    .nums-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); }
+    #numbers { padding:90px 48px; background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:hidden; }
+    .nums-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); position:relative; z-index:1; }
     .num-cell { background:var(--bg2); padding:44px 28px; text-align:center; }
-    .num-val { font-family:'Bebas Neue',sans-serif; font-size:70px; line-height:1; color:var(--gold); }
+    .num-val { font-family:'Bebas Neue',sans-serif; font-size:70px; line-height:1; color:var(--gold); text-shadow:0 0 40px rgba(201,169,110,.35),0 0 80px rgba(201,169,110,.12); }
     .num-sfx { color:var(--muted); }
     .num-lbl { font-size:12px; color:var(--muted); letter-spacing:.04em; margin-top:6px; }
 
@@ -294,8 +302,16 @@
     @keyframes hexPulse { 0%,100%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.1) rotate(30deg)} }
 
     /* ── CTA ─────────────── */
-    #cta { padding:150px 48px; text-align:center; position:relative; overflow:hidden; }
-    #cta::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(201,169,110,.07) 0%,transparent 70%); pointer-events:none; }
+    #cta {
+      padding:150px 48px; text-align:center; position:relative; overflow:hidden;
+      background-image:
+        linear-gradient(rgba(12,11,9,.90), rgba(12,11,9,.90)),
+        url('https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg');
+      background-size: cover;
+      background-position: center 45%;
+      background-attachment: fixed;
+    }
+    #cta::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(201,169,110,.10) 0%,transparent 65%); pointer-events:none; }
 
     /* 3D spinning QR in CTA */
     .cta-3d { position:absolute; right:8%; top:50%; transform:translateY(-50%); perspective:500px; opacity:.15; pointer-events:none; }
@@ -677,6 +693,62 @@
       .sv-qr-ico { font-size:64px; }
       .sv-confirm-ico { font-size:38px; }
       .sv-chat-wrap, .sv-qr-wrap, .sv-confirm-wrap { padding:14px 16px; gap:8px; }
+    }
+
+    /* ── Ambient light orbs ── */
+    #how::before {
+      content:''; position:absolute;
+      top:-15%; right:-10%;
+      width:65vw; height:65vw; max-width:780px; max-height:780px;
+      background:radial-gradient(circle, rgba(201,169,110,.09) 0%, transparent 55%);
+      pointer-events:none; z-index:0;
+    }
+    #features::before {
+      content:''; position:absolute;
+      bottom:-20%; left:-8%;
+      width:55vw; height:55vw; max-width:660px; max-height:660px;
+      background:radial-gradient(circle, rgba(201,169,110,.08) 0%, transparent 55%);
+      pointer-events:none; z-index:0;
+    }
+    #numbers::before {
+      content:''; position:absolute;
+      top:50%; left:50%; transform:translate(-50%,-50%);
+      width:80vw; height:300px;
+      background:radial-gradient(ellipse, rgba(201,169,110,.07) 0%, transparent 60%);
+      pointer-events:none;
+    }
+    #restaurant::before {
+      content:''; position:absolute;
+      top:0; right:-5%;
+      width:50vw; height:100%;
+      background:radial-gradient(ellipse at center, rgba(201,169,110,.07) 0%, transparent 60%);
+      pointer-events:none; z-index:0;
+    }
+    #telegram::before {
+      content:''; position:absolute;
+      top:0; left:50%; transform:translateX(-50%);
+      width:70vw; height:100%;
+      background:radial-gradient(ellipse at 50% 40%, rgba(201,169,110,.06) 0%, transparent 55%);
+      pointer-events:none; z-index:0;
+    }
+    #how .story-sticky, #features .feat-grid,
+    #restaurant .dash-mock, #restaurant .feat-list,
+    #telegram .tg-grid { position:relative; z-index:1; }
+    #features .sec-hdr { position:relative; z-index:1; }
+
+    /* ── Sec-title shimmer ── */
+    @keyframes goldShimmer {
+      0%, 100% { color:var(--gold); }
+      50% { color:var(--gold2); text-shadow:0 0 24px rgba(232,201,138,.4); }
+    }
+    .sec-title em { animation:goldShimmer 5s ease-in-out infinite; }
+    .hero-title em { animation:goldShimmer 5s ease-in-out .5s infinite; }
+
+    /* ── Mobile: disable fixed attachment ── */
+    @media (hover:none), (max-width:900px) {
+      #problem { background-attachment:scroll; }
+      #cta     { background-attachment:scroll; }
+      #problem { background-position:right center; }
     }
   </style>
 </head>
