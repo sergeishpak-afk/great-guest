@@ -2,331 +2,1491 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Great Guest</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Great Guest — Лояльность нового поколения</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160/build/three.min.js"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --gold: #c9a96e;
-      --bg: #0f0f0f;
-      --card: #1a1a1a;
-      --border: #2a2a2a;
-      --text: #f0f0f0;
-      --muted: #888;
+      --bg:      #0C0B09;
+      --bg2:     #0F0E0B;
+      --surface: #161410;
+      --gold:    #C9A96E;
+      --gold2:   #E8C98A;
+      --goldDim: rgba(201,169,110,.1);
+      --goldGlow:rgba(201,169,110,.25);
+      --text:    #F0EBE0;
+      --muted:   #6B6455;
+      --border:  rgba(201,169,110,.14);
+      --ease:    cubic-bezier(.16,1,.3,1);
     }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--tg-theme-bg-color, var(--bg));
-      color: var(--tg-theme-text-color, var(--text));
-      min-height: 100vh;
-      padding: 0;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; cursor: none; }
+
+    /* ── Scroll progress ─── */
+    #sp {
+      position: fixed; top: 0; left: 0; height: 2px; z-index: 9999;
+      background: linear-gradient(90deg, #C9A96E, #E8C98A);
+      width: 0%; transition: width .05s linear;
     }
 
-    #loading {
+    /* ── Custom cursor ───── */
+    #cur { position: fixed; top:0; left:0; z-index:9998; pointer-events:none; }
+    #cur-d { position:absolute; width:8px; height:8px; background:var(--gold2); border-radius:50%; transform:translate(-50%,-50%); transition:width .3s var(--ease),height .3s var(--ease); }
+    #cur-r { position:absolute; width:40px; height:40px; border:1px solid rgba(201,169,110,.45); border-radius:50%; transform:translate(-50%,-50%); transition:transform .18s var(--ease),width .3s,height .3s,opacity .3s; }
+    body.ch #cur-d { width:5px; height:5px; }
+    body.ch #cur-r { width:60px; height:60px; opacity:.5; }
+
+    /* ── Grain ──────────── */
+    body::before {
+      content:''; position:fixed; inset:0; z-index:1; pointer-events:none;
+      background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E") repeat;
+      background-size:180px; opacity:.55;
+    }
+
+    /* ── Nav ────────────── */
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:24px 48px; transition:background .4s,padding .4s var(--ease); }
+    nav.sc { background:rgba(12,11,9,.88); backdrop-filter:blur(20px); padding:14px 48px; border-bottom:1px solid var(--border); }
+    .nav-logo { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:500; color:var(--text); text-decoration:none; }
+    .nav-logo em { color:var(--gold); font-style:italic; }
+    .nav-links { display:flex; gap:36px; }
+    .nav-links a { font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color .2s; }
+    .nav-links a:hover { color:var(--text); }
+    .nav-cta { font-size:12px; letter-spacing:.06em; padding:10px 22px; border:1px solid var(--border); border-radius:2px; color:var(--gold); text-decoration:none; transition:background .2s,color .2s; }
+    .nav-cta:hover { background:var(--gold); color:var(--bg); }
+
+    /* ── Sections ────────── */
+    section { position:relative; z-index:2; }
+    .reveal { opacity:0; transform:translateY(28px); transition:opacity .8s var(--ease),transform .8s var(--ease); }
+    .reveal.in { opacity:1; transform:none; }
+    .rd1{transition-delay:.1s} .rd2{transition-delay:.2s} .rd3{transition-delay:.3s} .rd4{transition-delay:.4s} .rd5{transition-delay:.5s}
+
+    /* ── HERO ────────────── */
+    #hero {
+      min-height:100vh; display:grid; grid-template-columns:1fr 1fr;
+      align-items:center; padding:120px 48px 80px; gap:64px; overflow:hidden;
+      background-image:
+        linear-gradient(100deg, rgba(12,11,9,0.97) 0%, rgba(12,11,9,0.82) 42%, rgba(12,11,9,0.35) 100%),
+        url('https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg');
+      background-size: cover;
+      background-position: center 30%;
+    }
+
+    /* Canvas particles */
+    #hero-canvas { position:absolute; inset:0; pointer-events:none; z-index:0; }
+
+    /* 3D depth layer */
+    .hero-3d { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
+
+    /* spinCube kept for CTA decoration */
+    @keyframes spinCube {
+      0%   { transform:rotateX(15deg) rotateY(0deg); }
+      100% { transform:rotateX(15deg) rotateY(360deg); }
+    }
+
+    /* Floating rings */
+    .ring-deco { position:absolute; border-radius:50%; border:1px solid rgba(201,169,110,.12); animation:floatRing 6s ease-in-out infinite; pointer-events:none; }
+    .ring-deco.r1 { width:300px; height:300px; top:10%; left:-80px; animation-delay:0s; transform:rotateX(65deg); }
+    .ring-deco.r2 { width:180px; height:180px; top:55%; right:5%; animation-delay:2s; transform:rotateX(50deg); }
+    .ring-deco.r3 { width:90px; height:90px; bottom:15%; left:45%; animation-delay:4s; transform:rotateX(30deg); }
+    @keyframes floatRing { 0%,100%{transform:rotateX(65deg) translateY(0px)} 50%{transform:rotateX(65deg) translateY(-12px)} }
+
+    /* Dot grid */
+    .dot-grid {
+      position:absolute; inset:0;
+      background-image:radial-gradient(circle, rgba(201,169,110,.12) 1px, transparent 1px);
+      background-size:40px 40px;
+      mask-image:radial-gradient(ellipse 70% 60% at 80% 40%, black 0%, transparent 70%);
+    }
+
+    /* Floating particles (CSS-only fallback) */
+    .fp { position:absolute; border-radius:50%; background:var(--gold); pointer-events:none; animation:fpFloat linear infinite; opacity:0; }
+    @keyframes fpFloat { 0%{transform:translateY(0) scale(1);opacity:0} 10%{opacity:.4} 90%{opacity:.2} 100%{transform:translateY(-120px) scale(.5);opacity:0} }
+
+    /* Hero content */
+    .hero-left { position:relative; z-index:1; }
+    .hero-eyebrow { display:inline-flex; align-items:center; gap:10px; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:28px; opacity:0; animation:fuA .8s var(--ease) .2s forwards; }
+    .hero-eyebrow::before { content:''; width:28px; height:1px; background:var(--gold); }
+    .hero-title { font-family:'Cormorant Garamond',serif; font-size:clamp(50px,6vw,86px); font-weight:400; line-height:1.06; letter-spacing:-.01em; margin-bottom:24px; }
+    .hero-title .ln { display:block; overflow:hidden; }
+    .hero-title .li { display:block; opacity:0; transform:translateY(105%); }
+    .hero-title .ln:nth-child(1) .li { animation:slideUp 1s var(--ease) .3s forwards; }
+    .hero-title .ln:nth-child(2) .li { animation:slideUp 1s var(--ease) .45s forwards; }
+    .hero-title .ln:nth-child(3) .li { animation:slideUp 1s var(--ease) .6s forwards; }
+    .hero-title em { color:var(--gold); font-style:italic; }
+    .hero-sub { font-size:15px; line-height:1.8; color:var(--muted); max-width:420px; margin-bottom:44px; opacity:0; animation:fuA .8s var(--ease) .75s forwards; }
+    .hero-actions { display:flex; align-items:center; gap:20px; opacity:0; animation:fuA .8s var(--ease) .9s forwards; }
+
+    /* Magnetic buttons */
+    .btn-m { position:relative; display:inline-flex; align-items:center; gap:8px; overflow:hidden; padding:16px 36px; border-radius:2px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; letter-spacing:.04em; text-decoration:none; cursor:none; transition:transform .3s var(--ease); }
+    .btn-p { background:var(--gold); color:var(--bg); }
+    .btn-p::after { content:''; position:absolute; inset:0; background:var(--gold2); transform:translateY(101%); transition:transform .4s var(--ease); }
+    .btn-p:hover::after { transform:translateY(0); }
+    .btn-p span { position:relative; z-index:1; }
+    .btn-g { background:transparent; color:var(--text); border:1px solid var(--border); }
+    .btn-g:hover { border-color:rgba(201,169,110,.4); color:var(--gold); }
+
+    /* Phone wrap */
+    .hero-right { display:flex; justify-content:center; align-items:center; opacity:0; animation:fuIn 1.2s var(--ease) .6s forwards; position:relative; z-index:1; }
+    .phone-scene { position:relative; }
+
+    /* Sonar rings around phone */
+    .sonar-ring { position:absolute; border-radius:36px; border:1px solid rgba(201,169,110,.3); animation:sonarPulse 3.5s ease-out infinite; pointer-events:none; }
+    .sonar-ring:nth-child(1) { inset:-20px; animation-delay:0s; }
+    .sonar-ring:nth-child(2) { inset:-40px; animation-delay:1.2s; }
+    .sonar-ring:nth-child(3) { inset:-60px; animation-delay:2.4s; }
+    @keyframes sonarPulse { 0%{opacity:.5;transform:scale(.98)} 100%{opacity:0;transform:scale(1.08)} }
+
+    .phone-wrap { animation:floatPhone 6s ease-in-out infinite; }
+    @keyframes floatPhone { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-16px) rotate(1deg)} }
+    .phone { width:250px; height:500px; background:var(--surface); border-radius:34px; border:1px solid rgba(201,169,110,.18); overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.05); position:relative; }
+    .phone::before { content:''; position:absolute; top:12px; left:50%; transform:translateX(-50%); width:72px; height:6px; background:rgba(255,255,255,.07); border-radius:99px; z-index:10; }
+    /* Live iframe phone */
+    .phone-live { background:#0C0B09; }
+    .phone-iframe { width:375px; height:812px; border:none; transform:scale(0.6667); transform-origin:top left; pointer-events:none; display:block; }
+    .pscreen { padding:28px 18px 18px; height:100%; display:flex; flex-direction:column; gap:13px; }
+    .ps-hdr { text-align:center; }
+    .ps-logo { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:500; color:var(--text); }
+    .ps-logo em { color:var(--gold); font-style:italic; }
+    .ps-greet { font-size:11px; color:var(--muted); margin-top:2px; }
+    .ps-card { background:linear-gradient(135deg,#1C1A12,#221F14); border:1px solid rgba(201,169,110,.2); border-radius:14px; padding:18px; text-align:center; position:relative; overflow:hidden; }
+    .ps-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--gold),var(--gold2)); }
+    .ps-emo { font-size:32px; }
+    .ps-st { font-family:'Cormorant Garamond',serif; font-size:20px; color:var(--gold); font-weight:500; }
+    .ps-vis { font-size:11px; color:var(--muted); }
+    .ps-bar { height:3px; background:rgba(255,255,255,.07); border-radius:99px; margin-top:10px; }
+    .ps-bar-f { height:100%; width:40%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:99px; }
+    .ps-btn { background:var(--gold); color:var(--bg); border-radius:9px; padding:11px; font-size:11px; font-weight:500; text-align:center; }
+    .ps-row { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); border-radius:9px; padding:9px 12px; display:flex; justify-content:space-between; align-items:center; font-size:11px; }
+    .ps-rd { color:var(--muted); font-size:10px; }
+
+    /* Scroll hint */
+    .scroll-hint { position:absolute; bottom:36px; left:48px; display:flex; align-items:center; gap:12px; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); opacity:0; animation:fuA .8s var(--ease) 1.3s forwards; z-index:1; }
+    .sl { width:28px; height:1px; background:var(--muted); position:relative; overflow:hidden; }
+    .sl::after { content:''; position:absolute; inset:0; background:var(--gold); transform:translateX(-100%); animation:scan 2.2s ease-in-out 1.5s infinite; }
+    @keyframes scan { 0%{transform:translateX(-100%)} 50%{transform:translateX(0)} 100%{transform:translateX(100%)} }
+
+    @keyframes slideUp { to{opacity:1;transform:translateY(0)} }
+    @keyframes fuA { to{opacity:1;transform:translateY(0)} }
+    @keyframes fuIn { to{opacity:1} }
+
+    /* ── Marquee ───────── */
+    .marquee-wrap { padding:18px 0; overflow:hidden; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+    .marquee { display:flex; gap:56px; animation:mq 26s linear infinite; width:max-content; }
+    .mq-item { display:flex; align-items:center; gap:14px; font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:300; letter-spacing:.04em; color:var(--muted); white-space:nowrap; flex-shrink:0; }
+    .mq-item em { color:var(--gold); font-style:italic; }
+    .mq-sep { width:4px; height:4px; background:var(--gold); border-radius:50%; opacity:.4; }
+    @keyframes mq { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ── Problem ────────── */
+    #problem { padding:120px 48px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+    .sec-lbl { font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+    .sec-lbl::before { content:''; width:22px; height:1px; background:var(--gold); }
+    .sec-title { font-family:'Cormorant Garamond',serif; font-size:clamp(34px,4vw,54px); font-weight:400; line-height:1.12; letter-spacing:-.01em; }
+    .sec-title em { color:var(--gold); font-style:italic; }
+    .prob-stats { display:flex; flex-direction:column; gap:28px; }
+    .stat-row { display:flex; gap:22px; align-items:flex-start; padding-bottom:28px; border-bottom:1px solid rgba(255,255,255,.04); }
+    .stat-row:last-child { border:none; padding:0; }
+    .stat-num { font-family:'Bebas Neue',sans-serif; font-size:56px; line-height:1; color:var(--gold); flex-shrink:0; }
+    .stat-text strong { display:block; font-size:14px; font-weight:500; margin-bottom:3px; padding-top:7px; }
+    .stat-text span { font-size:13px; color:var(--muted); line-height:1.6; }
+    .prob-desc { font-size:15px; line-height:1.8; color:var(--muted); margin-top:20px; }
+
+    /* ── How it works ───── */
+    #how { padding:120px 48px; background:var(--bg2); }
+    #how .sec-hdr { text-align:center; margin-bottom:72px; }
+    .steps-wrap { position:relative; }
+
+    /* SVG connector */
+    .steps-svg { position:absolute; top:60px; left:calc(16.66% + 18px); width:calc(66.66% - 36px); height:2px; overflow:visible; pointer-events:none; z-index:0; }
+    .conn-path { fill:none; stroke:rgba(201,169,110,.2); stroke-width:1; stroke-dasharray:6,4; }
+    .conn-dot { fill:var(--gold); r:4; filter:drop-shadow(0 0 4px rgba(201,169,110,.8)); }
+
+    .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; position:relative; z-index:1; }
+    .step { background:var(--surface); padding:44px 32px; border:1px solid var(--border); position:relative; transition:border-color .3s,background .3s,transform .4s var(--ease); transform-style:preserve-3d; }
+    .step:hover { border-color:rgba(201,169,110,.35); background:#1B190F; }
+    .step-n { font-family:'Bebas Neue',sans-serif; font-size:64px; line-height:1; color:rgba(201,169,110,.1); position:absolute; top:20px; right:20px; }
+    .step-icon { width:44px; height:44px; border:1px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:20px; background:var(--goldDim); }
+    .step-title { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:500; margin-bottom:10px; }
+    .step-desc { font-size:13px; line-height:1.75; color:var(--muted); }
+
+    /* 3D tilt card glow */
+    .tilt-glow { position:absolute; width:140px; height:140px; border-radius:50%; background:radial-gradient(circle,rgba(201,169,110,.12) 0%,transparent 60%); pointer-events:none; transform:translate(-50%,-50%); transition:opacity .3s; opacity:0; }
+    .step:hover .tilt-glow { opacity:1; }
+
+    /* ── Features ────────── */
+    #features { padding:120px 48px; }
+    #features .sec-hdr { margin-bottom:56px; }
+    .feat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1px; border:1px solid var(--border); }
+    .feat {
+      padding:44px 36px; position:relative; overflow:hidden;
+      border:1px solid transparent; cursor:none;
+      transition:background .3s,border-color .3s,transform .15s;
+      transform-style:preserve-3d;
+    }
+    .feat:hover { background:var(--surface); border-color:var(--border); }
+    .feat::after { content:''; position:absolute; bottom:0; left:36px; width:0; height:1px; background:var(--gold); transition:width .5s var(--ease); }
+    .feat:hover::after { width:calc(100% - 72px); }
+    .feat-icon { font-size:26px; margin-bottom:18px; }
+    .feat-title { font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:500; margin-bottom:9px; }
+    .feat-desc { font-size:13px; line-height:1.75; color:var(--muted); }
+    .feat-tag { display:inline-block; margin-top:14px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); background:var(--goldDim); padding:4px 11px; border-radius:2px; }
+
+    /* ── Numbers ─────────── */
+    #numbers { padding:90px 48px; background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+    .nums-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); }
+    .num-cell { background:var(--bg2); padding:44px 28px; text-align:center; }
+    .num-val { font-family:'Bebas Neue',sans-serif; font-size:70px; line-height:1; color:var(--gold); }
+    .num-sfx { color:var(--muted); }
+    .num-lbl { font-size:12px; color:var(--muted); letter-spacing:.04em; margin-top:6px; }
+
+    /* 3D floating shapes in numbers section */
+    .num-shape { position:absolute; pointer-events:none; opacity:.08; animation:numFloat 8s ease-in-out infinite; }
+    @keyframes numFloat { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(180deg)} }
+
+    /* ── Restaurant ──────── */
+    #restaurant { padding:120px 48px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+    .dash-mock { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.6); transition:transform .15s; transform-style:preserve-3d; }
+    .dm-hdr { background:rgba(255,255,255,.03); padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:7px; }
+    .dm-dot { width:9px; height:9px; border-radius:50%; }
+    .dm-dot:nth-child(1){background:#FF5F57} .dm-dot:nth-child(2){background:#FEBC2E} .dm-dot:nth-child(3){background:#28C840}
+    .dm-ttl { font-size:11px; color:var(--muted); margin-left:7px; }
+    .dm-body { padding:18px; display:flex; flex-direction:column; gap:14px; }
+    .dm-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .dm-stat { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:7px; padding:11px; }
+    .dm-sv { font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--gold); line-height:1; }
+    .dm-sl { font-size:9px; color:var(--muted); margin-top:2px; letter-spacing:.04em; text-transform:uppercase; }
+    .dm-guests { display:flex; flex-direction:column; gap:7px; }
+    .dm-guest { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.04); border-radius:7px; padding:9px 12px; display:flex; justify-content:space-between; align-items:center; }
+    .dm-gi { display:flex; align-items:center; gap:9px; }
+    .dm-av { width:26px; height:26px; border-radius:50%; background:var(--goldDim); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; }
+    .dm-nm { font-size:11px; font-weight:500; }
+    .dm-vs { font-size:9px; color:var(--muted); }
+    .dm-badge { font-size:9px; padding:2px 7px; border-radius:2px; }
+    .bg-gold{background:rgba(255,215,0,.1);color:#FFD700} .bg-silv{background:rgba(192,192,192,.1);color:#C0C0C0} .bg-plat{background:rgba(184,184,232,.1);color:#B8B8E8}
+    .feat-list { margin-top:36px; display:flex; flex-direction:column; gap:13px; }
+    .feat-item { display:flex; align-items:flex-start; gap:12px; font-size:14px; line-height:1.6; }
+    .feat-item::before { content:''; width:16px; height:1px; background:var(--gold); flex-shrink:0; margin-top:10px; opacity:.6; }
+    .feat-item span { color:var(--muted); }
+
+    /* ── Telegram ────────── */
+    #telegram { padding:120px 48px; background:var(--bg2); text-align:center; }
+    .tg-pill { display:inline-flex; align-items:center; gap:8px; background:var(--goldDim); border:1px solid var(--border); border-radius:99px; padding:7px 18px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--gold); margin-bottom:24px; }
+    .tg-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:60px; text-align:left; }
+    .tg-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:28px; transition:transform .35s var(--ease),border-color .3s; transform-style:preserve-3d; position:relative; overflow:hidden; }
+    .tg-card:hover { transform:translateY(-8px) !important; border-color:rgba(201,169,110,.32); }
+    .tg-icon { font-size:30px; margin-bottom:14px; }
+    .tg-title { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:500; margin-bottom:7px; }
+    .tg-desc { font-size:13px; line-height:1.7; color:var(--muted); }
+
+    /* ── 3D floating decorations (global) ─── */
+    .deco-tri { position:absolute; pointer-events:none; }
+    .deco-tri svg { animation:triSpin 20s linear infinite; }
+    @keyframes triSpin { from{transform:rotateY(0deg)} to{transform:rotateY(360deg)} }
+
+    /* Floating hexagon */
+    .hex { position:absolute; pointer-events:none; opacity:.07; }
+    .hex svg { animation:hexPulse 4s ease-in-out infinite; }
+    @keyframes hexPulse { 0%,100%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.1) rotate(30deg)} }
+
+    /* ── CTA ─────────────── */
+    #cta { padding:150px 48px; text-align:center; position:relative; overflow:hidden; }
+    #cta::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(201,169,110,.07) 0%,transparent 70%); pointer-events:none; }
+
+    /* 3D spinning QR in CTA */
+    .cta-3d { position:absolute; right:8%; top:50%; transform:translateY(-50%); perspective:500px; opacity:.15; pointer-events:none; }
+    .qr-cube { width:120px; height:120px; transform-style:preserve-3d; animation:spinCube 15s linear infinite; }
+    .qr-face { position:absolute; width:120px; height:120px; border:1px solid rgba(201,169,110,.6); display:flex; align-items:center; justify-content:center; font-size:32px; }
+    .qr-face.ft { transform:translateZ(60px); }
+    .qr-face.bk { transform:rotateY(180deg) translateZ(60px); }
+    .qr-face.lt { transform:rotateY(-90deg) translateZ(60px); }
+    .qr-face.rt { transform:rotateY(90deg) translateZ(60px); }
+    .qr-face.tp { transform:rotateX(90deg) translateZ(60px); }
+    .qr-face.bt { transform:rotateX(-90deg) translateZ(60px); }
+
+    .cta-lbl { margin-bottom:22px; justify-content:center; }
+    #cta .sec-title { text-align:center; margin:0 auto 14px; max-width:680px; }
+    .cta-sub { font-size:15px; color:var(--muted); line-height:1.7; max-width:460px; margin:0 auto 52px; }
+    .cta-btns { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; }
+
+    /* ── Footer ──────────── */
+    footer { padding:44px 48px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; position:relative; z-index:2; }
+    .ft-logo { font-family:'Cormorant Garamond',serif; font-size:19px; color:var(--text); text-decoration:none; }
+    .ft-logo em { color:var(--gold); font-style:italic; }
+    .ft-links { display:flex; gap:28px; }
+    .ft-links a { font-size:12px; color:var(--muted); text-decoration:none; transition:color .2s; }
+    .ft-links a:hover { color:var(--gold); }
+    .ft-r { font-size:11px; color:var(--muted); }
+
+    /* ── Story Scroll (How it works) ── */
+    .story-track {
+      position: relative;
+      height: 300vh; /* 3 steps × 100vh */
+    }
+    .story-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .story-slides {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform 0s; /* driven by JS */
+    }
+    .story-slide {
+      min-width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 48px;
+      gap: 80px;
+    }
+    .story-slide-content { max-width: 480px; }
+    .story-slide-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 160px;
+      line-height: 1;
+      color: rgba(201,169,110,.06);
+      position: absolute;
+      right: 6%;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      user-select: none;
+    }
+    .story-slide-icon {
+      width: 64px; height: 64px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      background: var(--goldDim);
+      margin-bottom: 28px;
+    }
+    .story-slide-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(32px, 4vw, 54px);
+      font-weight: 400; line-height: 1.1;
+      margin-bottom: 18px;
+    }
+    .story-slide-title em { color: var(--gold); font-style: italic; }
+    .story-slide-desc {
+      font-size: 15px; line-height: 1.85;
+      color: var(--muted); max-width: 420px;
+    }
+    /* Progress dots */
+    .story-dots {
+      position: absolute;
+      bottom: 36px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 10px;
+      z-index: 2;
+    }
+    .story-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(201,169,110,.25);
+      transition: background .4s, transform .4s;
+    }
+    .story-dot.active {
+      background: var(--gold);
+      transform: scale(1.4);
+    }
+    /* Visual panel on the right */
+    .story-visual {
+      flex-shrink: 0;
+      width: 340px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .story-visual-inner {
+      width: 280px; height: 280px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
       gap: 16px;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    #app { display: none; padding: 24px 20px 40px; }
-
-    .header {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-    .logo { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
-    .logo span { color: var(--gold); }
-    .greeting { color: var(--muted); font-size: 14px; margin-top: 4px; }
-
-    .status-card {
-      background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 24px;
-      margin-bottom: 20px;
-      text-align: center;
       position: relative;
       overflow: hidden;
     }
-    .status-card::before {
+    .story-visual-inner::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--gold), #e8c97e, var(--gold));
-    }
-
-    .status-emoji { font-size: 48px; margin-bottom: 8px; }
-    .status-name { font-size: 24px; font-weight: 700; color: var(--gold); }
-    .visit-count { font-size: 14px; color: var(--muted); margin-top: 6px; }
-
-    .progress-wrap { margin-top: 16px; }
-    .progress-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    .progress-bar {
-      height: 6px;
-      background: var(--border);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--gold), #e8c97e);
-      border-radius: 99px;
-      transition: width .6s ease;
-    }
-
-    .section-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 12px;
-    }
-
-    .qr-section { margin-bottom: 20px; }
-    .qr-btn {
-      width: 100%;
+      top: 0; left: 0;
+      width: 22px; height: 2px;
       background: var(--gold);
-      color: #0f0f0f;
-      border: none;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 700;
-      padding: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: opacity .2s, transform .1s;
     }
-    .qr-btn:active { transform: scale(.97); opacity: .85; }
-
-    .qr-display {
-      display: none;
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      text-align: center;
-      margin-top: 12px;
+    .story-visual-inner::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 2px; height: 22px;
+      background: var(--gold);
     }
-    .qr-display img { width: 200px; height: 200px; }
-    .qr-hint { font-size: 12px; color: #666; margin-top: 8px; }
+    .story-visual-emoji { font-size: 56px; }
+    .story-visual-label { font-size: 13px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 
-    .visits-section { margin-bottom: 20px; }
-    .visit-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 8px;
-      font-size: 14px;
+    /* Slide-in animation */
+    @keyframes slideInLeft  { from { opacity:0; transform: translateX(-40px); } to { opacity:1; transform: none; } }
+    @keyframes slideInRight { from { opacity:0; transform: translateX(40px); }  to { opacity:1; transform: none; } }
+    .story-slide.entering-content .story-slide-content { animation: slideInLeft .6s var(--ease) forwards; }
+    .story-slide.entering-content .story-visual        { animation: slideInRight .6s var(--ease) .1s forwards; opacity: 0; }
+    .story-slide.entering-content .story-visual.anim-done { opacity: 1; }
+
+    /* On mobile — collapse to normal stacked steps */
+    @media(max-width: 900px) {
+      .story-track  { height: auto; }
+      .story-sticky { position: relative; height: auto; display: block; }
+      .story-slides { flex-direction: column; height: auto; }
+      .story-slide  {
+        min-width: 100%; flex-direction: column; height: auto;
+        padding: 48px 20px; gap: 28px; border-bottom: 1px solid var(--border);
+        align-items: flex-start;
+      }
+      .story-slide:last-child { border: none; }
+      .story-slide-num { display: none; }
+      .story-visual { width: 100%; }
+      .story-visual-inner { width: 100%; height: 180px; flex-direction: row; border-radius: 14px; }
+      .story-dots { display: none; }
+      .story-slide-content { max-width: 100%; }
     }
-    .visit-restaurant { font-weight: 500; }
-    .visit-date { color: var(--muted); font-size: 13px; }
 
-    .empty { text-align: center; color: var(--muted); padding: 20px; font-size: 14px; }
+    /* ── Three.js canvases ── */
+    .three-canvas {
+      position: absolute;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      animation: fadeInThree 1.4s var(--ease) .6s forwards;
+    }
+    @keyframes fadeInThree { to { opacity: 1; } }
 
-    #error {
-      display: none;
-      text-align: center;
-      padding: 40px 20px;
-      color: #e88;
+    #c-glass {
+      right: 4%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 200px; height: 340px;
+      mix-blend-mode: screen;
+    }
+    #c-crown {
+      right: 3%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 160px; height: 160px;
+    }
+    #c-diamond {
+      right: 6%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 180px; height: 220px;
+      mix-blend-mode: screen;
+    }
+    @media(max-width: 900px) {
+      #c-glass, #c-crown, #c-diamond { display: none; }
+    }
+
+    /* ── Hamburger ──────── */
+    .ham {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; padding: 6px; border: none; background: none;
+      z-index: 200; position: relative;
+    }
+    .ham span {
+      display: block; width: 22px; height: 1.5px; background: var(--text);
+      border-radius: 2px; transition: transform .3s var(--ease), opacity .3s;
+    }
+    body.menu-open .ham span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    body.menu-open .ham span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    body.menu-open .ham span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    /* Mobile overlay nav */
+    .mob-nav {
+      display: none; position: fixed; inset: 0; z-index: 150;
+      background: rgba(12,11,9,.97); backdrop-filter: blur(24px);
+      flex-direction: column; align-items: center; justify-content: center; gap: 36px;
+    }
+    body.menu-open .mob-nav { display: flex; }
+    .mob-nav a {
+      font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 400;
+      color: var(--text); text-decoration: none; letter-spacing: -.01em;
+      transition: color .2s;
+    }
+    .mob-nav a:hover, .mob-nav a:active { color: var(--gold); }
+    .mob-nav .nav-cta { font-family: 'DM Sans', sans-serif; font-size: 14px; }
+
+    /* ── Touch devices — disable cursor trick ── */
+    @media (hover: none) {
+      body { cursor: auto; }
+      #cur { display: none; }
+      .btn-m, a, button { cursor: pointer; }
+    }
+
+    /* ── Tablet / small desktop ── */
+    @media(max-width: 900px) {
+      nav { padding: 16px 20px; }
+      nav.sc { padding: 12px 20px; }
+      .nav-links { display: none; }
+      .ham { display: flex; }
+
+      #hero {
+        grid-template-columns: 1fr;
+        padding: 88px 20px 60px;
+        gap: 36px;
+      }
+      .hero-right { order: -1; }
+      .hero-title { font-size: clamp(40px, 9vw, 72px); }
+      .hero-sub { max-width: 100%; }
+      .hero-actions { flex-direction: column; align-items: stretch; gap: 12px; }
+      .btn-m { justify-content: center; }
+      .phone { width: 220px; height: 440px; }
+      .scroll-hint { left: 20px; }
+
+      .marquee-wrap { padding: 14px 0; }
+      .mq-item { font-size: 16px; }
+
+      #problem { grid-template-columns: 1fr; padding: 72px 20px; gap: 44px; }
+      .stat-num { font-size: 48px; }
+
+      #how { padding: 72px 20px; }
+      .steps { grid-template-columns: 1fr; gap: 1px; }
+      .steps-svg { display: none; }
+      .step { padding: 36px 28px; }
+
+      #features { padding: 72px 20px; }
+      .feat-grid { grid-template-columns: 1fr; }
+      .feat { padding: 36px 28px; }
+
+      #numbers { padding: 60px 20px; }
+      .nums-grid { grid-template-columns: repeat(2,1fr); }
+      .num-val { font-size: 56px; }
+
+      #restaurant { grid-template-columns: 1fr; padding: 72px 20px; gap: 44px; }
+
+      #telegram { padding: 72px 20px; }
+      .tg-grid { grid-template-columns: 1fr; }
+
+      #cta { padding: 90px 20px; }
+      .cta-3d { display: none; }
+      .cta-btns { flex-direction: column; align-items: center; }
+      .cta-btns .btn-m { width: 100%; max-width: 340px; justify-content: center; }
+
+      footer { padding: 28px 20px; }
+      .ft-links { display: none; }
+
+      .cube-scene { display: none; }
+      .diamond-scene { display: none; }
+      .ring-deco.r1 { display: none; }
+    }
+
+    /* ── Mobile phones ── */
+    @media(max-width: 480px) {
+      .hero-title { font-size: clamp(34px, 10vw, 48px); }
+      .hero-sub { font-size: 13px; }
+      .hero-actions .btn-m { padding: 14px 20px; font-size: 13px; }
+
+      .sec-title { font-size: clamp(26px, 8vw, 40px); }
+      .sec-lbl { font-size: 10px; }
+
+      .stat-num { font-size: 40px; }
+      .stat-text strong { font-size: 13px; }
+      .stat-text span { font-size: 12px; }
+
+      .step { padding: 28px 20px; }
+      .step-title { font-size: 18px; }
+      .step-n { font-size: 48px; }
+
+      .feat { padding: 28px 20px; }
+      .feat-title { font-size: 18px; }
+
+      .num-val { font-size: 44px; }
+      .num-lbl { font-size: 11px; }
+      .nums-grid { gap: 0; }
+
+      .tg-card { padding: 22px 20px; }
+      .tg-title { font-size: 17px; }
+
+      .mq-item { font-size: 14px; }
+
+      footer { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+      .phone { width: 200px; height: 400px; }
+    }
+
+    /* ── Very small (< 360px) ── */
+    @media(max-width: 359px) {
+      nav { padding: 14px 16px; }
+      .hero-title { font-size: 30px; }
+      .phone { width: 180px; height: 360px; }
+    }
+
+    /* ── Phosphor icon colors ── */
+    .story-slide-icon i,
+    .feat-icon i,
+    .tg-icon i { color: var(--gold); }
+    .tg-pill i { color: var(--gold); margin-right: 2px; }
+
+    /* ── Story visual mini-UI panels ── */
+    .sv-chat-wrap, .sv-qr-wrap, .sv-confirm-wrap {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      padding: 22px 20px; gap: 10px;
+    }
+    .sv-chat-wrap { justify-content: center; align-items: stretch; }
+    .sv-qr-wrap   { justify-content: center; align-items: center; gap: 8px; }
+    .sv-confirm-wrap { justify-content: center; align-items: center; gap: 12px; }
+
+    /* Chat panel */
+    .sv-chat-hdr { display:flex; align-items:center; gap:10px; padding-bottom:11px; border-bottom:1px solid var(--border); }
+    .sv-bot-av   { width:30px; height:30px; border-radius:50%; background:var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:12px; font-weight:600; color:var(--bg); flex-shrink:0; }
+    .sv-bot-nm   { font-size:11px; font-weight:500; color:var(--text); }
+    .sv-bot-st   { font-size:9px; color:var(--gold); letter-spacing:.05em; text-transform:uppercase; }
+    .sv-bubble   { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); border-radius:4px 10px 10px 10px; padding:8px 11px; font-size:11px; line-height:1.6; color:var(--text); }
+    .sv-kbd      { display:flex; flex-direction:column; gap:5px; margin-top:2px; }
+    .sv-kbtn     { background:rgba(201,169,110,.08); border:1px solid rgba(201,169,110,.22); border-radius:6px; padding:7px 11px; font-size:10px; color:var(--gold); text-align:center; }
+    .sv-kbrow    { display:flex; gap:5px; }
+    .sv-kbtn-sm  { flex:1; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:6px; padding:6px 8px; font-size:9px; color:var(--muted); text-align:center; }
+
+    /* QR panel */
+    .sv-qr-ico   { font-size:88px; color:var(--gold); line-height:1; opacity:.8; }
+    .sv-qr-ttl   { font-family:'Cormorant Garamond',serif; font-size:15px; color:var(--text); }
+    .sv-qr-sub   { font-size:9px; color:var(--muted); letter-spacing:.07em; text-transform:uppercase; }
+
+    /* Confirm panel */
+    .sv-confirm-ico  { font-size:50px; color:var(--gold); line-height:1; }
+    .sv-confirm-ttl  { font-family:'Cormorant Garamond',serif; font-size:16px; color:var(--text); }
+    .sv-guest-row    { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:8px; padding:9px 13px; width:100%; }
+    .sv-guest-av     { width:26px; height:26px; border-radius:50%; background:var(--goldDim); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0; }
+    .sv-guest-nm     { font-size:11px; font-weight:500; }
+    .sv-guest-prog   { font-size:9px; color:var(--muted); margin-top:1px; }
+
+    @media(max-width: 900px) {
+      .sv-qr-ico { font-size:64px; }
+      .sv-confirm-ico { font-size:38px; }
+      .sv-chat-wrap, .sv-qr-wrap, .sv-confirm-wrap { padding:14px 16px; gap:8px; }
     }
   </style>
 </head>
 <body>
 
-<div id="loading">
-  <div class="spinner"></div>
-  <div style="color:#888;font-size:14px">Загружаем...</div>
+<div id="sp"></div>
+<div id="cur"><div id="cur-d"></div><div id="cur-r"></div></div>
+
+<!-- NAV -->
+<!-- Mobile overlay nav -->
+<div class="mob-nav" id="mobNav">
+  <a href="#how"        onclick="closeMobNav()">Как работает</a>
+  <a href="#features"   onclick="closeMobNav()">Возможности</a>
+  <a href="#restaurant" onclick="closeMobNav()">Для ресторанов</a>
+  <a href="#cta" class="nav-cta" onclick="closeMobNav()">Попробовать →</a>
 </div>
 
-<div id="error">
-  <div style="font-size:32px;margin-bottom:12px">⚠️</div>
-  <div id="error-msg">Что-то пошло не так</div>
-</div>
-
-<div id="app">
-  <div class="header">
-    <div class="logo">Great<span>Guest</span></div>
-    <div class="greeting" id="greeting">Добро пожаловать</div>
+<nav id="nav">
+  <a href="#" class="nav-logo">Great<em>Guest</em></a>
+  <div class="nav-links">
+    <a href="#how">Как работает</a>
+    <a href="#features">Возможности</a>
+    <a href="#restaurant">Для ресторанов</a>
   </div>
-
-  <div class="status-card">
-    <div class="status-emoji" id="status-emoji">🥉</div>
-    <div class="status-name" id="status-name">Bronze</div>
-    <div class="visit-count" id="visit-count">0 визитов</div>
-    <div class="progress-wrap" id="progress-wrap">
-      <div class="progress-label">
-        <span id="progress-from"></span>
-        <span id="progress-to"></span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="qr-section">
-    <div class="section-title">Визит</div>
-    <button class="qr-btn" onclick="getQR()">
-      <span>🎫</span> Получить QR для визита
+  <div style="display:flex;align-items:center;gap:14px">
+    <a href="https://t.me/great_guest_bot" class="nav-cta">Попробовать →</a>
+    <button class="ham" id="hamBtn" onclick="toggleMobNav()" aria-label="Меню">
+      <span></span><span></span><span></span>
     </button>
-    <div class="qr-display" id="qr-display">
-      <img id="qr-img" src="" alt="QR" />
-      <div class="qr-hint">Покажи код администратору ресторана</div>
-    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+
+  <!-- 3D depth layer -->
+  <div class="hero-3d">
+    <div class="dot-grid"></div>
+
+    <!-- Floating rings -->
+    <div class="ring-deco r1"></div>
+    <div class="ring-deco r2"></div>
+    <div class="ring-deco r3"></div>
   </div>
 
-  <div class="visits-section">
-    <div class="section-title">История визитов</div>
-    <div id="visits-list"><div class="empty">Визитов пока нет</div></div>
+  <div class="hero-left">
+    <div class="hero-eyebrow">Loyalty 2.0 · HoReCa</div>
+    <h1 class="hero-title">
+      <span class="ln"><span class="li">Лояльность</span></span>
+      <span class="ln"><span class="li">нового</span></span>
+      <span class="ln"><span class="li"><em>поколения</em></span></span>
+    </h1>
+    <p class="hero-sub">Гость получает персональный QR в Telegram. Ресторан сканирует — видит статус, историю и предпочтения. Без приложений. Без карточек.</p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn-m btn-p" data-mag><span>Подключить ресторан</span></a>
+      <a href="https://t.me/great_guest_bot" class="btn-m btn-g" data-mag>Попробовать как гость →</a>
+    </div>
+    <div class="scroll-hint"><div class="sl"></div>Узнать больше</div>
+  </div>
+
+  <div class="hero-right">
+    <div class="phone-scene">
+      <div class="sonar-ring"></div><div class="sonar-ring"></div><div class="sonar-ring"></div>
+      <div class="phone-wrap" id="phoneMock">
+        <div class="phone phone-live">
+          <iframe
+            src="mockup-screen.html"
+            class="phone-iframe"
+            scrolling="no"
+            frameborder="0"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee">
+    <div class="mq-item">Без приложений<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Telegram Mini App</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Bronze → Silver → Gold → <em>Platinum</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Аналитика гостей<span class="mq-sep"></span></div>
+    <div class="mq-item">QR за секунды<span class="mq-sep"></span></div>
+    <div class="mq-item">Уведомления в Telegram<span class="mq-sep"></span></div>
+    <div class="mq-item">Без приложений<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Telegram Mini App</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Bronze → Silver → Gold → <em>Platinum</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Аналитика гостей<span class="mq-sep"></span></div>
+    <div class="mq-item">QR за секунды<span class="mq-sep"></span></div>
+    <div class="mq-item">Уведомления в Telegram<span class="mq-sep"></span></div>
   </div>
 </div>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <!-- floating hex decoration -->
+  <div class="hex" style="top:20%;right:3%">
+    <svg width="80" height="92" viewBox="0 0 80 92"><polygon points="40,2 78,22 78,70 40,90 2,70 2,22" fill="none" stroke="#C9A96E" stroke-width="1.5"/></svg>
+  </div>
+  <div>
+    <div class="sec-lbl reveal">Проблема рынка</div>
+    <h2 class="sec-title reveal rd1">Рестораны<br>не знают<br>своих <em>гостей</em></h2>
+    <p class="prob-desc reveal rd2">Каждый визит начинается с нуля. Ресторан тратит деньги на привлечение, но не умеет удерживать. Гость не видит прогресс — нет мотивации возвращаться.</p>
+  </div>
+  <div class="prob-stats">
+    <div class="stat-row reveal"><div class="stat-num counter" data-t="68">0</div><div class="stat-text"><strong>% гостей не возвращаются</strong><span>после первого визита, если нет программы лояльности</span></div></div>
+    <div class="stat-row reveal rd1"><div class="stat-num counter" data-t="7">0</div><div class="stat-text"><strong>× дороже новый гость</strong><span>стоит привлечь нового клиента, чем вернуть существующего</span></div></div>
+    <div class="stat-row reveal rd2"><div class="stat-num counter" data-t="40">0</div><div class="stat-text"><strong>% роста выручки</strong><span>даёт увеличение возврата постоянников на 5%</span></div></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS — Story Scroll -->
+<section id="how">
+  <div class="sec-hdr" style="padding:80px 48px 0;text-align:center">
+    <div class="sec-lbl reveal" style="justify-content:center">Механика</div>
+    <h2 class="sec-title reveal rd1">Три шага — и всё работает</h2>
+  </div>
+
+  <div class="story-track" id="storyTrack">
+    <div class="story-sticky" id="storySticky">
+      <div class="story-slides" id="storySlides">
+
+        <!-- Step 1 -->
+        <div class="story-slide" id="ss1">
+          <div class="story-slide-num">01</div>
+          <div class="story-slide-content">
+            <div class="story-slide-icon"><i class="ph-thin ph-telegram-logo"></i></div>
+            <h3 class="story-slide-title">Гость открывает <em>бот</em></h3>
+            <p class="story-slide-desc">Переходит в @great_guest_bot — один раз. Telegram автоматически регистрирует его. Никаких карточек, анкет и приложений.</p>
+          </div>
+          <div class="story-visual">
+            <div class="story-visual-inner sv-chat-wrap">
+              <div class="sv-chat-hdr">
+                <div class="sv-bot-av">GG</div>
+                <div>
+                  <div class="sv-bot-nm">Great Guest</div>
+                  <div class="sv-bot-st">бот</div>
+                </div>
+              </div>
+              <div class="sv-bubble">Добро пожаловать!<br>Ваш статус: <em style="color:var(--gold)">Bronze</em></div>
+              <div class="sv-kbd">
+                <div class="sv-kbtn">Получить QR для визита</div>
+                <div class="sv-kbrow">
+                  <div class="sv-kbtn-sm">Мой статус</div>
+                  <div class="sv-kbtn-sm">История</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="story-slide" id="ss2">
+          <div class="story-slide-num">02</div>
+          <div class="story-slide-content">
+            <div class="story-slide-icon"><i class="ph-thin ph-qr-code"></i></div>
+            <h3 class="story-slide-title">Получает <em>QR</em> за секунду</h3>
+            <p class="story-slide-desc">При каждом визите — нажимает одну кнопку. Уникальный QR-код живёт ровно один визит. Не нужно ничего показывать заранее.</p>
+          </div>
+          <div class="story-visual">
+            <div class="story-visual-inner sv-qr-wrap">
+              <i class="ph-thin ph-qr-code sv-qr-ico"></i>
+              <div class="sv-qr-ttl">Уникальный QR</div>
+              <div class="sv-qr-sub">Действует 1 визит</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="story-slide" id="ss3">
+          <div class="story-slide-num">03</div>
+          <div class="story-slide-content">
+            <div class="story-slide-icon"><i class="ph-thin ph-check-circle"></i></div>
+            <h3 class="story-slide-title">Персонал <em>подтверждает</em></h3>
+            <p class="story-slide-desc">Сканирует QR на телефоне. Видит статус и историю гостя. Нажимает «Подтвердить» — гость получает уведомление и видит прогресс.</p>
+          </div>
+          <div class="story-visual">
+            <div class="story-visual-inner sv-confirm-wrap">
+              <i class="ph-thin ph-check-circle sv-confirm-ico"></i>
+              <div class="sv-confirm-ttl">Визит записан</div>
+              <div class="sv-guest-row">
+                <div class="sv-guest-av">А</div>
+                <div>
+                  <div class="sv-guest-nm">Анна К.</div>
+                  <div class="sv-guest-prog">Bronze → <span style="color:var(--gold)">Silver</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- Progress dots -->
+      <div class="story-dots" id="storyDots">
+        <div class="story-dot active" data-i="0"></div>
+        <div class="story-dot" data-i="1"></div>
+        <div class="story-dot" data-i="2"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="sec-hdr reveal">
+    <div class="sec-lbl">Возможности</div>
+    <h2 class="sec-title reveal rd1" style="margin-top:10px">Всё что нужно —<br><em>и ничего лишнего</em></h2>
+  </div>
+  <div class="feat-grid">
+    <div class="feat reveal" data-tilt="8"><div class="tilt-glow"></div>
+      <div class="feat-icon"><i class="ph-thin ph-user-circle"></i></div>
+      <div class="feat-title">Единый профиль гостя</div>
+      <p class="feat-desc">История визитов по всей сети партнёров. Один QR — для всех ресторанов. Гость накапливает статус везде.</p>
+      <span class="feat-tag">Для гостей</span>
+    </div>
+    <div class="feat reveal rd1" data-tilt="8"><div class="tilt-glow"></div>
+      <div class="feat-icon"><i class="ph-thin ph-chart-bar"></i></div>
+      <div class="feat-title">Дашборд ресторана</div>
+      <p class="feat-desc">Кто ваши лучшие гости, как часто они приходят, когда последний раз были. Полная картина без доп. усилий.</p>
+      <span class="feat-tag">Для ресторанов</span>
+    </div>
+    <div class="feat reveal rd2" data-tilt="8"><div class="tilt-glow"></div>
+      <div class="feat-icon"><i class="ph-thin ph-lightning"></i></div>
+      <div class="feat-title">Запуск за 15 минут</div>
+      <p class="feat-desc">Никаких приложений, кассовых интеграций, обучения персонала. QR на столе — и система работает.</p>
+      <span class="feat-tag">Простота</span>
+    </div>
+    <div class="feat reveal rd3" data-tilt="8"><div class="tilt-glow"></div>
+      <div class="feat-icon"><i class="ph-thin ph-bell"></i></div>
+      <div class="feat-title">Уведомления в Telegram</div>
+      <p class="feat-desc">Гость мгновенно видит подтверждение и прогресс к следующему статусу. Механика удержания встроена в поток.</p>
+      <span class="feat-tag">Вовлечённость</span>
+    </div>
+  </div>
+</section>
+
+<!-- NUMBERS -->
+<section id="numbers" style="position:relative;overflow:hidden">
+  <!-- Three.js crown -->
+  <canvas id="c-crown" class="three-canvas"></canvas>
+  <!-- 3D floating shapes in background -->
+  <div class="hex" style="bottom:0;left:50%;transform:translateX(-50%);opacity:.04">
+    <svg width="200" height="230" viewBox="0 0 80 92"><polygon points="40,2 78,22 78,70 40,90 2,70 2,22" fill="none" stroke="#C9A96E" stroke-width="1"/></svg>
+  </div>
+  <div class="nums-grid">
+    <div class="num-cell reveal"><div class="num-val"><span class="counter" data-t="15">0</span><span class="num-sfx">мин</span></div><div class="num-lbl">До первого гостя</div></div>
+    <div class="num-cell reveal rd1"><div class="num-val"><span class="num-sfx">0</span></div><div class="num-lbl">Приложений скачивать</div></div>
+    <div class="num-cell reveal rd2"><div class="num-val"><span class="counter" data-t="4">0</span></div><div class="num-lbl">Уровня лояльности</div></div>
+    <div class="num-cell reveal rd3"><div class="num-val"><span class="counter" data-t="24">0</span><span class="num-sfx">/7</span></div><div class="num-lbl">Работает без сервера</div></div>
+  </div>
+</section>
+
+<!-- RESTAURANT -->
+<section id="restaurant">
+  <div class="reveal">
+    <div class="sec-lbl">Для ресторана</div>
+    <h2 class="sec-title reveal rd1" style="margin-top:10px">Знайте своих<br>лучших <em>гостей</em></h2>
+    <p style="font-size:14px;line-height:1.8;color:var(--muted);margin-top:14px;max-width:440px" class="reveal rd2">Персонал видит кто пришёл ещё до того как гость открыл меню — имя, статус, количество визитов.</p>
+    <div class="feat-list reveal rd3">
+      <div class="feat-item">Список всех гостей с сортировкой по визитам</div>
+      <div class="feat-item">VIP-сегмент: Gold и Platinum гости</div>
+      <div class="feat-item">Статистика посещаемости по дням и неделям</div>
+      <div class="feat-item">QR-сканер прямо в браузере — без приложений</div>
+    </div>
+  </div>
+  <div class="reveal rd2">
+    <div class="dash-mock" data-tilt="6">
+      <div class="tilt-glow"></div>
+      <div class="dm-hdr"><div class="dm-dot"></div><div class="dm-dot"></div><div class="dm-dot"></div><div class="dm-ttl">Панель ресторана — Great Guest</div></div>
+      <div class="dm-body">
+        <div class="dm-stats">
+          <div class="dm-stat"><div class="dm-sv">142</div><div class="dm-sl">Гостей</div></div>
+          <div class="dm-stat"><div class="dm-sv">38</div><div class="dm-sl">VIP</div></div>
+          <div class="dm-stat"><div class="dm-sv">3.4</div><div class="dm-sl">Ср. визитов</div></div>
+        </div>
+        <div class="dm-guests">
+          <div class="dm-guest"><div class="dm-gi"><div class="dm-av">А</div><div><div class="dm-nm">Анна К.</div><div class="dm-vs">28 визитов · вчера</div></div></div><span class="dm-badge bg-plat">Platinum</span></div>
+          <div class="dm-guest"><div class="dm-gi"><div class="dm-av">М</div><div><div class="dm-nm">Михаил Р.</div><div class="dm-vs">17 визитов · 3 дня назад</div></div></div><span class="dm-badge bg-gold">Gold</span></div>
+          <div class="dm-guest"><div class="dm-gi"><div class="dm-av">Е</div><div><div class="dm-nm">Екатерина В.</div><div class="dm-vs">11 визитов · неделю назад</div></div></div><span class="dm-badge bg-silv">Silver</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TELEGRAM -->
+<section id="telegram">
+  <div class="tg-pill reveal"><i class="ph-thin ph-telegram-logo"></i> Работает через Telegram</div>
+  <h2 class="sec-title reveal rd1" style="text-align:center;max-width:580px;margin:0 auto">Ваши гости уже<br>в <em>Telegram</em></h2>
+  <p style="text-align:center;color:var(--muted);font-size:14px;line-height:1.7;max-width:460px;margin:18px auto 0" class="reveal rd2">Не надо убеждать скачивать приложение. 800 млн пользователей Telegram — уже ваша аудитория.</p>
+  <div class="tg-grid">
+    <div class="tg-card reveal" data-tilt="7"><div class="tilt-glow"></div><div class="tg-icon"><i class="ph-thin ph-rocket-launch"></i></div><div class="tg-title">Мгновенное принятие</div><p class="tg-desc">Переход в бот — одна ссылка. Регистрация — автоматически. Первый QR — за 10 секунд.</p></div>
+    <div class="tg-card reveal rd2" data-tilt="7"><div class="tilt-glow"></div><div class="tg-icon"><i class="ph-thin ph-bell-ringing"></i></div><div class="tg-title">Встроенные уведомления</div><p class="tg-desc">Telegram push-уведомления работают по умолчанию. Гость видит каждый подтверждённый визит и прогресс.</p></div>
+    <div class="tg-card reveal rd4" data-tilt="7"><div class="tilt-glow"></div><div class="tg-icon"><i class="ph-thin ph-diamond"></i></div><div class="tg-title">Mini App — нативный опыт</div><p class="tg-desc">Полноценный веб-апп прямо внутри мессенджера. Статус, история, QR — без выхода из Telegram.</p></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" style="position:relative;overflow:hidden">
+  <!-- Three.js diamond -->
+  <canvas id="c-diamond" class="three-canvas"></canvas>
+  <!-- 3D spinning cube decoration -->
+  <div class="cta-3d">
+    <div class="qr-cube">
+      <div class="qr-face ft"></div><div class="qr-face bk"></div>
+      <div class="qr-face lt"></div><div class="qr-face rt"></div>
+      <div class="qr-face tp"></div><div class="qr-face bt"></div>
+    </div>
+  </div>
+  <div class="sec-lbl cta-lbl reveal">Начать сейчас</div>
+  <h2 class="sec-title reveal rd1">Первый пилотный<br><em>ресторан — бесплатно</em></h2>
+  <p class="cta-sub reveal rd2">Подключите Great Guest и за 15 минут начните узнавать своих лучших гостей. На период пилота — без оплаты.</p>
+  <div class="cta-btns reveal rd3">
+    <a href="https://t.me/great_guest_bot" class="btn-m btn-p" data-mag><span>Написать нам в Telegram →</span></a>
+    <a href="/pitch.html" class="btn-m btn-g" data-mag>Смотреть питч</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="#" class="ft-logo">Great<em>Guest</em></a>
+  <div class="ft-links"><a href="#how">Как работает</a><a href="https://t.me/great_guest_bot">Telegram-бот</a><a href="/pitch.html">Питч</a></div>
+  <div class="ft-r">© 2026 Great Guest</div>
+</footer>
 
 <script>
-const SUPABASE_URL = 'https://wjlhaizrygeyeishbycp.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps';
+/* ── Scroll progress ── */
+const sp = document.getElementById('sp');
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - innerHeight) * 100;
+  sp.style.width = pct + '%';
+}, { passive: true });
 
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const tg = window.Telegram?.WebApp;
+/* ── Custom cursor ── */
+const cd = document.getElementById('cur-d'), cr = document.getElementById('cur-r');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+(function animCur() {
+  rx += (mx - rx) * .18; ry += (my - ry) * .18;
+  cd.style.cssText = `left:${mx}px;top:${my}px`;
+  cr.style.cssText = `left:${rx}px;top:${ry}px`;
+  requestAnimationFrame(animCur);
+})();
+document.querySelectorAll('a,button,[data-mag],[data-tilt]').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('ch'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('ch'));
+});
 
-const LEVELS = [
-  { name: 'Bronze',   emoji: '🥉', min: 0,  max: 4  },
-  { name: 'Silver',   emoji: '🥈', min: 5,  max: 14 },
-  { name: 'Gold',     emoji: '🥇', min: 15, max: 29 },
-  { name: 'Platinum', emoji: '💎', min: 30, max: Infinity },
-];
-
-function getLevel(n) {
-  return [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0];
-}
-function getNext(n) {
-  return LEVELS.find(l => l.min > n);
-}
-function declVisit(n) {
-  if (n % 10 === 1 && n % 100 !== 11) return 'визит';
-  if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'визита';
-  return 'визитов';
-}
-
-function showError(msg) {
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('error').style.display = 'block';
-  document.getElementById('error-msg').textContent = msg;
-}
-
-async function init() {
-  if (tg) tg.ready();
-
-  const tgUser = tg?.initDataUnsafe?.user;
-  if (!tgUser?.id) {
-    showError('Открой через Telegram-бота @great_guest_bot');
-    return;
-  }
-
-  // ✅ Server-side HMAC validation + upsert (replaces direct Supabase call)
-  const res = await fetch('/api/webapp-init', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ initData: tg.initData }),
+/* ── Magnetic buttons ── */
+document.querySelectorAll('[data-mag]').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const r = btn.getBoundingClientRect();
+    const dx = (e.clientX - r.left - r.width/2) * .25;
+    const dy = (e.clientY - r.top - r.height/2) * .25;
+    btn.style.transform = `translate(${dx}px,${dy}px)`;
   });
-  const payload = await res.json();
-  if (!res.ok || !payload.guest) { showError(payload.error || 'Ошибка загрузки профиля'); return; }
-  const guest = payload.guest;
+  btn.addEventListener('mouseleave', () => btn.style.transform = '');
+});
 
-  document.getElementById('greeting').textContent = `Привет, ${guest.first_name}! 👋`;
-  renderStatus(guest.visit_count);
-  await renderHistory(guest.telegram_id);
-
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-}
-
-function renderStatus(count) {
-  const lvl = getLevel(count);
-  const next = getNext(count);
-
-  document.getElementById('status-emoji').textContent = lvl.emoji;
-  document.getElementById('status-name').textContent = lvl.name;
-  document.getElementById('visit-count').textContent = `${count} ${declVisit(count)}`;
-
-  if (next) {
-    const span = next.min - lvl.min;
-    const done = count - lvl.min;
-    const pct = Math.round((done / span) * 100);
-    document.getElementById('progress-from').textContent = `${lvl.emoji} ${lvl.name}`;
-    document.getElementById('progress-to').textContent = `${getNext(count).emoji} ${next.name}`;
-    document.getElementById('progress-fill').style.width = pct + '%';
-  } else {
-    document.getElementById('progress-wrap').style.display = 'none';
-  }
-}
-
-async function renderHistory(telegramId) {
-  const { data: visits } = await db
-    .from('visits')
-    .select('visited_at, restaurants(name)')
-    .eq('telegram_id', telegramId)
-    .order('visited_at', { ascending: false })
-    .limit(10);
-
-  const list = document.getElementById('visits-list');
-  if (!visits || visits.length === 0) {
-    list.innerHTML = '<div class="empty">Визитов пока нет — получи QR и посети ресторан!</div>';
-    return;
-  }
-  list.innerHTML = visits.map(v => {
-    const date = new Date(v.visited_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-    const name = v.restaurants?.name || 'Ресторан-партнёр';
-    return `<div class="visit-item"><span class="visit-restaurant">🍽 ${name}</span><span class="visit-date">${date}</span></div>`;
-  }).join('');
-}
-
-async function getQR() {
-  if (!tg?.initData) return;
-
-  // ✅ Server creates QR token after HMAC validation
-  const res = await fetch('/api/create-qr', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ initData: tg.initData }),
+/* ── 3D Tilt cards ── */
+function initTilt() {
+  document.querySelectorAll('[data-tilt]').forEach(el => {
+    const intensity = parseFloat(el.dataset.tilt) || 10;
+    const glow = el.querySelector('.tilt-glow');
+    el.addEventListener('mousemove', e => {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - .5;
+      const y = (e.clientY - r.top)  / r.height - .5;
+      el.style.transform = `perspective(800px) rotateX(${-y*intensity}deg) rotateY(${x*intensity}deg) scale(1.02)`;
+      el.style.transition = 'transform .08s ease';
+      if (glow) {
+        glow.style.left = (e.clientX - r.left) + 'px';
+        glow.style.top  = (e.clientY - r.top)  + 'px';
+      }
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = '';
+      el.style.transition = 'transform .6s cubic-bezier(.16,1,.3,1)';
+    });
   });
-  const data = await res.json();
-  if (!res.ok || !data.visitUrl) { alert(data.error || 'Ошибка создания QR'); return; }
-
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.visitUrl)}&ecc=H`;
-  document.getElementById('qr-img').src = qrUrl;
-  document.getElementById('qr-display').style.display = 'block';
 }
+initTilt();
 
-init();
+/* ── Nav scroll ── */
+document.getElementById('nav').classList[window.scrollY > 60 ? 'add' : 'remove']('sc');
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList[window.scrollY > 60 ? 'add' : 'remove']('sc');
+}, { passive: true });
+
+/* ── Scroll reveal ── */
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+/* ── Counter ── */
+function animCounter(el) {
+  const t = parseInt(el.dataset.t);
+  const dur = 1600, start = performance.now();
+  (function tick(now) {
+    const p = Math.min((now - start) / dur, 1);
+    const e = 1 - Math.pow(1 - p, 4);
+    el.textContent = Math.round(e * t);
+    if (p < 1) requestAnimationFrame(tick);
+  })(start);
+}
+const cObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { animCounter(e.target); cObs.unobserve(e.target); } });
+}, { threshold: .5 });
+document.querySelectorAll('.counter').forEach(el => cObs.observe(el));
+
+/* ── Canvas particles (hero) ── */
+(function initParticles() {
+  const canvas = document.getElementById('hero-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H;
+
+  function resize() {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const COLS = ['rgba(201,169,110,', 'rgba(232,201,138,', 'rgba(180,140,80,'];
+
+  class Particle {
+    constructor() { this.reset(true); }
+    reset(init) {
+      this.x = Math.random() * W;
+      this.y = init ? Math.random() * H : H + 10;
+      this.r = Math.random() * 1.8 + .4;
+      this.vy = -(Math.random() * .6 + .2);
+      this.vx = (Math.random() - .5) * .25;
+      this.life = 0;
+      this.maxLife = Math.random() * 180 + 100;
+      this.col = COLS[Math.floor(Math.random() * COLS.length)];
+    }
+    update() {
+      this.x += this.vx; this.y += this.vy; this.life++;
+      if (this.life > this.maxLife || this.y < -10) this.reset(false);
+    }
+    draw() {
+      const a = Math.sin(this.life / this.maxLife * Math.PI) * .5;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.col + a + ')';
+      ctx.fill();
+    }
+  }
+
+  const particles = Array.from({ length: 80 }, () => new Particle());
+
+  (function loop() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(loop);
+  })();
+})();
+
+/* ── Story Scroll ── */
+(function initStoryScroll() {
+  const track  = document.getElementById('storyTrack');
+  const slides = document.getElementById('storySlides');
+  const dots   = document.querySelectorAll('.story-dot');
+  if (!track || !slides) return;
+
+  // Only activate on desktop (hover capable)
+  if (window.matchMedia('(hover: none)').matches) return;
+
+  const TOTAL = 3;
+  let current = -1;
+
+  function setSlide(idx) {
+    if (idx === current) return;
+    current = idx;
+    const pct = idx * 100;
+    slides.style.transition = 'transform .7s cubic-bezier(.16,1,.3,1)';
+    slides.style.transform  = `translateX(-${pct}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+  }
+
+  window.addEventListener('scroll', () => {
+    const rect = track.getBoundingClientRect();
+    const trackH = track.offsetHeight;
+    // progress 0→1 across the full track
+    const progress = Math.max(0, Math.min(1, -rect.top / (trackH - window.innerHeight)));
+    const idx = Math.min(TOTAL - 1, Math.floor(progress * TOTAL));
+    setSlide(idx);
+  }, { passive: true });
+})();
+
+/* ── SVG connector dot animation (legacy, hidden on mobile) ── */
+(function initConnector() {
+  const dot = document.getElementById('connDot');
+  if (!dot) return;
+  let pos = 0, dir = 1, anim;
+  function run() {
+    pos += dir * 2;
+    if (pos > 600) { pos = 600; dir = -1; }
+    if (pos < 0)   { pos = 0;   dir = 1; }
+    dot.setAttribute('cx', pos);
+    anim = requestAnimationFrame(run);
+  }
+
+  const stepsObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { anim = requestAnimationFrame(run); }
+      else { cancelAnimationFrame(anim); }
+    });
+  }, { threshold: .2 });
+  const stepsEl = document.querySelector('.steps-wrap');
+  if (stepsEl) stepsObs.observe(stepsEl);
+})();
+
+/* ── Phone parallax ── */
+const phoneMock = document.getElementById('phoneMock');
+window.addEventListener('scroll', () => {
+  if (!phoneMock) return;
+  const y = window.scrollY;
+  if (y < innerHeight) {
+    phoneMock.style.transform = `translateY(${y * .08}px)`;
+  }
+}, { passive: true });
+
+/* ── Smooth anchor scroll ── */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
+  });
+});
+
+/* ── Three.js 3D Objects ── */
+(function init3D() {
+  if (!window.THREE) return;
+  if (window.matchMedia('(hover: none)').matches) return; // skip touch devices
+
+  const T = THREE;
+  const GOLD  = 0xC9A96E;
+  const GOLD2 = 0xE8C98A;
+  const DARK  = 0x0C0B09;
+
+  function makeRenderer(canvas, w, h) {
+    const r = new T.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    r.setPixelRatio(Math.min(devicePixelRatio, 2));
+    r.setSize(w, h);
+    r.setClearColor(0x000000, 0);
+    r.toneMapping = T.ACESFilmicToneMapping;
+    r.toneMappingExposure = 1.3;
+    return r;
+  }
+
+  function makeScene() {
+    const s = new T.Scene();
+    s.add(new T.AmbientLight(0xffffff, 0.5));
+    const l1 = new T.PointLight(GOLD, 3, 12);
+    l1.position.set(2, 3, 3);
+    s.add(l1);
+    const l2 = new T.PointLight(0xffffff, 1.5, 12);
+    l2.position.set(-2, -1, 2);
+    s.add(l2);
+    const l3 = new T.PointLight(GOLD2, 1, 8);
+    l3.position.set(0, -2, 1);
+    s.add(l3);
+    return s;
+  }
+
+  /* ─────────────────────────────────────────
+     1. WINE GLASS  — Hero section
+  ───────────────────────────────────────── */
+  const glassCanvas = document.getElementById('c-glass');
+  if (glassCanvas) {
+    const W = 200, H = 340;
+    const renderer = makeRenderer(glassCanvas, W, H);
+    const scene    = makeScene();
+    const camera   = new T.PerspectiveCamera(42, W / H, 0.1, 50);
+    camera.position.set(0, 0.35, 2.8);
+    camera.lookAt(0, 0.35, 0);
+
+    const glassMat = new T.MeshPhysicalMaterial({
+      color: GOLD, metalness: 0.05, roughness: 0.02,
+      transmission: 0.9, transparent: true, opacity: 0.72,
+      side: T.DoubleSide, envMapIntensity: 2,
+    });
+    const stemMat = new T.MeshPhysicalMaterial({
+      color: GOLD2, metalness: 0.1, roughness: 0.05,
+      transmission: 0.85, transparent: true, opacity: 0.8,
+    });
+    const wineMat = new T.MeshPhysicalMaterial({
+      color: 0x6B0F1A, metalness: 0, roughness: 0.4,
+      transparent: true, opacity: 0.65,
+    });
+
+    const group = new T.Group();
+
+    // Lathe profile — wine glass silhouette
+    const pts = [
+      new T.Vector2(0,     0),
+      new T.Vector2(0.12,  0.022),
+      new T.Vector2(0.055, 0.11),
+      new T.Vector2(0.042, 0.24),
+      new T.Vector2(0.09,  0.32),
+      new T.Vector2(0.21,  0.50),
+      new T.Vector2(0.30,  0.68),
+      new T.Vector2(0.285, 0.79),
+      new T.Vector2(0.305, 0.84),
+    ];
+    group.add(new T.Mesh(new T.LatheGeometry(pts, 64), glassMat));
+
+    // Foot disc
+    const footDisc = new T.Mesh(new T.CylinderGeometry(0.12, 0.135, 0.022, 48), stemMat);
+    footDisc.position.set(0, 0.011, 0);
+    group.add(footDisc);
+
+    // Wine fill
+    const wine = new T.Mesh(new T.CylinderGeometry(0.235, 0.155, 0.22, 48), wineMat);
+    wine.position.y = 0.605;
+    group.add(wine);
+
+    // Wine surface disc
+    const wineSurface = new T.Mesh(new T.CircleGeometry(0.235, 48), wineMat);
+    wineSurface.position.set(0, 0.716, 0);
+    wineSurface.rotation.x = -Math.PI / 2;
+    group.add(wineSurface);
+
+    // Rim highlight ring
+    const rimMat = new T.MeshBasicMaterial({ color: GOLD2, transparent: true, opacity: 0.5 });
+    const rimRing = new T.Mesh(new T.TorusGeometry(0.302, 0.006, 8, 64), rimMat);
+    rimRing.position.set(0, 0.84, 0);
+    group.add(rimRing);
+
+    group.position.y = -0.42;
+    group.rotation.x = 0.08;
+    scene.add(group);
+
+    let ft = 0, mx = 0, my = 0;
+    document.addEventListener('mousemove', e => {
+      mx = (e.clientX / innerWidth  - 0.5) * 0.4;
+      my = (e.clientY / innerHeight - 0.5) * 0.25;
+    });
+
+    (function loop() {
+      requestAnimationFrame(loop);
+      ft += 0.008;
+      group.rotation.y  += 0.004;
+      group.rotation.x   = 0.08 + my * 0.5;
+      group.rotation.z   = mx  * 0.3;
+      group.position.y   = -0.42 + Math.sin(ft) * 0.055;
+      renderer.render(scene, camera);
+    })();
+  }
+
+  /* ─────────────────────────────────────────
+     2. CROWN  — Numbers section
+  ───────────────────────────────────────── */
+  const crownCanvas = document.getElementById('c-crown');
+  if (crownCanvas) {
+    const W = 160, H = 160;
+    const renderer = makeRenderer(crownCanvas, W, H);
+    const scene    = makeScene();
+    const camera   = new T.PerspectiveCamera(42, W / H, 0.1, 50);
+    camera.position.set(0, 0.18, 2.4);
+    camera.lookAt(0, 0.10, 0);
+
+    const goldMat = new T.MeshStandardMaterial({
+      color: GOLD, metalness: 0.92, roughness: 0.08,
+      emissive: 0x3d2a10, emissiveIntensity: 0.25,
+    });
+    const gemMat = new T.MeshPhysicalMaterial({
+      color: GOLD2, metalness: 0, roughness: 0,
+      transmission: 0.88, transparent: true, opacity: 0.9,
+    });
+
+    const g = new T.Group();
+
+    // Band (open cylinder)
+    g.add(new T.Mesh(new T.CylinderGeometry(0.5, 0.48, 0.16, 48, 1, true), goldMat));
+    // Bottom torus
+    g.add(new T.Mesh(new T.TorusGeometry(0.49, 0.022, 8, 48), goldMat));
+    // Top torus
+    const topTorus = new T.Mesh(new T.TorusGeometry(0.49, 0.018, 8, 48), goldMat);
+    topTorus.position.y = 0.16;
+    g.add(topTorus);
+
+    // 5 spikes
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      const spike = new T.Mesh(new T.ConeGeometry(0.065, 0.42, 5), goldMat);
+      spike.position.set(Math.sin(a) * 0.47, 0.37, Math.cos(a) * 0.47);
+      g.add(spike);
+    }
+    // 5 gems between spikes
+    for (let i = 0; i < 5; i++) {
+      const a = ((i + 0.5) / 5) * Math.PI * 2;
+      const gem = new T.Mesh(new T.SphereGeometry(0.062, 16, 16), gemMat);
+      gem.position.set(Math.sin(a) * 0.47, 0.04, Math.cos(a) * 0.47);
+      g.add(gem);
+    }
+    // Center top gem
+    const topGem = new T.Mesh(new T.SphereGeometry(0.09, 20, 20), gemMat);
+    topGem.position.y = 0.65;
+    g.add(topGem);
+
+    g.position.y = -0.1;
+    scene.add(g);
+
+    let ct = 0;
+    (function loop() {
+      requestAnimationFrame(loop);
+      ct += 0.007;
+      g.rotation.y  += 0.009;
+      g.position.y   = -0.1 + Math.sin(ct) * 0.05;
+      renderer.render(scene, camera);
+    })();
+  }
+
+  /* ─────────────────────────────────────────
+     3. DIAMOND  — CTA section
+  ───────────────────────────────────────── */
+  const diamCanvas = document.getElementById('c-diamond');
+  if (diamCanvas) {
+    const W = 180, H = 220;
+    const renderer = makeRenderer(diamCanvas, W, H);
+    const scene    = makeScene();
+    const camera   = new T.PerspectiveCamera(40, W / H, 0.1, 50);
+    camera.position.set(0, 0, 3.2);
+    camera.lookAt(0, 0, 0);
+
+    const faceMat = new T.MeshPhysicalMaterial({
+      color: GOLD2, metalness: 0, roughness: 0,
+      transmission: 0.94, transparent: true, opacity: 0.88,
+      thickness: 1.2, ior: 2.42, envMapIntensity: 4,
+      side: T.DoubleSide,
+    });
+    const edgeMat = new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.35 });
+
+    const dg = new T.Group();
+
+    // Upper girdle — table + star facets (cone top)
+    const top = new T.Mesh(new T.ConeGeometry(0.58, 0.28, 8, 1), faceMat);
+    top.position.y = 0.28;
+    dg.add(top);
+
+    // Crown (8-sided frustum between table and girdle)
+    const crown = new T.Mesh(new T.CylinderGeometry(0.40, 0.58, 0.18, 8, 1), faceMat);
+    crown.position.y = 0.09;
+    dg.add(crown);
+
+    // Girdle ring
+    const girdle = new T.Mesh(new T.CylinderGeometry(0.58, 0.58, 0.04, 8), faceMat);
+    girdle.position.y = 0.0;
+    dg.add(girdle);
+
+    // Pavilion (lower cone — pointed)
+    const pavilion = new T.Mesh(new T.ConeGeometry(0.58, 0.72, 8, 1), faceMat);
+    pavilion.rotation.z = Math.PI;
+    pavilion.position.y = -0.38;
+    dg.add(pavilion);
+
+    // Wireframe edges for sparkle
+    const wf = new T.Mesh(new T.OctahedronGeometry(0.5, 0), edgeMat);
+    wf.scale.set(1, 1.5, 1);
+    dg.add(wf);
+
+    // Inner glow
+    const glowMat = new T.MeshBasicMaterial({ color: GOLD2, transparent: true, opacity: 0.08 });
+    dg.add(new T.Mesh(new T.OctahedronGeometry(0.38, 0), glowMat));
+
+    scene.add(dg);
+
+    let dt = 0, dmx = 0, dmy = 0;
+    document.addEventListener('mousemove', e => {
+      dmx = (e.clientX / innerWidth  - 0.5) * 0.6;
+      dmy = (e.clientY / innerHeight - 0.5) * 0.4;
+    });
+
+    (function loop() {
+      requestAnimationFrame(loop);
+      dt += 0.009;
+      dg.rotation.y += 0.014;
+      dg.rotation.x  = dmy * 0.4;
+      dg.rotation.z  = dmx * 0.25;
+      dg.position.y  = Math.sin(dt) * 0.07;
+      renderer.render(scene, camera);
+    })();
+  }
+})();
+
+/* ── Mobile nav ── */
+function toggleMobNav() { document.body.classList.toggle('menu-open'); }
+function closeMobNav()  { document.body.classList.remove('menu-open'); }
+
+/* Close mob nav on ESC */
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobNav(); });
+
+/* Disable tilt & magnetic effects on touch devices */
+if (window.matchMedia('(hover: none)').matches) {
+  document.querySelectorAll('[data-tilt]').forEach(el => {
+    el.style.transform = '';
+    el.removeAttribute('data-tilt');
+  });
+  document.querySelectorAll('[data-mag]').forEach(el => {
+    el.removeAttribute('data-mag');
+  });
+}
 </script>
 </body>
 </html>
