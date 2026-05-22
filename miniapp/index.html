@@ -353,7 +353,7 @@
       background-position: center 35%;
     }
     #features .sec-hdr { margin-bottom:56px; }
-    .feat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1px; border:1px solid var(--border); }
+    .feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; border:1px solid var(--border); }
     .feat {
       padding:44px 36px; position:relative; overflow:hidden;
       border:1px solid transparent; cursor:none;
@@ -784,6 +784,78 @@
     @media (max-width:900px) {
       #problem  { background-position:center center; }
       #restaurant { background-position:center 40%; }
+      #events { background-position:center 30%; }
+      #community { background-position:center 45%; }
+    }
+
+    /* ── Body scroll-lock behind overlay nav ── */
+    body.menu-open { overflow: hidden; }
+    html { overflow-x: hidden; }
+
+    /* ── Events deep dive ── */
+    #events {
+      padding:120px 48px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center;
+      background-image:
+        linear-gradient(100deg, rgba(13,11,8,0.97) 0%, rgba(13,11,8,0.92) 45%, rgba(13,11,8,0.65) 75%, rgba(13,11,8,0.30) 100%),
+        url('https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg');
+      background-size:cover; background-position:right 30%;
+    }
+    #events::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse 60% 50% at 20% 50%, rgba(107,168,194,.05) 0%, transparent 60%);
+      pointer-events:none;
+    }
+    .ev-mock {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:10px; overflow:hidden;
+      box-shadow:0 30px 80px rgba(0,0,0,.6);
+      transition:transform .15s; transform-style:preserve-3d;
+    }
+    .ev-meta { padding:14px 18px 12px; border-bottom:1px solid var(--border); }
+    .ev-name { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:500; color:var(--text); }
+    .ev-date { font-size:11px; color:var(--muted); margin-top:3px; }
+    .ev-green { color:#5DBF8A !important; }
+    .ev-badge-in   { background:rgba(93,191,138,.12)!important; color:#5DBF8A!important; }
+    .ev-badge-miss { background:rgba(220,100,100,.10)!important; color:rgba(220,100,100,.9)!important; }
+
+    /* ── Community deep dive ── */
+    #community {
+      padding:120px 48px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center;
+      background-image:
+        linear-gradient(100deg, rgba(13,11,8,0.30) 0%, rgba(13,11,8,0.65) 28%, rgba(13,11,8,0.92) 56%, rgba(13,11,8,0.97) 100%),
+        url('https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg');
+      background-size:cover; background-position:left 45%;
+    }
+    #community::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse 55% 50% at 80% 50%, rgba(139,124,246,.05) 0%, transparent 60%);
+      pointer-events:none;
+    }
+    .cm-mock {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:10px; overflow:hidden;
+      box-shadow:0 30px 80px rgba(0,0,0,.6);
+      transition:transform .15s; transform-style:preserve-3d;
+    }
+    .cm-segments { display:flex; flex-direction:column; gap:10px; padding:14px 18px; border-top:1px solid var(--border); }
+    .cm-seg-row { display:flex; align-items:center; gap:10px; }
+    .cm-seg-label { font-size:11px; color:var(--muted); width:66px; flex-shrink:0; }
+    .cm-seg-bar { flex:1; height:3px; background:rgba(255,255,255,.06); border-radius:99px; overflow:hidden; }
+    .cm-seg-fill { height:100%; border-radius:99px; }
+    .cm-seg-val { font-size:11px; color:var(--text); width:24px; text-align:right; flex-shrink:0; }
+    .cm-ai-v { color:#A89BF8 !important; }
+    .cm-ai-badge { background:rgba(139,124,246,.14)!important; color:#A89BF8!important; }
+
+    /* ── Mobile overrides for new sections ── */
+    @media(max-width:900px) {
+      #events { grid-template-columns:1fr; padding:72px 20px; gap:44px; }
+      #community { grid-template-columns:1fr; padding:72px 20px; gap:44px; }
+      #how .sec-hdr { padding:48px 20px 0 !important; }
+      .feat-grid { grid-template-columns:1fr !important; }
+    }
+    @media(max-width:480px) {
+      #events { padding:56px 16px; }
+      #community { padding:56px 16px; }
     }
   </style>
 </head>
@@ -797,8 +869,9 @@
 <div class="mob-nav" id="mobNav">
   <a href="#verticals"  onclick="closeMobNav()">Три рынка</a>
   <a href="#how"        onclick="closeMobNav()">Как работает</a>
-  <a href="#features"   onclick="closeMobNav()">Возможности</a>
-  <a href="#restaurant" onclick="closeMobNav()">Для ресторанов</a>
+  <a href="#restaurant" onclick="closeMobNav()">Рестораны</a>
+  <a href="#events"     onclick="closeMobNav()">Мероприятия</a>
+  <a href="#community"  onclick="closeMobNav()">Комьюнити</a>
   <a href="#cta" class="nav-cta" onclick="closeMobNav()">Попробовать →</a>
 </div>
 
@@ -807,8 +880,9 @@
   <div class="nav-links">
     <a href="#verticals">Рынки</a>
     <a href="#how">Как работает</a>
-    <a href="#features">Возможности</a>
-    <a href="#restaurant">Для ресторанов</a>
+    <a href="#restaurant">Рестораны</a>
+    <a href="#events">Мероприятия</a>
+    <a href="#community">Комьюнити</a>
   </div>
   <div style="display:flex;align-items:center;gap:14px">
     <a href="https://t.me/great_guest_bot" class="nav-cta">Попробовать →</a>
@@ -833,7 +907,7 @@
     </h1>
     <p class="hero-sub">Гость получает персональный QR в Telegram. Ресторан, организатор мероприятия или комьюнити сканирует — видит статус, историю и предпочтения. Без приложений. Без карточек.</p>
     <div class="hero-actions">
-      <a href="#cta" class="btn-m btn-p" data-mag><span>Подключить ресторан</span></a>
+      <a href="#cta" class="btn-m btn-p" data-mag><span>Подключить бесплатно →</span></a>
       <a href="https://t.me/great_guest_bot" class="btn-m btn-g" data-mag>Попробовать как гость →</a>
     </div>
     <div class="scroll-hint"><div class="sl"></div>Узнать больше</div>
@@ -947,8 +1021,8 @@
   </div>
   <div>
     <div class="sec-lbl reveal">Проблема рынка</div>
-    <h2 class="sec-title reveal rd1">Рестораны<br>не знают<br>своих <em>гостей</em></h2>
-    <p class="prob-desc reveal rd2">Каждый визит начинается с нуля. Ресторан тратит деньги на привлечение, но не умеет удерживать. Гость не видит прогресс — нет мотивации возвращаться.</p>
+    <h2 class="sec-title reveal rd1">Каждый гость<br>уходит <em>незнакомцем</em></h2>
+    <p class="prob-desc reveal rd2">Ресторан, организатор мероприятия, комьюнити — все тратят бюджет на привлечение, но теряют гостей, ничего о них не зная. Каждый контакт начинается с нуля.</p>
   </div>
   <div class="prob-stats">
     <div class="stat-row reveal"><div class="stat-num counter" data-t="68">0</div><div class="stat-text"><strong>% гостей не возвращаются</strong><span>после первого визита, если нет программы лояльности</span></div></div>
@@ -1079,6 +1153,18 @@
       <p class="feat-desc">Гость мгновенно видит подтверждение и прогресс к следующему статусу. Механика удержания встроена в поток.</p>
       <span class="feat-tag">Вовлечённость</span>
     </div>
+    <div class="feat reveal rd4" data-tilt="8"><div class="tilt-glow"></div>
+      <div class="feat-icon"><i class="ph-thin ph-calendar-check"></i></div>
+      <div class="feat-title">Чек-ин на мероприятии</div>
+      <p class="feat-desc">Гость показывает QR на входе — организатор подтверждает за 3 секунды. Список присутствующих онлайн. Закрытые события с доступом по QR.</p>
+      <span class="feat-tag">Мероприятия</span>
+    </div>
+    <div class="feat reveal rd5" data-tilt="8"><div class="tilt-glow"></div>
+      <div class="feat-icon"><i class="ph-thin ph-brain"></i></div>
+      <div class="feat-title">AI Win-back</div>
+      <p class="feat-desc">Видите кто давно не появлялся. AI предлагает персонализированные касания — нужный гость получает нужное сообщение в нужный момент.</p>
+      <span class="feat-tag">Комьюнити</span>
+    </div>
   </div>
 </section>
 
@@ -1130,6 +1216,98 @@
   </div>
 </section>
 
+<!-- EVENTS -->
+<section id="events" style="position:relative;overflow:hidden">
+  <div>
+    <div class="sec-lbl reveal">Для мероприятий</div>
+    <h2 class="sec-title reveal rd1" style="margin-top:10px">Гость пришёл —<br>вы <em>знаете</em></h2>
+    <p style="font-size:14px;line-height:1.8;color:var(--muted);margin-top:14px;max-width:440px" class="reveal rd2">Регистрация через Telegram, QR-чек-ин на входе, список присутствующих в реальном времени. Каждый участник — в вашей базе навсегда.</p>
+    <div class="feat-list reveal rd3">
+      <div class="feat-item">Регистрация без сторонних форм и приложений</div>
+      <div class="feat-item">QR-чек-ин на входе за 3 секунды</div>
+      <div class="feat-item">Кто пришёл / не пришёл — онлайн с телефона</div>
+      <div class="feat-item">Закрытые мероприятия: доступ строго по QR</div>
+    </div>
+  </div>
+  <div class="reveal rd2">
+    <div class="ev-mock" data-tilt="6">
+      <div class="tilt-glow"></div>
+      <div class="dm-hdr">
+        <div class="dm-dot"></div><div class="dm-dot"></div><div class="dm-dot"></div>
+        <div class="dm-ttl">Мероприятие — Great Guest</div>
+      </div>
+      <div class="dm-body">
+        <div class="ev-meta">
+          <div class="ev-name">☕ Бизнес-завтрак с инвесторами</div>
+          <div class="ev-date">22 мая, 09:00 · Кафе «Опера»</div>
+        </div>
+        <div class="dm-stats">
+          <div class="dm-stat"><div class="dm-sv" style="color:var(--gold)">30</div><div class="dm-sl">Зарегистрировано</div></div>
+          <div class="dm-stat"><div class="dm-sv ev-green">24</div><div class="dm-sl">Пришло ✓</div></div>
+          <div class="dm-stat"><div class="dm-sv" style="color:var(--muted)">6</div><div class="dm-sl">Не пришло</div></div>
+        </div>
+        <div class="dm-guests">
+          <div class="dm-guest"><div class="dm-gi"><div class="dm-av">С</div><div><div class="dm-nm">Сергей П.</div><div class="dm-vs">11 мероприятий</div></div></div><span class="dm-badge ev-badge-in">Чек-ин ✓</span></div>
+          <div class="dm-guest"><div class="dm-gi"><div class="dm-av">М</div><div><div class="dm-nm">Мария К.</div><div class="dm-vs">4 мероприятия</div></div></div><span class="dm-badge ev-badge-in">Чек-ин ✓</span></div>
+          <div class="dm-guest"><div class="dm-gi"><div class="dm-av">А</div><div><div class="dm-nm">Алексей Н.</div><div class="dm-vs">1 мероприятие</div></div></div><span class="dm-badge ev-badge-miss">Не пришёл</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section id="community" style="position:relative;overflow:hidden">
+  <div class="reveal rd2">
+    <div class="cm-mock" data-tilt="6">
+      <div class="tilt-glow"></div>
+      <div class="dm-hdr">
+        <div class="dm-dot"></div><div class="dm-dot"></div><div class="dm-dot"></div>
+        <div class="dm-ttl">Комьюнити — Great Guest</div>
+      </div>
+      <div class="dm-body">
+        <div class="dm-stats">
+          <div class="dm-stat"><div class="dm-sv">248</div><div class="dm-sl">Участников</div></div>
+          <div class="dm-stat"><div class="dm-sv ev-green">34</div><div class="dm-sl">Активных</div></div>
+          <div class="dm-stat"><div class="dm-sv cm-ai-v">12</div><div class="dm-sl">AI Win-back</div></div>
+        </div>
+        <div class="cm-segments">
+          <div class="cm-seg-row">
+            <div class="cm-seg-label">Активные</div>
+            <div class="cm-seg-bar"><div class="cm-seg-fill" style="width:80%;background:rgba(201,169,110,.65)"></div></div>
+            <div class="cm-seg-val">34</div>
+          </div>
+          <div class="cm-seg-row">
+            <div class="cm-seg-label">Редкие</div>
+            <div class="cm-seg-bar"><div class="cm-seg-fill" style="width:50%;background:rgba(201,169,110,.35)"></div></div>
+            <div class="cm-seg-val">58</div>
+          </div>
+          <div class="cm-seg-row">
+            <div class="cm-seg-label">Ушедшие</div>
+            <div class="cm-seg-bar"><div class="cm-seg-fill" style="width:20%;background:rgba(139,124,246,.45)"></div></div>
+            <div class="cm-seg-val">12</div>
+          </div>
+        </div>
+        <div class="dm-guests">
+          <div class="dm-guest"><div class="dm-gi"><div class="dm-av">Д</div><div><div class="dm-nm">Дмитрий О.</div><div class="dm-vs">18 событий · 2 года с нами</div></div></div><span class="dm-badge bg-gold">Superfan</span></div>
+          <div class="dm-guest"><div class="dm-gi"><div class="dm-av">Н</div><div><div class="dm-nm">Наташа Р.</div><div class="dm-vs">Не приходила 3 мес.</div></div></div><span class="dm-badge cm-ai-badge">✦ AI Win-back</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="sec-lbl reveal">Для комьюнити</div>
+    <h2 class="sec-title reveal rd1" style="margin-top:10px">База участников —<br>это <em>актив</em></h2>
+    <p style="font-size:14px;line-height:1.8;color:var(--muted);margin-top:14px;max-width:440px" class="reveal rd2">Видите кто ходит, что интересует, кто давно не появлялся. AI предлагает с кем и как работать дальше.</p>
+    <div class="feat-list reveal rd3">
+      <div class="feat-item">Профиль участника с историей всех событий</div>
+      <div class="feat-item">Сегментация: активные / редкие / ушедшие</div>
+      <div class="feat-item">AI Win-back — умные касания с неактивными</div>
+      <div class="feat-item">Закрытые события только для зарегистрированных</div>
+    </div>
+  </div>
+</section>
+
 <!-- TELEGRAM -->
 <section id="telegram">
   <div class="tg-pill reveal"><i class="ph-thin ph-telegram-logo"></i> Работает через Telegram</div>
@@ -1146,11 +1324,14 @@
 <section id="cta" style="position:relative;overflow:hidden">
   <div class="sec-lbl cta-lbl reveal">Начать сейчас</div>
   <h2 class="sec-title reveal rd1">Первый пилот —<br><em>бесплатно</em></h2>
-  <p class="cta-sub reveal rd2">Ресторан, мероприятие или комьюнити — подключите Great Guest и за 15 минут начните знать своих гостей. На период пилота без оплаты.</p>
+  <p class="cta-sub reveal rd2">Ресторан, мероприятие или комьюнити — запуск за 15 минут, без интеграций и обучения персонала. В период пилота полностью без оплаты.</p>
   <div class="cta-btns reveal rd3">
     <a href="https://t.me/great_guest_bot" class="btn-m btn-p" data-mag><span>Написать нам в Telegram →</span></a>
-    <a href="/pitch.html" class="btn-m btn-g" data-mag>Смотреть питч</a>
+    <a href="/pitch.html" class="btn-m btn-g" data-mag>Смотреть питч инвестора</a>
   </div>
+  <p style="margin-top:24px;font-size:12px;color:var(--muted);letter-spacing:.04em" class="reveal rd4">
+    Без кредитной карты · Без договора · Отмена в любой момент
+  </p>
 </section>
 
 <!-- FOOTER -->
