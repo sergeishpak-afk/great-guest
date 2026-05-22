@@ -587,6 +587,17 @@
     .slide p { font-size: 15px; }
     .pitch-grid { grid-template-columns: 1fr 1fr; }
   }
+  @media (max-width: 720px) {
+    .topnav-inner { flex-wrap: wrap; padding: 12px 16px 0; gap: 0; }
+    .tabs {
+      width: 100%; flex-wrap: nowrap; overflow-x: auto;
+      padding: 6px 0 10px; scrollbar-width: none; -ms-overflow-style: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tabs li { white-space: nowrap; flex-shrink: 0; font-size: 12px; padding: 7px 10px; }
+    .logo { font-size: 18px; }
+    .logo-mark { width: 28px; height: 28px; font-size: 11px; }
+  }
 </style>
 </head>
 <body>
@@ -606,7 +617,6 @@
       <li data-tab="ai">AI Фичи</li>
       <li data-tab="demo">Live Demo</li>
     </ul>
-    <a href="/" class="back-home">← На лендинг</a>
   </div>
 </nav>
 
