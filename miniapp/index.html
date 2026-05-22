@@ -3,10 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Great Guest — Лояльность нового поколения</title>
+  <title>Great Guest — Платформа управления гостями для ресторанов, мероприятий и комьюнити</title>
+  <meta name="description" content="Great Guest — программа лояльности через Telegram для ресторанов, организаторов мероприятий и комьюнити. QR-чек-ин, база гостей, аналитика. Запуск за 15 минут, без приложений." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://great-guest.vercel.app/" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Great Guest — Платформа управления гостями" />
+  <meta property="og:description" content="QR-лояльность через Telegram для ресторанов, мероприятий и комьюнити. Запуск за 15 минут, без приложений." />
+  <meta property="og:url" content="https://great-guest.vercel.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:site_name" content="Great Guest" />
+  <meta property="og:image" content="https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Great Guest — Платформа управления гостями" />
+  <meta name="twitter:description" content="QR-лояльность через Telegram для ресторанов, мероприятий и комьюнити." />
+  <meta name="twitter:image" content="https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg" />
+
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Great Guest",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web, Telegram",
+        "description": "Платформа управления гостями для ресторанов, мероприятий и комьюнити на базе Telegram Mini App",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "RUB", "description": "Бесплатный пилот" },
+        "url": "https://great-guest.vercel.app",
+        "inLanguage": "ru",
+        "keywords": "программа лояльности ресторан, лояльность telegram, чек-ин мероприятия, управление гостями"
+      },
+      {
+        "@type": "Organization",
+        "name": "Great Guest",
+        "url": "https://great-guest.vercel.app",
+        "sameAs": ["https://t.me/great_guest_bot"],
+        "description": "Платформа лояльности нового поколения через Telegram"
+      },
+      {
+        "@type": "WebSite",
+        "name": "Great Guest",
+        "url": "https://great-guest.vercel.app",
+        "inLanguage": "ru"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://uhuegcgiysvbcxokebjg.supabase.co" />
+  <link rel="preload" as="image" href="https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg" fetchpriority="high" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1" defer></script>
   <style>
     :root {
       --bg:      #0D0B08;
@@ -165,6 +223,67 @@
     @keyframes slideUp { to{opacity:1;transform:translateY(0)} }
     @keyframes fuA { to{opacity:1;transform:translateY(0)} }
     @keyframes fuIn { to{opacity:1} }
+
+    /* ── Verticals (три рынка) ── */
+    #verticals {
+      padding: 100px 48px;
+      background-image:
+        linear-gradient(rgba(13,11,8,0.97), rgba(13,11,8,0.97)),
+        url('https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg');
+      background-size: cover;
+      background-position: center 40%;
+    }
+    #verticals::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201,169,110,.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .vert-hdr { text-align: center; margin-bottom: 64px; }
+    .vert-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; background: var(--border); }
+    .vert-card {
+      background: var(--surface); padding: 44px 36px;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
+      transition: background .3s;
+    }
+    .vert-card:hover { background: #1B190F; }
+    .vert-card::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 28px; height: 2px; background: var(--gold);
+    }
+    .vert-card::after {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 2px; height: 28px; background: var(--gold);
+    }
+    .vert-num {
+      font-family: 'Bebas Neue', sans-serif; font-size: 72px; line-height: 1;
+      color: rgba(201,169,110,.06); position: absolute; top: 12px; right: 16px;
+    }
+    .vert-icon { font-size: 32px; color: var(--gold); margin-bottom: 20px; }
+    .vert-tag {
+      display: inline-block; font-size: 9px; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--gold); border: 1px solid rgba(201,169,110,.25);
+      padding: 3px 10px; border-radius: 2px; margin-bottom: 16px; width: fit-content;
+    }
+    .vert-title {
+      font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 500;
+      line-height: 1.15; margin-bottom: 12px;
+    }
+    .vert-desc { font-size: 13px; line-height: 1.75; color: var(--muted); margin-bottom: 28px; }
+    .vert-list { display: flex; flex-direction: column; gap: 10px; }
+    .vert-item { display: flex; align-items: flex-start; gap: 12px; font-size: 13px; line-height: 1.6; color: var(--text); }
+    .vert-item::before { content: ''; width: 16px; height: 1px; background: var(--gold); flex-shrink: 0; margin-top: 10px; opacity: .5; }
+    @media(max-width: 900px) {
+      #verticals { padding: 72px 20px; }
+      .vert-grid { grid-template-columns: 1fr; }
+      .vert-card { padding: 36px 24px; border-bottom: 1px solid var(--border); }
+      .vert-card:last-child { border: none; }
+      .vert-hdr { margin-bottom: 44px; }
+    }
+    @media(max-width: 480px) {
+      #verticals { padding: 56px 16px; }
+      .vert-title { font-size: 22px; }
+    }
 
     /* ── Marquee ───────── */
     .marquee-wrap { padding:18px 0; overflow:hidden; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
@@ -676,6 +795,7 @@
 <!-- NAV -->
 <!-- Mobile overlay nav -->
 <div class="mob-nav" id="mobNav">
+  <a href="#verticals"  onclick="closeMobNav()">Три рынка</a>
   <a href="#how"        onclick="closeMobNav()">Как работает</a>
   <a href="#features"   onclick="closeMobNav()">Возможности</a>
   <a href="#restaurant" onclick="closeMobNav()">Для ресторанов</a>
@@ -685,6 +805,7 @@
 <nav id="nav">
   <a href="#" class="nav-logo">Great<em>Guest</em></a>
   <div class="nav-links">
+    <a href="#verticals">Рынки</a>
     <a href="#how">Как работает</a>
     <a href="#features">Возможности</a>
     <a href="#restaurant">Для ресторанов</a>
@@ -704,13 +825,13 @@
   <div class="hero-3d"><div class="dot-grid"></div></div>
 
   <div class="hero-left">
-    <div class="hero-eyebrow">Loyalty 2.0 · HoReCa</div>
+    <div class="hero-eyebrow">Loyalty 2.0 · HoReCa · События · Комьюнити</div>
     <h1 class="hero-title">
       <span class="ln"><span class="li">Лояльность</span></span>
       <span class="ln"><span class="li">нового</span></span>
       <span class="ln"><span class="li"><em>поколения</em></span></span>
     </h1>
-    <p class="hero-sub">Гость получает персональный QR в Telegram. Ресторан сканирует — видит статус, историю и предпочтения. Без приложений. Без карточек.</p>
+    <p class="hero-sub">Гость получает персональный QR в Telegram. Ресторан, организатор мероприятия или комьюнити сканирует — видит статус, историю и предпочтения. Без приложений. Без карточек.</p>
     <div class="hero-actions">
       <a href="#cta" class="btn-m btn-p" data-mag><span>Подключить ресторан</span></a>
       <a href="https://t.me/great_guest_bot" class="btn-m btn-g" data-mag>Попробовать как гость →</a>
@@ -738,20 +859,85 @@
 <!-- MARQUEE -->
 <div class="marquee-wrap">
   <div class="marquee">
+    <div class="mq-item">Рестораны<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Мероприятия</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Комьюнити<span class="mq-sep"></span></div>
     <div class="mq-item">Без приложений<span class="mq-sep"></span></div>
     <div class="mq-item"><em>Telegram Mini App</em><span class="mq-sep"></span></div>
     <div class="mq-item">Bronze → Silver → Gold → <em>Platinum</em><span class="mq-sep"></span></div>
-    <div class="mq-item">Аналитика гостей<span class="mq-sep"></span></div>
-    <div class="mq-item">QR за секунды<span class="mq-sep"></span></div>
+    <div class="mq-item">QR-чек-ин на входе<span class="mq-sep"></span></div>
+    <div class="mq-item">База гостей<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Закрытые мероприятия</em><span class="mq-sep"></span></div>
     <div class="mq-item">Уведомления в Telegram<span class="mq-sep"></span></div>
+    <div class="mq-item">Рестораны<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Мероприятия</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Комьюнити<span class="mq-sep"></span></div>
     <div class="mq-item">Без приложений<span class="mq-sep"></span></div>
     <div class="mq-item"><em>Telegram Mini App</em><span class="mq-sep"></span></div>
     <div class="mq-item">Bronze → Silver → Gold → <em>Platinum</em><span class="mq-sep"></span></div>
-    <div class="mq-item">Аналитика гостей<span class="mq-sep"></span></div>
-    <div class="mq-item">QR за секунды<span class="mq-sep"></span></div>
+    <div class="mq-item">QR-чек-ин на входе<span class="mq-sep"></span></div>
+    <div class="mq-item">База гостей<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Закрытые мероприятия</em><span class="mq-sep"></span></div>
     <div class="mq-item">Уведомления в Telegram<span class="mq-sep"></span></div>
   </div>
 </div>
+
+<!-- VERTICALS: три рынка -->
+<section id="verticals">
+  <div class="vert-hdr">
+    <div class="sec-lbl reveal" style="justify-content:center">Один инструмент</div>
+    <h2 class="sec-title reveal rd1" style="text-align:center;margin:0 auto;max-width:560px">Три рынка —<br><em>одна платформа</em></h2>
+    <p style="text-align:center;color:var(--muted);font-size:14px;line-height:1.7;max-width:460px;margin:16px auto 0" class="reveal rd2">Та же механика QR-чек-ина и Telegram-бота работает для ресторанов, организаторов мероприятий и комьюнити-менеджеров.</p>
+  </div>
+  <div class="vert-grid">
+
+    <!-- Рестораны -->
+    <div class="vert-card reveal">
+      <div class="vert-num">01</div>
+      <div class="vert-icon"><i class="ph-thin ph-fork-knife"></i></div>
+      <div class="vert-tag">HoReCa</div>
+      <div class="vert-title">Рестораны<br>и кафе</div>
+      <p class="vert-desc">Лояльность вместо забытых карточек. Каждый визит — в базе. Персонал знает гостя до того, как тот открыл меню.</p>
+      <div class="vert-list">
+        <div class="vert-item">Статусы Bronze → Platinum</div>
+        <div class="vert-item">QR-чек-ин при каждом визите</div>
+        <div class="vert-item">VIP-список и история гостя</div>
+        <div class="vert-item">Уведомления об акциях</div>
+      </div>
+    </div>
+
+    <!-- Мероприятия -->
+    <div class="vert-card reveal rd1">
+      <div class="vert-num">02</div>
+      <div class="vert-icon"><i class="ph-thin ph-calendar-check"></i></div>
+      <div class="vert-tag">События</div>
+      <div class="vert-title">Мероприятия<br>и ивенты</div>
+      <p class="vert-desc">Регистрация через Telegram, чек-ин на входе, список присутствующих онлайн. Каждый гость — в базе навсегда.</p>
+      <div class="vert-list">
+        <div class="vert-item">Регистрация без сторонних форм</div>
+        <div class="vert-item">QR-чек-ин на входе за секунды</div>
+        <div class="vert-item">Закрытые мероприятия с доступом по QR</div>
+        <div class="vert-item">Кто пришёл / не пришёл — онлайн</div>
+      </div>
+    </div>
+
+    <!-- Комьюнити -->
+    <div class="vert-card reveal rd2">
+      <div class="vert-num">03</div>
+      <div class="vert-icon"><i class="ph-thin ph-users-three"></i></div>
+      <div class="vert-tag">Комьюнити</div>
+      <div class="vert-title">Клубы<br>и комьюнити</div>
+      <p class="vert-desc">База участников с историей активности. Видите кто ходит на каждое событие, что интересует, кто давно не появлялся.</p>
+      <div class="vert-list">
+        <div class="vert-item">Профиль участника и история</div>
+        <div class="vert-item">Сегментация по активности</div>
+        <div class="vert-item">Приглашения на следующие события</div>
+        <div class="vert-item">AI Win-back для неактивных</div>
+      </div>
+    </div>
+
+  </div>
+</section>
 
 <!-- PROBLEM -->
 <section id="problem">
@@ -959,8 +1145,8 @@
 <!-- CTA -->
 <section id="cta" style="position:relative;overflow:hidden">
   <div class="sec-lbl cta-lbl reveal">Начать сейчас</div>
-  <h2 class="sec-title reveal rd1">Первый пилотный<br><em>ресторан — бесплатно</em></h2>
-  <p class="cta-sub reveal rd2">Подключите Great Guest и за 15 минут начните узнавать своих лучших гостей. На период пилота — без оплаты.</p>
+  <h2 class="sec-title reveal rd1">Первый пилот —<br><em>бесплатно</em></h2>
+  <p class="cta-sub reveal rd2">Ресторан, мероприятие или комьюнити — подключите Great Guest и за 15 минут начните знать своих гостей. На период пилота без оплаты.</p>
   <div class="cta-btns reveal rd3">
     <a href="https://t.me/great_guest_bot" class="btn-m btn-p" data-mag><span>Написать нам в Telegram →</span></a>
     <a href="/pitch.html" class="btn-m btn-g" data-mag>Смотреть питч</a>
