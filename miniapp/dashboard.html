@@ -9,6 +9,8 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
     :root {
       --gold:   #c9a96e;
       --gold2:  #e8c97e;
@@ -170,8 +172,9 @@
 <header>
   <div class="logo">Great<span>Guest</span> <span style="color:var(--muted);font-weight:400;font-size:14px">/ Аналитика</span></div>
   <div class="header-right">
+    <label for="restSelect" class="sr-only">Выбрать ресторан</label>
     <select id="restSelect"><option value="">Загрузка...</option></select>
-    <a href="/restaurant.html" class="panel-link">📷 Панель</a>
+    <a href="/restaurant.html" class="panel-link"><span aria-hidden="true">📷</span> Панель</a>
   </div>
 </header>
 
@@ -180,25 +183,25 @@
   <!-- KPI row -->
   <div class="kpi-row">
     <div class="kpi">
-      <div class="kpi-icon">🍽</div>
+      <div class="kpi-icon" aria-hidden="true">🍽</div>
       <div class="kpi-label">Визитов всего</div>
       <div class="kpi-val" id="kTotal">—</div>
       <div class="kpi-sub" id="kTotalSub"></div>
     </div>
     <div class="kpi">
-      <div class="kpi-icon">📅</div>
+      <div class="kpi-icon" aria-hidden="true">📅</div>
       <div class="kpi-label">За 7 дней</div>
       <div class="kpi-val gold" id="kWeek">—</div>
       <div class="kpi-sub" id="kWeekSub"></div>
     </div>
     <div class="kpi">
-      <div class="kpi-icon">👥</div>
+      <div class="kpi-icon" aria-hidden="true">👥</div>
       <div class="kpi-label">Гостей</div>
       <div class="kpi-val" id="kGuests">—</div>
       <div class="kpi-sub" id="kGuestsSub"></div>
     </div>
     <div class="kpi">
-      <div class="kpi-icon">⭐</div>
+      <div class="kpi-icon" aria-hidden="true">⭐</div>
       <div class="kpi-label">Gold+ гостей</div>
       <div class="kpi-val gold" id="kGold">—</div>
       <div class="kpi-sub">15+ визитов</div>
@@ -208,13 +211,13 @@
   <!-- Chart + Levels -->
   <div class="grid3">
     <div class="chart-card">
-      <div class="card-title">Визиты за 14 дней</div>
+      <h2 class="card-title">Визиты за 14 дней</h2>
       <div class="chart-wrap">
-        <canvas id="visitsChart"></canvas>
+        <canvas id="visitsChart" aria-label="График визитов за последние 14 дней" role="img"></canvas>
       </div>
     </div>
     <div class="chart-card">
-      <div class="card-title">Уровни гостей</div>
+      <h2 class="card-title">Уровни гостей</h2>
       <div class="levels" id="levelsWrap">
         <div class="empty">Загрузка...</div>
       </div>
@@ -224,7 +227,7 @@
   <!-- Top guests + Recent -->
   <div class="grid2">
     <div class="chart-card">
-      <div class="card-title">Топ гостей</div>
+      <h2 class="card-title">Топ гостей</h2>
       <table class="guests-table">
         <thead>
           <tr>
@@ -239,7 +242,7 @@
       </table>
     </div>
     <div class="chart-card">
-      <div class="card-title">Последние визиты</div>
+      <h2 class="card-title">Последние визиты</h2>
       <div class="visit-feed" id="recentFeed">
         <div class="empty">Загрузка...</div>
       </div>
@@ -398,7 +401,7 @@ function renderLevels(recent) {
 
   document.getElementById('levelsWrap').innerHTML = levels.map(l => `
     <div class="level-row">
-      <div class="level-emoji">${l.emoji}</div>
+      <div class="level-emoji" aria-hidden="true">${l.emoji}</div>
       <div class="level-name">${l.name}</div>
       <div class="level-bar-wrap">
         <div class="level-bar" style="width:${Math.round(l.count/total*100)}%;background:${l.color}"></div>
@@ -454,10 +457,10 @@ function renderRecentFeed(recent) {
 
 // ── Helpers ──
 function badgeHtml(n) {
-  if (n >= 30) return '<span class="bdg bdg-p">💎 Platinum</span>';
-  if (n >= 15) return '<span class="bdg bdg-g">🥇 Gold</span>';
-  if (n >= 5)  return '<span class="bdg bdg-s">🥈 Silver</span>';
-  return '<span class="bdg bdg-b">🥉 Bronze</span>';
+  if (n >= 30) return '<span class="bdg bdg-p"><span aria-hidden="true">💎</span> Platinum</span>';
+  if (n >= 15) return '<span class="bdg bdg-g"><span aria-hidden="true">🥇</span> Gold</span>';
+  if (n >= 5)  return '<span class="bdg bdg-s"><span aria-hidden="true">🥈</span> Silver</span>';
+  return '<span class="bdg bdg-b"><span aria-hidden="true">🥉</span> Bronze</span>';
 }
 
 function timeAgo(iso) {

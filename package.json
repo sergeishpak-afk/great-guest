@@ -8,14 +8,21 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
-    "telegraf": "^4.16.3",
-    "qrcode": "^1.5.4",
     "@supabase/supabase-js": "^2.49.4",
-    "express": "^4.21.2",
+    "@vercel/og": "^0.11.1",
     "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4",
+    "telegraf": "^4.16.3",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.16.0",
+    "nodemon": "^3.1.9",
+    "tailwind-merge": "^3.6.0"
   }
 }

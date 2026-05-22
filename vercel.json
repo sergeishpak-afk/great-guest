@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "outputDirectory": "miniapp",
+  "framework": null,
+  "buildCommand": "",
+  "rewrites": [
+    { "source": "/api/guest-preview/:token", "destination": "/api/guest-preview?token=:token" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" }
+      ]
+    }
+  ]
+}

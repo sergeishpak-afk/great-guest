@@ -4,11 +4,22 @@ const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 const path = require('path');
-const supabase = require('./db');
+const supabase = require('./admin-db'); // service_role — bypasses RLS for bot writes
 const { formatStatus } = require('./status');
 
 // ─── Bot ──────────────────────────────────────────────────────────────────────
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
+const MINI_APP_URL = 'https://great-guest.vercel.app/app.html';
+
+const mainKeyboard = Markup.keyboard([
+  ['🎫 Получить QR для визита'],
+  ['⭐ Мой статус', '📋 История визитов'],
+]).resize();
+
+const appInlineBtn = Markup.inlineKeyboard([
+  [Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP_URL)]
+]);
 
 bot.start(async (ctx) => {
   const tgUser = ctx.from;
@@ -25,11 +36,12 @@ bot.start(async (ctx) => {
 
   await ctx.replyWithMarkdown(
     `👋 Привет, *${tgUser.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности.\n\nКаждый визит в ресторан-партнёр повышает твой статус.`,
-    Markup.keyboard([
-      ['🎫 Получить QR для визита'],
-      ['⭐ Мой статус', '📋 История визитов'],
-    ]).resize()
+    mainKeyboard
   );
+});
+
+bot.command('app', async (ctx) => {
+  await ctx.reply('👇 Нажми чтобы открыть:', appInlineBtn);
 });
 
 bot.hears('🎫 Получить QR для визита', async (ctx) => {
@@ -193,9 +205,15 @@ app.listen(PORT, () => {
   console.log(`✅ Веб-панель ресторана: http://localhost:${PORT}`);
 });
 
-bot.launch({ dropPendingUpdates: true }).then(() => {
-  console.log('✅ @great_guest_bot запущен');
-}).catch(console.error);
+// Устанавливаем menu button до запуска polling
+bot.telegram.setChatMenuButton({
+  menu_button: { type: 'web_app', text: 'Open Great Guest', web_app: { url: MINI_APP_URL } }
+}).then(() => console.log('✅ Menu button установлен'))
+  .catch(e => console.warn('⚠️  Menu button:', e.message));
+
+bot.launch({ dropPendingUpdates: true })
+  .then(() => console.log('✅ @great_guest_bot запущен'))
+  .catch(console.error);
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
