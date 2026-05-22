@@ -4,7 +4,7 @@ const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 const path = require('path');
-const supabase = require('./db');
+const supabase = require('./admin-db'); // service_role — bypasses RLS for bot writes
 const { formatStatus } = require('./status');
 
 // ─── Bot ──────────────────────────────────────────────────────────────────────
