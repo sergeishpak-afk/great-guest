@@ -37,6 +37,16 @@ bot.start(async (ctx) => {
   );
 });
 
+// Fallback: если клиент не поддерживает web_app кнопку — отправляет текст
+bot.hears('🚀 Открыть приложение', async (ctx) => {
+  await ctx.reply(
+    '👆 Нажми кнопку ниже чтобы открыть приложение:',
+    Markup.inlineKeyboard([
+      [Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP_URL)]
+    ])
+  );
+});
+
 bot.hears('🎫 Получить QR для визита', async (ctx) => {
   const telegramId = String(ctx.from.id);
   const visitToken = uuidv4();

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Great Guest</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #c9a96e;
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --muted: #888;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--tg-theme-bg-color, var(--bg));
+      color: var(--tg-theme-text-color, var(--text));
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 16px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #app { display: none; padding: 24px 20px 40px; }
+
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: var(--gold); }
+    .greeting { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    .status-card {
+      background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .status-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), #e8c97e, var(--gold));
+    }
+
+    .status-emoji { font-size: 48px; margin-bottom: 8px; }
+    .status-name { font-size: 24px; font-weight: 700; color: var(--gold); }
+    .visit-count { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+    .progress-wrap { margin-top: 16px; }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), #e8c97e);
+      border-radius: 99px;
+      transition: width .6s ease;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+
+    .qr-section { margin-bottom: 20px; }
+    .qr-btn {
+      width: 100%;
+      background: var(--gold);
+      color: #0f0f0f;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity .2s, transform .1s;
+    }
+    .qr-btn:active { transform: scale(.97); opacity: .85; }
+
+    .qr-display {
+      display: none;
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .qr-display img { width: 200px; height: 200px; }
+    .qr-hint { font-size: 12px; color: #666; margin-top: 8px; }
+
+    .visits-section { margin-bottom: 20px; }
+    .visit-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .visit-restaurant { font-weight: 500; }
+    .visit-date { color: var(--muted); font-size: 13px; }
+
+    .empty { text-align: center; color: var(--muted); padding: 20px; font-size: 14px; }
+
+    #error {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+      color: #e88;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div style="color:#888;font-size:14px">Загружаем...</div>
+</div>
+
+<div id="error">
+  <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+  <div id="error-msg">Что-то пошло не так</div>
+</div>
+
+<div id="app">
+  <div class="header">
+    <div class="logo">Great<span>Guest</span></div>
+    <div class="greeting" id="greeting">Добро пожаловать</div>
+  </div>
+
+  <div class="status-card">
+    <div class="status-emoji" id="status-emoji">🥉</div>
+    <div class="status-name" id="status-name">Bronze</div>
+    <div class="visit-count" id="visit-count">0 визитов</div>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-label">
+        <span id="progress-from"></span>
+        <span id="progress-to"></span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qr-section">
+    <div class="section-title">Визит</div>
+    <button class="qr-btn" onclick="getQR()">
+      <span>🎫</span> Получить QR для визита
+    </button>
+    <div class="qr-display" id="qr-display">
+      <img id="qr-img" src="" alt="QR" />
+      <div class="qr-hint">Покажи код администратору ресторана</div>
+    </div>
+  </div>
+
+  <div class="visits-section">
+    <div class="section-title">История визитов</div>
+    <div id="visits-list"><div class="empty">Визитов пока нет</div></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wjlhaizrygeyeishbycp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps';
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const tg = window.Telegram?.WebApp;
+
+const LEVELS = [
+  { name: 'Bronze',   emoji: '🥉', min: 0,  max: 4  },
+  { name: 'Silver',   emoji: '🥈', min: 5,  max: 14 },
+  { name: 'Gold',     emoji: '🥇', min: 15, max: 29 },
+  { name: 'Platinum', emoji: '💎', min: 30, max: Infinity },
+];
+
+function getLevel(n) {
+  return [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0];
+}
+function getNext(n) {
+  return LEVELS.find(l => l.min > n);
+}
+function declVisit(n) {
+  if (n % 10 === 1 && n % 100 !== 11) return 'визит';
+  if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'визита';
+  return 'визитов';
+}
+
+function showError(msg) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('error-msg').textContent = msg;
+}
+
+async function init() {
+  if (tg) tg.ready();
+
+  const tgUser = tg?.initDataUnsafe?.user;
+  if (!tgUser?.id) {
+    showError('Нажми кнопку «🚀 Открыть приложение» в клавиатуре бота — не синюю кнопку меню слева, а кнопку в чате после /start');
+    return;
+  }
+
+  let res, payload;
+  try {
+    res = await fetch('/api/webapp-init', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: tg.initData }),
+    });
+    payload = await res.json();
+  } catch(e) {
+    showError('Сетевая ошибка: ' + e.message);
+    return;
+  }
+  if (!res.ok || !payload.guest) {
+    showError('Ошибка API ' + res.status + ': ' + (payload?.error || 'нет данных гостя'));
+    return;
+  }
+  const guest = payload.guest;
+
+  document.getElementById('greeting').textContent = `Привет, ${guest.first_name}! 👋`;
+  renderStatus(guest.visit_count);
+  await renderHistory(guest.telegram_id);
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+function renderStatus(count) {
+  const lvl = getLevel(count);
+  const next = getNext(count);
+
+  document.getElementById('status-emoji').textContent = lvl.emoji;
+  document.getElementById('status-name').textContent = lvl.name;
+  document.getElementById('visit-count').textContent = `${count} ${declVisit(count)}`;
+
+  if (next) {
+    const span = next.min - lvl.min;
+    const done = count - lvl.min;
+    const pct = Math.round((done / span) * 100);
+    document.getElementById('progress-from').textContent = `${lvl.emoji} ${lvl.name}`;
+    document.getElementById('progress-to').textContent = `${getNext(count).emoji} ${next.name}`;
+    document.getElementById('progress-fill').style.width = pct + '%';
+  } else {
+    document.getElementById('progress-wrap').style.display = 'none';
+  }
+}
+
+async function renderHistory(telegramId) {
+  const { data: visits } = await db
+    .from('visits')
+    .select('visited_at, restaurants(name)')
+    .eq('telegram_id', telegramId)
+    .order('visited_at', { ascending: false })
+    .limit(10);
+
+  const list = document.getElementById('visits-list');
+  if (!visits || visits.length === 0) {
+    list.innerHTML = '<div class="empty">Визитов пока нет — получи QR и посети ресторан!</div>';
+    return;
+  }
+  list.innerHTML = visits.map(v => {
+    const date = new Date(v.visited_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    const name = v.restaurants?.name || 'Ресторан-партнёр';
+    return `<div class="visit-item"><span class="visit-restaurant">🍽 ${name}</span><span class="visit-date">${date}</span></div>`;
+  }).join('');
+}
+
+async function getQR() {
+  if (!tg?.initData) return;
+
+  // ✅ Server creates QR token after HMAC validation
+  const res = await fetch('/api/create-qr', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: tg.initData }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.visitUrl) { alert(data.error || 'Ошибка создания QR'); return; }
+
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.visitUrl)}&ecc=H`;
+  document.getElementById('qr-img').src = qrUrl;
+  document.getElementById('qr-display').style.display = 'block';
+}
+
+init();
+</script>
+</body>
+</html>
