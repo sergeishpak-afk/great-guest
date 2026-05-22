@@ -198,18 +198,15 @@ app.listen(PORT, () => {
   console.log(`✅ Веб-панель ресторана: http://localhost:${PORT}`);
 });
 
-bot.launch({ dropPendingUpdates: true }).then(async () => {
-  console.log('✅ @great_guest_bot запущен');
-  // Устанавливаем кнопку меню Mini App (видна в каждом чате с ботом)
-  try {
-    await bot.telegram.setChatMenuButton({
-      menuButton: { type: 'web_app', text: 'Открыть Great Guest', web_app: { url: MINI_APP_URL } }
-    });
-    console.log('✅ Menu button установлен');
-  } catch (e) {
-    console.warn('⚠️  Menu button не установлен:', e.message);
-  }
-}).catch(console.error);
+// Устанавливаем menu button до запуска polling
+bot.telegram.setChatMenuButton({
+  menu_button: { type: 'web_app', text: 'Open Great Guest', web_app: { url: MINI_APP_URL } }
+}).then(() => console.log('✅ Menu button установлен'))
+  .catch(e => console.warn('⚠️  Menu button:', e.message));
+
+bot.launch({ dropPendingUpdates: true })
+  .then(() => console.log('✅ @great_guest_bot запущен'))
+  .catch(console.error);
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
