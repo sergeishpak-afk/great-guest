@@ -58,6 +58,10 @@
   }
   </script>
 
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
   <!-- Performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -128,7 +132,7 @@
     section { position:relative; z-index:2; }
     .reveal { opacity:0; transform:translateY(28px); transition:opacity .8s var(--ease),transform .8s var(--ease); }
     .reveal.in { opacity:1; transform:none; }
-    .rd1{transition-delay:.1s} .rd2{transition-delay:.2s} .rd3{transition-delay:.3s} .rd4{transition-delay:.4s} .rd5{transition-delay:.5s}
+    .rd1{transition-delay:.1s} .rd2{transition-delay:.2s} .rd3{transition-delay:.3s} .rd4{transition-delay:.4s} .rd5{transition-delay:.5s} .rd6{transition-delay:.6s}
 
     /* ── HERO ────────────── */
     #hero {
@@ -1329,7 +1333,23 @@
     <a href="https://t.me/great_guest_bot" class="btn-m btn-p" data-mag><span>Написать нам в Telegram →</span></a>
     <a href="/pitch.html" class="btn-m btn-g" data-mag>Смотреть питч инвестора</a>
   </div>
-  <p style="margin-top:24px;font-size:12px;color:var(--muted);letter-spacing:.04em" class="reveal rd4">
+  <div style="margin-top:40px;display:flex;justify-content:center;gap:32px;flex-wrap:wrap" class="reveal rd4">
+    <div style="text-align:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold);line-height:1">0 ₽</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:4px">Пилот</div>
+    </div>
+    <div style="width:1px;background:var(--border);align-self:stretch"></div>
+    <div style="text-align:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold);line-height:1">15 мин</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:4px">До первого гостя</div>
+    </div>
+    <div style="width:1px;background:var(--border);align-self:stretch"></div>
+    <div style="text-align:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold);line-height:1">0</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:4px">Приложений</div>
+    </div>
+  </div>
+  <p style="margin-top:20px;font-size:12px;color:var(--muted);letter-spacing:.04em" class="reveal rd5">
     Без кредитной карты · Без договора · Отмена в любой момент
   </p>
 </section>
