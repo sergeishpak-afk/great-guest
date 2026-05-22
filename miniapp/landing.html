@@ -175,9 +175,7 @@
     @keyframes floatPhone { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-16px) rotate(1deg)} }
     .phone { width:250px; height:500px; background:var(--surface); border-radius:34px; border:1px solid rgba(201,169,110,.18); overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.05); position:relative; }
     .phone::before { content:''; position:absolute; top:12px; left:50%; transform:translateX(-50%); width:72px; height:6px; background:rgba(255,255,255,.07); border-radius:99px; z-index:10; }
-    /* Live iframe phone */
     .phone-live { background:#0C0B09; }
-    .phone-iframe { width:100%; height:100%; border:none; display:block; pointer-events:none; }
     .pscreen { padding:28px 18px 18px; height:100%; display:flex; flex-direction:column; gap:13px; }
     .ps-hdr { text-align:center; }
     .ps-logo { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:500; color:var(--text); }
@@ -794,12 +792,31 @@
       <div class="sonar-ring"></div><div class="sonar-ring"></div><div class="sonar-ring"></div>
       <div class="phone-wrap" id="phoneMock">
         <div class="phone phone-live">
-          <iframe
-            src="mockup-screen.html"
-            class="phone-iframe"
-            scrolling="no"
-            frameborder="0"
-          ></iframe>
+          <div class="pscreen">
+            <div class="ps-hdr">
+              <div class="ps-logo">Great<em>Guest</em></div>
+              <div class="ps-greet">Александр С. 👋</div>
+            </div>
+            <div class="ps-card">
+              <div class="ps-emo">🥇</div>
+              <div class="ps-st">Gold</div>
+              <div class="ps-vis">23 визита · 7 до Platinum</div>
+              <div class="ps-bar"><div class="ps-bar-f"></div></div>
+            </div>
+            <div class="ps-btn">🎫 Получить QR для визита</div>
+            <div class="ps-row">
+              <span>🍽 Кофейня Noir</span>
+              <span class="ps-rd">сегодня</span>
+            </div>
+            <div class="ps-row">
+              <span>🍽 Bistro 32</span>
+              <span class="ps-rd">вчера</span>
+            </div>
+            <div class="ps-row">
+              <span>🍽 Sushi Point</span>
+              <span class="ps-rd">3 дня назад</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
