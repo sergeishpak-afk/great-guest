@@ -10,6 +10,14 @@ const { formatStatus } = require('./status');
 // ─── Bot ──────────────────────────────────────────────────────────────────────
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
+const MINI_APP_URL = 'https://great-guest.vercel.app/app.html';
+
+const mainKeyboard = Markup.keyboard([
+  [{ text: '🚀 Открыть приложение', web_app: { url: MINI_APP_URL } }],
+  ['🎫 Получить QR для визита'],
+  ['⭐ Мой статус', '📋 История визитов'],
+]).resize();
+
 bot.start(async (ctx) => {
   const tgUser = ctx.from;
   const { error } = await supabase
@@ -25,10 +33,7 @@ bot.start(async (ctx) => {
 
   await ctx.replyWithMarkdown(
     `👋 Привет, *${tgUser.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности.\n\nКаждый визит в ресторан-партнёр повышает твой статус.`,
-    Markup.keyboard([
-      ['🎫 Получить QR для визита'],
-      ['⭐ Мой статус', '📋 История визитов'],
-    ]).resize()
+    mainKeyboard
   );
 });
 
@@ -193,8 +198,17 @@ app.listen(PORT, () => {
   console.log(`✅ Веб-панель ресторана: http://localhost:${PORT}`);
 });
 
-bot.launch({ dropPendingUpdates: true }).then(() => {
+bot.launch({ dropPendingUpdates: true }).then(async () => {
   console.log('✅ @great_guest_bot запущен');
+  // Устанавливаем кнопку меню Mini App (видна в каждом чате с ботом)
+  try {
+    await bot.telegram.setChatMenuButton({
+      menuButton: { type: 'web_app', text: 'Открыть Great Guest', web_app: { url: MINI_APP_URL } }
+    });
+    console.log('✅ Menu button установлен');
+  } catch (e) {
+    console.warn('⚠️  Menu button не установлен:', e.message);
+  }
 }).catch(console.error);
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
