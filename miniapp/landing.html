@@ -182,13 +182,19 @@
     .ps-logo { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:500; color:var(--text); }
     .ps-logo em { color:var(--gold); font-style:italic; }
     .ps-greet { font-size:11px; color:var(--muted); margin-top:2px; }
-    .ps-card { background:linear-gradient(135deg,#1C1A12,#221F14); border:1px solid rgba(201,169,110,.2); border-radius:14px; padding:18px; text-align:center; position:relative; overflow:hidden; }
-    .ps-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--gold),var(--gold2)); }
-    .ps-emo { font-size:32px; }
-    .ps-st { font-family:'Cormorant Garamond',serif; font-size:20px; color:var(--gold); font-weight:500; }
-    .ps-vis { font-size:11px; color:var(--muted); }
-    .ps-bar { height:3px; background:rgba(255,255,255,.07); border-radius:99px; margin-top:10px; }
-    .ps-bar-f { height:100%; width:40%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:99px; }
+    .ps-card { background:linear-gradient(135deg,#1C1A12 0%,#241F13 60%,#1A1810 100%); border:1px solid rgba(201,169,110,.25); border-radius:14px; padding:16px 18px 14px; position:relative; overflow:hidden; }
+    .ps-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),transparent); }
+    .ps-card::after { content:''; position:absolute; top:-40px; right:-30px; width:100px; height:100px; border-radius:50%; background:radial-gradient(circle,rgba(201,169,110,.08) 0%,transparent 70%); }
+    .ps-card-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; position:relative; z-index:1; }
+    .ps-badge { display:flex; align-items:center; gap:6px; }
+    .ps-st { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:600; color:var(--gold); letter-spacing:0.06em; line-height:1; }
+    .ps-count { text-align:right; }
+    .ps-count-n { display:block; font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:500; color:var(--text); line-height:1; }
+    .ps-count-l { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+    .ps-name { font-family:'Cormorant Garamond',serif; font-size:13px; font-style:italic; color:rgba(240,235,224,.55); margin-bottom:11px; letter-spacing:0.02em; position:relative; z-index:1; }
+    .ps-bar { height:2px; background:rgba(201,169,110,.12); border-radius:99px; position:relative; z-index:1; }
+    .ps-bar-f { height:100%; width:68%; background:linear-gradient(90deg,#8B6A3E,var(--gold),var(--gold2)); border-radius:99px; }
+    .ps-prog { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); margin-top:5px; letter-spacing:0.03em; position:relative; z-index:1; }
     .ps-btn { background:var(--gold); color:var(--bg); border-radius:9px; padding:11px; font-size:11px; font-weight:500; text-align:center; }
     .ps-row { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); border-radius:9px; padding:9px 12px; display:flex; justify-content:space-between; align-items:center; font-size:11px; }
     .ps-rd { color:var(--muted); font-size:10px; }
@@ -799,10 +805,19 @@
               <div class="ps-greet">Александр С. 👋</div>
             </div>
             <div class="ps-card">
-              <div class="ps-emo">🥇</div>
-              <div class="ps-st">Gold</div>
-              <div class="ps-vis">23 визита · 7 до Platinum</div>
+              <div class="ps-card-row">
+                <div class="ps-badge">
+                  <svg width="13" height="11" viewBox="0 0 13 11" fill="none" aria-hidden="true"><path d="M1 10L2.2 4.5L5.2 7.8L6.5 1L7.8 7.8L10.8 4.5L12 10H1Z" fill="#C9A96E" opacity=".9"/><circle cx="1" cy="4" r="1" fill="#C9A96E"/><circle cx="6.5" cy="1" r="1" fill="#C9A96E"/><circle cx="12" cy="4" r="1" fill="#C9A96E"/></svg>
+                  <span class="ps-st">Gold</span>
+                </div>
+                <div class="ps-count">
+                  <span class="ps-count-n">23</span>
+                  <span class="ps-count-l">визита</span>
+                </div>
+              </div>
+              <div class="ps-name">Александр С.</div>
               <div class="ps-bar"><div class="ps-bar-f"></div></div>
+              <div class="ps-prog"><span>Gold</span><span>7 до Platinum</span></div>
             </div>
             <div class="ps-btn">🎫 Получить QR для визита</div>
             <div class="ps-row">
