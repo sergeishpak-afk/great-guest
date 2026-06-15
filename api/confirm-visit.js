@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { Telegraf } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 const { formatStatus } = require('../src/status');
@@ -5,13 +6,16 @@ const { formatStatus } = require('../src/status');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+// Basic UUID v4 format check — prevent arbitrary token enumeration attempts
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const { token, restaurantId } = req.body || {};
-  if (!token) return res.status(400).json({ error: 'token required' });
+  if (!token || !UUID_RE.test(token)) return res.status(400).json({ error: 'token required' });
 
   const { data: pending } = await supabase.from('pending_visits').select('*').eq('token', token).eq('used', false).single();
   if (!pending) return res.status(404).json({ error: 'QR не найден или уже использован' });
@@ -22,8 +26,10 @@ module.exports = async (req, res) => {
   const newCount = guest.visit_count + 1;
   let restaurantName = 'ресторан-партнёр';
   if (restaurantId) {
+    if (!UUID_RE.test(restaurantId)) return res.status(400).json({ error: 'invalid restaurantId' });
     const { data: rest } = await supabase.from('restaurants').select('name').eq('id', restaurantId).single();
-    if (rest) restaurantName = rest.name;
+    if (!rest) return res.status(404).json({ error: 'Ресторан не найден' });
+    restaurantName = rest.name;
   }
 
   await supabase.from('visits').insert({ telegram_id: pending.telegram_id, restaurant_id: restaurantId || null, visit_token: token });

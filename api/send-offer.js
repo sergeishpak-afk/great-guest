@@ -9,6 +9,19 @@ const crypto = require('crypto');
 const { Telegraf } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 
+// In-memory rate limit: max 20 send-offer requests per owner per minute
+const RL_MAP = new Map();
+function checkRateLimit(ownerId) {
+  const now = Date.now();
+  const window = 60_000;
+  const limit = 20;
+  const entry = RL_MAP.get(ownerId) || { count: 0, start: now };
+  if (now - entry.start > window) { entry.count = 0; entry.start = now; }
+  entry.count++;
+  RL_MAP.set(ownerId, entry);
+  return entry.count <= limit;
+}
+
 const db  = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -25,6 +38,9 @@ function validateInitData(initData, token) {
     const params = new URLSearchParams(initData);
     const hash = params.get('hash');
     if (!hash) return false;
+    // Reject requests older than 1 hour (replay-attack protection)
+    const authDate = parseInt(params.get('auth_date') || '0', 10);
+    if (!authDate || Date.now() / 1000 - authDate > 3600) return false;
     params.delete('hash');
     const str = Array.from(params.entries()).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${k}=${v}`).join('\n');
     const secret = crypto.createHmac('sha256','WebAppData').update(token).digest();
@@ -95,7 +111,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  const { initData, guestTelegramId, offerText } = req.body || {};
+  const { initData, guestTelegramId, offerText, restaurantId } = req.body || {};
   if (!initData || !guestTelegramId)
     return res.status(400).json({ error: 'initData and guestTelegramId required' });
   if (!validateInitData(initData, process.env.BOT_TOKEN))
@@ -105,18 +121,29 @@ module.exports = async (req, res) => {
   const tgUser  = JSON.parse(params.get('user') || '{}');
   const ownerId = String(tgUser.id);
 
-  // Verify owner + subscription
-  const { data: restaurant } = await db
-    .from('restaurants')
+  // Rate limiting
+  if (!checkRateLimit(ownerId))
+    return res.status(429).json({ error: 'too_many_requests', message: 'Подождите минуту перед следующей отправкой' });
+
+  // Verify owner subscription
+  const { data: ownerSub } = await db
+    .from('owner_subscriptions')
     .select('*')
-    .eq('owner_telegram_id', ownerId)
+    .eq('telegram_id', ownerId)
     .single();
 
-  if (!restaurant) return res.status(403).json({ error: 'not_registered' });
-
-  const expires  = restaurant.subscription_expires_at ? new Date(restaurant.subscription_expires_at) : null;
-  const isActive = expires && expires > new Date();
+  const now     = new Date();
+  const expires = ownerSub?.subscription_expires_at ? new Date(ownerSub.subscription_expires_at) : null;
+  const isActive = ownerSub && (ownerSub.subscription_status === 'trial' || ownerSub.subscription_status === 'active') && expires && expires > now;
   if (!isActive) return res.status(403).json({ error: 'subscription_expired' });
+
+  // Get the specific restaurant (verify ownership)
+  // NOTE: must reassign to let so the .eq() chain is not discarded
+  let venueQuery = db.from('restaurants').select('*').eq('owner_telegram_id', ownerId);
+  if (restaurantId) venueQuery = venueQuery.eq('id', restaurantId);
+  const { data: restaurant } = await venueQuery.single();
+
+  if (!restaurant) return res.status(403).json({ error: 'not_registered' });
 
   // Get guest
   const { data: guest } = await db

@@ -13,6 +13,9 @@ function validateInitData(initData, token) {
     const params = new URLSearchParams(initData);
     const hash = params.get('hash');
     if (!hash) return false;
+    // Reject requests older than 1 hour (replay-attack protection)
+    const authDate = parseInt(params.get('auth_date') || '0', 10);
+    if (!authDate || Date.now() / 1000 - authDate > 3600) return false;
     params.delete('hash');
     const str = Array.from(params.entries()).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${k}=${v}`).join('\n');
     const secret = crypto.createHmac('sha256','WebAppData').update(token).digest();
