@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-  <title>Great Guest — Кабинет</title>
+  <title>Great Guest — Моя сеть</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -20,7 +20,7 @@
     #s-loading{display:flex;flex-direction:column;align-items:center;
       justify-content:center;height:100vh;gap:14px}
     #s-error{padding:40px 20px;text-align:center;color:#e88}
-    #s-type,#s-reg,#s-dash{padding:0}
+    #s-network,#s-type,#s-reg,#s-dash{padding:0}
 
     /* ─ Spinner ─ */
     .spinner{width:36px;height:36px;border:3px solid var(--border);
@@ -35,7 +35,54 @@
     .logo span{color:var(--gold)}
     .sub-label{font-size:12px;color:var(--muted);margin-top:2px}
 
+    /* ─ Network screen ─ */
+    .net-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+    .net-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .net-title h1{font-size:20px;font-weight:700}
+    .net-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+      font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap}
+    .net-trial{background:rgba(201,169,110,.15);color:var(--gold)}
+    .net-active{background:rgba(76,175,110,.15);color:var(--green)}
+    .net-expired{background:rgba(224,85,85,.15);color:var(--red)}
+    .net-sub-bar{background:var(--card);border:1px solid var(--border);
+      border-radius:10px;padding:10px 14px;display:flex;align-items:center;
+      justify-content:space-between;font-size:13px}
+    .net-sub-left{display:flex;align-items:center;gap:8px}
+    .net-sub-label{color:var(--muted)}
+    .net-sub-value{font-weight:600}
+    .net-upgrade{color:var(--gold);font-weight:600;cursor:pointer;text-decoration:none}
+    .net-upgrade:hover{text-decoration:underline}
+
+    .venues-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:20px}
+    .venue-card{background:var(--card);border:2px solid var(--border);border-radius:14px;
+      padding:16px 12px;cursor:pointer;transition:.2s;text-align:center}
+    .venue-card:hover{border-color:rgba(201,169,110,.4);transform:translateY(-2px)}
+    .venue-card:active{transform:scale(.98)}
+    .venue-icon{font-size:32px;margin-bottom:8px}
+    .venue-name{font-size:14px;font-weight:700;margin-bottom:4px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .venue-loc{font-size:11px;color:var(--muted);margin-bottom:10px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .venue-stats{display:flex;justify-content:space-around;gap:8px;font-size:10px;
+      border-top:1px solid var(--border);padding-top:10px;margin-top:10px}
+    .venue-stat{text-align:center}
+    .venue-stat-n{font-size:16px;font-weight:700;color:var(--gold);display:block}
+    .venue-stat-l{color:var(--muted);margin-top:2px}
+
+    .add-venue-btn{margin:0 20px 32px;background:var(--gold);color:#0a0a0a;
+      border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;
+      cursor:pointer;transition:opacity .2s;width:calc(100% - 40px);display:flex;
+      align-items:center;justify-content:center;gap:8px}
+    .add-venue-btn:active{opacity:.82}
+
+    .net-empty{text-align:center;padding:60px 20px;color:var(--muted)}
+    .net-empty-icon{font-size:48px;margin-bottom:16px}
+    .net-empty-text{font-size:15px;line-height:1.6;margin-bottom:24px}
+
     /* ─ Type chooser ─ */
+    .back-btn{display:flex;align-items:center;gap:8px;font-size:14px;
+      color:var(--muted);cursor:pointer;margin-bottom:20px;user-select:none}
+    .back-btn:hover{color:var(--text)}
     .chooser-hero{text-align:center;padding:32px 0 24px}
     .chooser-hero h1{font-size:22px;font-weight:700;margin-bottom:8px}
     .chooser-hero p{color:var(--muted);font-size:14px;line-height:1.5}
@@ -49,9 +96,6 @@
     .type-card-desc{font-size:12px;color:var(--muted);line-height:1.4}
 
     /* ─ Registration ─ */
-    .reg-back{display:flex;align-items:center;gap:8px;font-size:14px;
-      color:var(--muted);cursor:pointer;margin-bottom:20px}
-    .reg-back:hover{color:var(--text)}
     .reg-title{font-size:20px;font-weight:700;margin-bottom:6px}
     .reg-desc{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:20px}
     .trial-badge{display:inline-flex;align-items:center;gap:6px;
@@ -88,10 +132,14 @@
     .topbar{background:var(--card);border-bottom:1px solid var(--border);
       padding:14px 20px;display:flex;align-items:center;justify-content:space-between;
       position:sticky;top:0;z-index:10}
-    .rest-name{font-size:16px;font-weight:700;line-height:1.2}
+    .topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
+    .topbar-back{font-size:18px;cursor:pointer;user-select:none;flex-shrink:0}
+    .topbar-back:hover{opacity:.7}
+    .rest-name{font-size:16px;font-weight:700;line-height:1.2;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap}
     .rest-sub{font-size:11px;color:var(--muted);margin-top:2px}
     .sub-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;
-      font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap}
+      font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
     .sub-trial{background:rgba(201,169,110,.15);color:var(--gold)}
     .sub-active{background:rgba(76,175,110,.15);color:var(--green)}
     .sub-expired{background:rgba(224,85,85,.15);color:var(--red)}
@@ -198,7 +246,62 @@
       border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer}
     .btn-send:disabled{opacity:.4;cursor:not-allowed}
 
+    /* Upgrade modal */
+    .upgrade-modal{background:var(--bg);border-radius:20px;max-width:440px;
+      width:calc(100% - 40px);padding:28px 24px;position:relative}
+    .upgrade-close{position:absolute;top:16px;right:16px;font-size:24px;
+      cursor:pointer;color:var(--muted);user-select:none;width:32px;height:32px;
+      display:flex;align-items:center;justify-content:center;border-radius:50%}
+    .upgrade-close:hover{background:var(--card);color:var(--text)}
+    .upgrade-title{font-size:20px;font-weight:700;margin-bottom:6px}
+    .upgrade-desc{color:var(--muted);font-size:14px;margin-bottom:20px;line-height:1.5}
+    .upgrade-current{background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:14px;margin-bottom:20px;font-size:13px}
+    .upgrade-current-label{color:var(--muted);font-size:11px;text-transform:uppercase;
+      letter-spacing:.05em;margin-bottom:6px}
+    .upgrade-current-value{font-weight:600;font-size:15px}
+    .upgrade-plans{display:grid;gap:12px}
+    .upgrade-plan{background:var(--card);border:2px solid var(--border);
+      border-radius:14px;padding:16px;transition:.2s;cursor:pointer}
+    .upgrade-plan:hover{border-color:rgba(201,169,110,.4)}
+    .upgrade-plan-name{font-size:16px;font-weight:700;margin-bottom:4px}
+    .upgrade-plan-venues{font-size:12px;color:var(--muted);margin-bottom:10px}
+    .upgrade-plan-price{font-size:18px;font-weight:700;color:var(--gold)}
+    .upgrade-plan-btn{margin-top:12px;width:100%;background:rgba(201,169,110,.12);
+      border:1px solid rgba(201,169,110,.3);color:var(--gold);border-radius:10px;
+      padding:10px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+    .upgrade-plan-btn:hover{background:rgba(201,169,110,.2)}
+
     .empty{text-align:center;padding:40px 16px;color:var(--muted);font-size:14px;line-height:1.6}
+
+    /* ─ AI tab ─ */
+    .ai-action-card{display:flex;align-items:center;gap:12px;background:var(--card);
+      border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;
+      cursor:pointer;transition:.2s;user-select:none}
+    .ai-action-card:hover{border-color:rgba(201,169,110,.4);transform:translateX(2px)}
+    .ai-action-card:active{opacity:.8}
+    .ai-action-icon{font-size:24px;flex-shrink:0;width:44px;height:44px;
+      border-radius:10px;background:rgba(201,169,110,.08);display:flex;
+      align-items:center;justify-content:center}
+    .ai-action-text{flex:1;min-width:0}
+    .ai-action-text strong{display:block;font-size:13px;margin-bottom:3px}
+    .ai-action-text span{font-size:11px;color:var(--muted)}
+    .ai-action-arrow{color:var(--muted);font-size:16px;flex-shrink:0}
+
+    .coming-soon-card{display:flex;align-items:center;gap:12px;background:var(--card);
+      border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;
+      opacity:.75}
+    .cs-icon{font-size:22px;width:40px;height:40px;border-radius:10px;
+      background:rgba(255,255,255,.04);display:flex;align-items:center;
+      justify-content:center;flex-shrink:0}
+    .cs-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
+      background:rgba(201,169,110,.12);color:var(--gold);white-space:nowrap;flex-shrink:0}
+
+    .ai-insight-row{display:flex;gap:10px;margin-bottom:16px}
+    .ai-insight{flex:1;background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:14px 10px;text-align:center}
+    .ai-insight-n{font-size:22px;font-weight:700;margin-bottom:3px}
+    .ai-insight-l{font-size:10px;color:var(--muted);line-height:1.3}
   </style>
 </head>
 <body>
@@ -218,9 +321,15 @@
   </div>
 </div>
 
+<!-- ─ Network — MY NETWORK (main home) ────────────────────────────── -->
+<div id="s-network" class="screen">
+  <!-- filled by renderNetwork() -->
+</div>
+
 <!-- ─ Type chooser ──────────────────────────────────────── -->
 <div id="s-type" class="screen">
   <div class="page">
+    <div class="back-btn" onclick="show('s-network')">← Назад</div>
     <div class="logo">Great<span>Guest</span></div>
     <div class="sub-label">Кабинет партнёра</div>
     <div class="chooser-hero">
@@ -249,8 +358,8 @@
   </div>
 </div>
 
-<!-- ─ Dashboard ─────────────────────────────────────────── -->
-<div id="s-dash" class="screen" id="dashboard-root">
+<!-- ─ Dashboard (single venue) ─────────────────────────────────────────── -->
+<div id="s-dash" class="screen">
   <!-- filled by renderDashboard() -->
 </div>
 
@@ -261,8 +370,18 @@
     <div class="modal-sub" id="modal-sub">Выберите вариант</div>
     <div id="offer-options"></div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+      <button class="btn-cancel" onclick="closeOfferModal()">Отмена</button>
       <button class="btn-send" id="modal-send-btn" onclick="sendOffer()" disabled>Отправить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─ Upgrade Modal ────────────────────────────────────── -->
+<div class="modal-overlay" id="upgrade-modal" role="dialog" aria-modal="true">
+  <div class="upgrade-modal">
+    <div class="upgrade-close" onclick="closeUpgradeModal()">×</div>
+    <div id="upgrade-content">
+      <!-- filled by showUpgradeModal() -->
     </div>
   </div>
 </div>
@@ -270,16 +389,20 @@
 <script>
 // ─ Global state ──────────────────────────────────────────────────────────────
 const tg = window.Telegram?.WebApp;
-// CRITICAL: never embed initData in HTML attributes — always use this variable
 const initData = tg?.initData || '';
 
-let venueType        = 'restaurant';
-let dashData         = null;
-let currentGuestId   = null;
+let ownerData = null;         // owner subscription info
+let venuesData = [];          // all venues
+let currentVenue = null;      // selected venue object
+let globalGuests = [];        // all guests across network
+let allOffers = [];           // all offers across network
+let venueType = 'restaurant'; // for new venue registration
+let activeFilter = 'all';     // guest filter
+
+let currentGuestId = null;
 let currentGuestName = null;
-let selectedOffer    = null;
-let offerOptions     = [];
-let activeFilter     = 'all';
+let selectedOffer = null;
+let offerOptions = [];
 
 // ─ Levels ────────────────────────────────────────────────────────────────────
 const LEVELS = [
@@ -290,10 +413,18 @@ const LEVELS = [
 ];
 const getLevel = n => [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0];
 
+// ─ Plans ─────────────────────────────────────────────────────────────────────
+const UPGRADE_PLANS = [
+  { key:'basic',   label:'Базовый', max_venues:1,   price:'2 990 ₽/мес' },
+  { key:'network', label:'Сеть',    max_venues:5,   price:'7 990 ₽/мес' },
+  { key:'empire',  label:'Империя', max_venues:'∞', price:'19 990 ₽/мес' },
+];
+
 // ─ Screen switcher ───────────────────────────────────────────────────────────
 const SCREEN_DISPLAY = {
   's-loading': 'flex',
   's-error':   'block',
+  's-network': 'block',
   's-type':    'block',
   's-reg':     'block',
   's-dash':    'block',
@@ -332,17 +463,135 @@ async function init() {
   const data = await apiFetch('/api/restaurant-dashboard', { initData });
 
   if (data.error === 'not_registered') {
-    // New user — let them choose type first
     show('s-type');
     return;
   }
-  if (!data.restaurant) {
+  if (!data.owner) {
     showErr('Ошибка загрузки: ' + (data.error || 'попробуйте позже'));
     return;
   }
 
-  dashData = data;
-  renderDashboard(data);
+  ownerData = data.owner;
+  venuesData = data.venues || [];
+  globalGuests = data.globalGuests || [];
+  allOffers = data.offers || [];
+
+  renderNetwork();
+}
+
+// ─ Network screen ────────────────────────────────────────────────────────────
+function renderNetwork() {
+  const owner = ownerData;
+  const venues = venuesData;
+
+  const planLabel = {
+    trial: 'Пробный',
+    basic: 'Базовый',
+    network: 'Сеть',
+    empire: 'Империя',
+  }[owner.plan] || owner.plan;
+
+  const badgeClass = owner.subscription_status === 'trial'
+    ? 'net-trial'
+    : owner.is_active
+      ? 'net-active'
+      : 'net-expired';
+
+  const badgeText = owner.subscription_status === 'trial'
+    ? `⏳ ${owner.days_left} дн.`
+    : owner.is_active
+      ? `✅ Активна`
+      : `⛔ Истекла`;
+
+  const subStatus = owner.subscription_status === 'trial'
+    ? `Пробный период истекает через ${owner.days_left} ${owner.days_left === 1 ? 'день' : owner.days_left < 5 ? 'дня' : 'дней'}`
+    : owner.is_active
+      ? `Подписка активна до ${fmtDate(owner.subscription_expires_at)}`
+      : `Подписка истекла ${fmtDate(owner.subscription_expires_at)}`;
+
+  const showUpgrade = !owner.is_active || owner.subscription_status === 'trial' || owner.plan === 'trial';
+
+  let content = `
+    <div class="net-header">
+      <div class="net-title">
+        <h1><span style="color:var(--gold)">Great</span>Guest · Моя сеть</h1>
+        <span class="net-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="net-sub-bar">
+        <div class="net-sub-left">
+          <span class="net-sub-label">${planLabel}</span>
+          <span class="net-sub-value">${subStatus}</span>
+        </div>
+        ${showUpgrade ? `<a class="net-upgrade" onclick="showUpgradeModal('expired')">Upgrade</a>` : ''}
+      </div>
+    </div>
+  `;
+
+  if (venues.length === 0) {
+    content += `
+      <div class="net-empty">
+        <div class="net-empty-icon">🏪</div>
+        <div class="net-empty-text">
+          У вас пока нет заведений.<br>
+          Добавьте первое заведение чтобы начать работу с гостями.
+        </div>
+      </div>
+      <button class="add-venue-btn" onclick="addVenue()">
+        <span style="font-size:20px">＋</span> Добавить заведение
+      </button>
+    `;
+  } else {
+    content += `<div class="venues-grid">`;
+    venues.forEach(v => {
+      const icon = v.venue_type === 'event' ? '🎉' : '🍽';
+      const subtitle = v.venue_type === 'event'
+        ? (v.event_type || 'Мероприятие')
+        : (v.cuisine || 'Ресторан');
+      const location = [v.city, subtitle].filter(Boolean).join(' · ');
+      content += `
+        <div class="venue-card" onclick='openVenue(${JSON.stringify(v)})'>
+          <div class="venue-icon">${icon}</div>
+          <div class="venue-name">${esc(v.name)}</div>
+          <div class="venue-loc">${esc(location)}</div>
+          <div class="venue-stats">
+            <div class="venue-stat">
+              <span class="venue-stat-n">${v.stats.visits30d}</span>
+              <span class="venue-stat-l">визиты/30д</span>
+            </div>
+            <div class="venue-stat">
+              <span class="venue-stat-n">${v.stats.totalVisits}</span>
+              <span class="venue-stat-l">всего</span>
+            </div>
+            <div class="venue-stat">
+              <span class="venue-stat-n">${v.stats.offersCount}</span>
+              <span class="venue-stat-l">офферов</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    content += `</div>`;
+    content += `<button class="add-venue-btn" onclick="addVenue()">
+      <span style="font-size:20px">＋</span> Добавить заведение
+    </button>`;
+  }
+
+  document.getElementById('s-network').innerHTML = content;
+  show('s-network');
+}
+
+// ─ Add venue ─────────────────────────────────────────────────────────────────
+function addVenue() {
+  const owner = ownerData;
+  const current = venuesData.length;
+  const max = owner.max_venues;
+
+  if (current >= max) {
+    showUpgradeModal('limit_reached');
+    return;
+  }
+
+  show('s-type');
 }
 
 // ─ Type chooser ──────────────────────────────────────────────────────────────
@@ -390,15 +639,17 @@ function renderRegistrationForm() {
     </div>
   `;
 
+  const showTrialBadge = ownerData && ownerData.subscription_status === 'trial' && venuesData.length === 0;
+
   document.getElementById('reg-content').innerHTML = `
-    <div class="reg-back" onclick="show('s-type')">← Назад</div>
+    <div class="back-btn" onclick="show('s-type')">← Назад</div>
     <div class="logo">Great<span>Guest</span></div>
     <div class="sub-label">${icon} ${isEvent ? 'Мероприятие' : 'Ресторан'}</div>
 
     <div style="margin:20px 0 6px;font-size:20px;font-weight:700">${title}</div>
     <p style="color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:20px">${desc}</p>
 
-    <div class="trial-badge">✨ 14 дней бесплатно</div>
+    ${showTrialBadge ? '<div class="trial-badge">✨ 14 дней бесплатно</div>' : ''}
 
     <div class="perks">
       <div class="perk">
@@ -439,9 +690,9 @@ function renderRegistrationForm() {
     ${extraFields}
 
     <button class="btn-primary" id="reg-btn" onclick="register()">
-      ${isEvent ? 'Создать кабинет мероприятия →' : 'Подключить ресторан бесплатно →'}
+      ${isEvent ? 'Создать кабинет мероприятия →' : venuesData.length === 0 ? 'Подключить ресторан бесплатно →' : 'Добавить заведение →'}
     </button>
-    <div class="price-note">После пробного периода — 2 990 ₽/мес. Отмена в любой момент.</div>
+    ${showTrialBadge ? '<div class="price-note">После пробного периода — 2 990 ₽/мес. Отмена в любой момент.</div>' : ''}
   `;
 }
 
@@ -460,7 +711,7 @@ async function register() {
   const cuisine    = !isEvent ? (document.getElementById('r-cuisine')?.value || '') : '';
 
   const data = await apiFetch('/api/restaurant-register', {
-    initData,            // ← global variable, NOT embedded in HTML
+    initData,
     name,
     address:    (document.getElementById('r-addr')?.value || '').trim(),
     city:       (document.getElementById('r-city')?.value || 'Москва').trim(),
@@ -470,47 +721,89 @@ async function register() {
     event_date,
   });
 
+  if (data.error === 'limit_reached') {
+    btn.disabled = false;
+    btn.textContent = venueType === 'event'
+      ? 'Создать кабинет мероприятия →'
+      : 'Добавить заведение →';
+    showUpgradeModal('limit_reached', data);
+    return;
+  }
+
+  if (data.error === 'subscription_expired') {
+    btn.disabled = false;
+    btn.textContent = venueType === 'event'
+      ? 'Создать кабинет мероприятия →'
+      : 'Добавить заведение →';
+    showUpgradeModal('expired');
+    return;
+  }
+
   if (data.error) {
     btn.disabled = false;
     btn.textContent = venueType === 'event'
       ? 'Создать кабинет мероприятия →'
-      : 'Подключить ресторан бесплатно →';
+      : 'Добавить заведение →';
     alert('Ошибка: ' + data.error);
     return;
   }
 
-  // Load dashboard
   const dash = await apiFetch('/api/restaurant-dashboard', { initData });
-  if (dash.restaurant) {
-    dashData = dash;
-    renderDashboard(dash);
+  if (dash.owner) {
+    ownerData = dash.owner;
+    venuesData = dash.venues || [];
+    globalGuests = dash.globalGuests || [];
+    allOffers = dash.offers || [];
+    renderNetwork();
   } else {
     showErr('Зарегистрировано! Закройте и откройте панель снова через /restaurant в боте.');
   }
 }
 
-// ─ Dashboard ─────────────────────────────────────────────────────────────────
-function renderDashboard(data) {
-  const { restaurant: r, subscription: sub, stats, globalGuests, offers } = data;
-  const isEvent  = r.venue_type === 'event';
-  const badge    = sub.status === 'trial'
-    ? `<span class="sub-badge sub-trial">⏳ ${sub.daysLeft} дн.</span>`
-    : sub.isActive
-      ? `<span class="sub-badge sub-active">✅ Активна</span>`
-      : `<span class="sub-badge sub-expired">⛔ Истекла</span>`;
+// ─ Open venue ────────────────────────────────────────────────────────────────
+function openVenue(venue) {
+  currentVenue = venue;
+  activeFilter = 'all';
+  renderDashboard();
+}
+
+// ─ Dashboard (single venue) ──────────────────────────────────────────────────
+function renderDashboard() {
+  if (!currentVenue) return;
+
+  const v = currentVenue;
+  const owner = ownerData;
+  const isEvent = v.venue_type === 'event';
+
+  const badgeClass = owner.subscription_status === 'trial'
+    ? 'sub-trial'
+    : owner.is_active
+      ? 'sub-active'
+      : 'sub-expired';
+
+  const badgeText = owner.subscription_status === 'trial'
+    ? `⏳ ${owner.days_left} дн.`
+    : owner.is_active
+      ? `✅ Активна`
+      : `⛔ Истекла`;
 
   const tabLabels = isEvent
-    ? ['👥 Гости', '🎉 Мероприятие', '📨 Приглашения']
-    : ['👥 Гости', '📊 Статистика', '🎁 Предложения'];
-  const tabKeys = ['guests', 'info', 'history'];
+    ? ['👥 Гости', '🎉 Инфо', '📨 История', '🤖 ИИ']
+    : ['👥 Гости', '📊 Инфо', '🎁 История', '🤖 ИИ'];
+  const tabKeys = ['guests', 'info', 'history', 'ai'];
+
+  const venueOffers = allOffers.filter(o => o.restaurant_id === v.id);
 
   document.getElementById('s-dash').innerHTML = `
     <div class="topbar">
-      <div>
-        <div class="rest-name">${esc(r.name)}</div>
-        <div class="rest-sub">${esc(isEvent ? (r.event_type || 'Мероприятие') : (r.cuisine || 'Ресторан'))}${r.city ? ' · ' + esc(r.city) : ''}</div>
+      <div class="topbar-left">
+        <div class="topbar-back" onclick="show('s-network')">←</div>
+        <div style="min-width:0">
+          <div class="rest-name">${esc(v.name)}</div>
+          <div class="rest-sub">${esc(isEvent ? (v.event_type || 'Мероприятие') : (v.cuisine || 'Ресторан'))}${v.city ? ' · ' + esc(v.city) : ''}</div>
+        </div>
       </div>
-      ${badge}
+      <span class="sub-badge ${badgeClass}">${badgeText}</span>
     </div>
 
     <div class="tabs">
@@ -518,13 +811,16 @@ function renderDashboard(data) {
     </div>
 
     <div class="tab-pane active" id="tab-guests">
-      ${renderGuestsPane(globalGuests, sub, isEvent)}
+      ${renderGuestsPane(globalGuests, owner, isEvent)}
     </div>
     <div class="tab-pane" id="tab-info">
-      ${isEvent ? renderEventPane(r, stats) : renderStatsPane(stats, r)}
+      ${isEvent ? renderEventPane(v) : renderStatsPane(v)}
     </div>
     <div class="tab-pane" id="tab-history">
-      ${renderHistoryPane(offers, globalGuests, isEvent)}
+      ${renderHistoryPane(venueOffers, globalGuests, isEvent)}
+    </div>
+    <div class="tab-pane" id="tab-ai">
+      ${renderAIPane(v, globalGuests, isEvent)}
     </div>
   `;
 
@@ -532,8 +828,8 @@ function renderDashboard(data) {
 }
 
 // ─ Guests tab ────────────────────────────────────────────────────────────────
-function renderGuestsPane(guests, sub, isEvent) {
-  if (!sub.isActive) {
+function renderGuestsPane(guests, owner, isEvent) {
+  if (!owner.is_active) {
     return `<div class="empty">⛔ Подписка истекла.<br><br>Оформите подписку чтобы видеть гостей сети.<br><br>Напишите нам: @great_guest_support</div>`;
   }
   if (!guests || !guests.length) {
@@ -560,6 +856,11 @@ function renderGuestsPane(guests, sub, isEvent) {
 }
 
 function renderGuestCards(guests, isEvent) {
+  if (!currentVenue) return '';
+
+  const venueOffers = allOffers.filter(o => o.restaurant_id === currentVenue.id);
+  const targetedIds = new Set(venueOffers.map(o => o.guest_telegram_id));
+
   const filtered = activeFilter === 'all'
     ? guests
     : guests.filter(g => getLevel(g.visit_count).name === activeFilter);
@@ -571,6 +872,7 @@ function renderGuestCards(guests, isEvent) {
   const btnLabel = isEvent ? 'Пригласить' : 'Оффер';
 
   return filtered.map(g => {
+    const alreadyTargeted = targetedIds.has(g.telegram_id);
     const lvl      = getLevel(g.visit_count);
     const initial  = (g.first_name || '?')[0].toUpperCase();
     const fullName = [g.first_name, g.last_name].filter(Boolean).join(' ');
@@ -594,55 +896,56 @@ function renderGuestCards(guests, isEvent) {
             <div class="guest-meta">${metaParts}</div>
           </div>
         </div>
-        <button class="action-btn${g.alreadyTargeted?' sent':''}"
+        <button class="action-btn${alreadyTargeted?' sent':''}"
           data-guest-id="${esc(g.telegram_id)}"
           data-guest-name="${esc(g.first_name)}"
           onclick="openOfferModal(this)"
-          ${g.alreadyTargeted ? 'disabled' : ''}
-          aria-label="${g.alreadyTargeted ? 'Отправлено' : btnLabel + ' ' + esc(fullName)}">
-          ${g.alreadyTargeted ? '✓ Отправлено' : btnLabel}
+          ${alreadyTargeted ? 'disabled' : ''}
+          aria-label="${alreadyTargeted ? 'Отправлено' : btnLabel + ' ' + esc(fullName)}">
+          ${alreadyTargeted ? '✓ Отправлено' : btnLabel}
         </button>
       </div>`;
   }).join('');
 }
 
 // ─ Stats / Event info tab ────────────────────────────────────────────────────
-function renderStatsPane(stats, r) {
+function renderStatsPane(v) {
+  const venueOffers = allOffers.filter(o => o.restaurant_id === v.id);
   return `
-    <div class="section-title">За последние 30 дней</div>
+    <div class="section-title">Статистика</div>
     <div class="stats-grid" style="margin-bottom:20px">
-      <div class="stat-card"><div class="stat-n">${stats.visits30d}</div><div class="stat-l">Визитов</div></div>
-      <div class="stat-card"><div class="stat-n">${stats.guests30d}</div><div class="stat-l">Уникальных<br>гостей</div></div>
-      <div class="stat-card"><div class="stat-n">${stats.totalVisits}</div><div class="stat-l">Всего<br>визитов</div></div>
+      <div class="stat-card"><div class="stat-n">${v.stats.visits30d}</div><div class="stat-l">Визитов<br>за 30 дн.</div></div>
+      <div class="stat-card"><div class="stat-n">${v.stats.totalVisits}</div><div class="stat-l">Всего<br>визитов</div></div>
+      <div class="stat-card"><div class="stat-n">${venueOffers.length}</div><div class="stat-l">Офферов<br>отправлено</div></div>
     </div>
-    <div class="section-title">Ваш ресторан</div>
+    <div class="section-title">О заведении</div>
     <div class="info-card">
-      ${infoRow('Название', r.name)}
-      ${r.address ? infoRow('Адрес', r.address) : ''}
-      ${r.city ? infoRow('Город', r.city) : ''}
-      ${r.cuisine ? infoRow('Кухня', r.cuisine) : ''}
+      ${infoRow('Название', v.name)}
+      ${v.address ? infoRow('Адрес', v.address) : ''}
+      ${v.city ? infoRow('Город', v.city) : ''}
+      ${v.cuisine ? infoRow('Кухня', v.cuisine) : ''}
     </div>
   `;
 }
 
-function renderEventPane(r, stats) {
-  const dateStr = r.event_date
-    ? new Date(r.event_date + 'T12:00:00').toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})
+function renderEventPane(v) {
+  const dateStr = v.event_date
+    ? new Date(v.event_date + 'T12:00:00').toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})
     : 'не указана';
   return `
     <div class="section-title">Мероприятие</div>
     <div class="info-card">
-      ${infoRow('Название', r.name)}
-      ${r.event_type ? infoRow('Тип', r.event_type) : ''}
+      ${infoRow('Название', v.name)}
+      ${v.event_type ? infoRow('Тип', v.event_type) : ''}
       ${infoRow('Дата', dateStr)}
-      ${r.address ? infoRow('Площадка', r.address) : ''}
-      ${r.city ? infoRow('Город', r.city) : ''}
+      ${v.address ? infoRow('Площадка', v.address) : ''}
+      ${v.city ? infoRow('Город', v.city) : ''}
     </div>
     <div class="section-title" style="margin-top:20px">Статистика</div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-n">${stats.visits30d}</div><div class="stat-l">Отметок<br>за 30 дн.</div></div>
-      <div class="stat-card"><div class="stat-n">${stats.guests30d}</div><div class="stat-l">Гостей<br>пришло</div></div>
-      <div class="stat-card"><div class="stat-n">${stats.totalVisits}</div><div class="stat-l">Всего<br>отметок</div></div>
+      <div class="stat-card"><div class="stat-n">${v.stats.visits30d}</div><div class="stat-l">Отметок<br>за 30 дн.</div></div>
+      <div class="stat-card"><div class="stat-n">${v.stats.totalVisits}</div><div class="stat-l">Всего<br>отметок</div></div>
+      <div class="stat-card"><div class="stat-n">${v.stats.offersCount}</div><div class="stat-l">Приглашений<br>отправлено</div></div>
     </div>
   `;
 }
@@ -685,6 +988,121 @@ function renderHistoryPane(offers, guests, isEvent) {
   }).join('');
 }
 
+// ─ AI tab ────────────────────────────────────────────────────────────────────
+function renderAIPane(v, guests, isEvent) {
+  const venueOffers  = allOffers.filter(o => o.restaurant_id === v.id);
+  const targetedIds  = new Set(venueOffers.map(o => o.guest_telegram_id));
+  const totalGuests  = guests.length;
+  const platinum     = guests.filter(g => getLevel(g.visit_count).name === 'Platinum').length;
+  const gold         = guests.filter(g => getLevel(g.visit_count).name === 'Gold').length;
+  const untargeted   = guests.filter(g => !targetedIds.has(g.telegram_id)).length;
+
+  const noGuests = !ownerData?.is_active || !totalGuests;
+
+  return `
+    <div style="padding-bottom:8px">
+
+      <div class="section-title">Ситуация сейчас</div>
+      <div class="ai-insight-row">
+        <div class="ai-insight">
+          <div class="ai-insight-n">${totalGuests}</div>
+          <div class="ai-insight-l">Гостей<br>в сети</div>
+        </div>
+        <div class="ai-insight">
+          <div class="ai-insight-n" style="color:#7ab0ff">${platinum + gold}</div>
+          <div class="ai-insight-l">VIP-гостей<br>Gold & Platinum</div>
+        </div>
+        <div class="ai-insight">
+          <div class="ai-insight-n" style="color:var(--green)">${untargeted}</div>
+          <div class="ai-insight-l">Не получили<br>оффер</div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:4px">Быстрые действия ИИ</div>
+
+      ${noGuests
+        ? `<div class="empty" style="padding:20px">Гости появятся после первого визита в сеть</div>`
+        : `
+          <div class="ai-action-card" onclick="aiGoToLevel('Platinum')">
+            <div class="ai-action-icon">💎</div>
+            <div class="ai-action-text">
+              <strong>Отправить оффер Platinum-гостям</strong>
+              <span>${platinum} гостей — ваши самые ценные клиенты</span>
+            </div>
+            <div class="ai-action-arrow">→</div>
+          </div>
+          <div class="ai-action-card" onclick="aiGoToLevel('Gold')">
+            <div class="ai-action-icon">🥇</div>
+            <div class="ai-action-text">
+              <strong>Активировать Gold-гостей</strong>
+              <span>${gold} гостей — на пути к Platinum</span>
+            </div>
+            <div class="ai-action-arrow">→</div>
+          </div>
+          <div class="ai-action-card" onclick="aiGoToLevel('all')">
+            <div class="ai-action-icon">🎯</div>
+            <div class="ai-action-text">
+              <strong>Показать всех ещё не охваченных</strong>
+              <span>${untargeted} гостей без персонального предложения</span>
+            </div>
+            <div class="ai-action-arrow">→</div>
+          </div>
+        `
+      }
+
+      <div class="section-title" style="margin-top:20px">Как работает ИИ</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;
+          padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.7;color:var(--muted)">
+        Нажми <b style="color:var(--text)">«Оффер»</b> или <b style="color:var(--text)">«Пригласить»</b> рядом с гостем —
+        ИИ сгенерирует <b style="color:var(--text)">3 варианта текста</b>,
+        персонализированных под статус гостя (${isEvent ? 'Bronze → Platinum' : 'Bronze → Platinum'}).<br><br>
+        Ты выбираешь лучший и отправляешь напрямую в Telegram одним нажатием.
+      </div>
+
+      <div class="section-title">Скоро в арсенале ИИ</div>
+      <div class="coming-soon-card">
+        <div class="cs-icon">🔁</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px;margin-bottom:2px">Авто-офферы</div>
+          <div style="font-size:11px;color:var(--muted)">ИИ сам выбирает момент и гостя — вы смотрите результат</div>
+        </div>
+        <div class="cs-badge">Скоро</div>
+      </div>
+      <div class="coming-soon-card">
+        <div class="cs-icon">📉</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px;margin-bottom:2px">Прогноз оттока</div>
+          <div style="font-size:11px;color:var(--muted)">Кто из гостей уходит и когда лучше напомнить о себе</div>
+        </div>
+        <div class="cs-badge">Скоро</div>
+      </div>
+      <div class="coming-soon-card">
+        <div class="cs-icon">💬</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px;margin-bottom:2px">ИИ-ответы гостям</div>
+          <div style="font-size:11px;color:var(--muted)">Бот отвечает на вопросы от имени ресторана 24/7</div>
+        </div>
+        <div class="cs-badge">Скоро</div>
+      </div>
+    </div>
+  `;
+}
+
+function aiGoToLevel(levelName) {
+  activeFilter = levelName;
+  switchTab('guests');
+  // Re-render guests with filter applied
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    const match = levelName === 'all'
+      ? b.textContent.trim() === 'Все'
+      : b.textContent.includes(levelName);
+    b.classList.toggle('active', match);
+  });
+  const list = document.getElementById('guest-list');
+  if (list) list.innerHTML = renderGuestCards(globalGuests, currentVenue?.venue_type === 'event');
+  document.getElementById('s-dash').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // ─ Tabs ──────────────────────────────────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => {
@@ -698,13 +1116,13 @@ function switchTab(name) {
 
 function setFilter(f) {
   activeFilter = f;
-  const isEvent = dashData?.restaurant?.venue_type === 'event';
+  const isEvent = currentVenue?.venue_type === 'event';
   document.querySelectorAll('.filter-btn').forEach(b => {
     b.classList.toggle('active', b.textContent.trim().includes(f) || (f==='all' && b.textContent.trim()==='Все'));
   });
   const list = document.getElementById('guest-list');
-  if (list && dashData) {
-    list.innerHTML = renderGuestCards(dashData.globalGuests, isEvent);
+  if (list && globalGuests) {
+    list.innerHTML = renderGuestCards(globalGuests, isEvent);
   }
 }
 
@@ -712,38 +1130,52 @@ function setFilter(f) {
 async function openOfferModal(btn) {
   if (btn.disabled) return;
 
-  // Read from data attributes — no inline JS parameters needed
   currentGuestId   = btn.dataset.guestId;
   currentGuestName = btn.dataset.guestName;
   selectedOffer    = null;
   offerOptions     = [];
 
-  const isEvent    = dashData?.restaurant?.venue_type === 'event';
-  const modalLabel = isEvent ? 'Отправить приглашение' : 'Отправить предложение';
+  const isEvent    = currentVenue?.venue_type === 'event';
+  const modalLabel = isEvent ? '📨 Отправить приглашение' : '🎁 Отправить предложение';
+  const guest      = globalGuests.find(g => g.telegram_id === currentGuestId);
+  const lvl        = guest ? getLevel(guest.visit_count) : LEVELS[0];
 
   document.getElementById('modal-title').textContent = modalLabel;
-  document.getElementById('modal-sub').textContent   = `Для ${currentGuestName || 'гостя'} — выберите вариант`;
-  document.getElementById('offer-options').innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted)">Генерируем варианты…</div>`;
-  document.getElementById('modal-send-btn').disabled  = true;
+  document.getElementById('modal-sub').innerHTML =
+    `Для <b>${esc(currentGuestName || 'гостя')}</b> ${lvl.emoji} ${lvl.name} — ИИ генерирует варианты…`;
+  document.getElementById('offer-options').innerHTML = `
+    <div style="text-align:center;padding:32px 16px">
+      <div class="spinner" style="margin:0 auto 12px"></div>
+      <div style="color:var(--muted);font-size:13px">ИИ создаёт персональные варианты…</div>
+    </div>`;
+  document.getElementById('modal-send-btn').disabled    = true;
   document.getElementById('modal-send-btn').textContent = 'Отправить';
   document.getElementById('offer-modal').classList.add('open');
 
+  // ─ Call real AI generation API ─
   const data = await apiFetch('/api/send-offer', {
-    initData,           // ← global variable
+    initData,
     guestTelegramId: currentGuestId,
+    restaurantId:    currentVenue?.id,
+    // no offerText → server returns { options: [...] }
   });
 
-  if (data.error || !data.options) {
+  if (!data.options || !Array.isArray(data.options)) {
+    const msg = data.error === 'subscription_expired'
+      ? 'Подписка истекла. Оформите тариф для продолжения.'
+      : data.message || data.error || 'Ошибка генерации — попробуйте позже';
     document.getElementById('offer-options').innerHTML =
-      `<div style="color:var(--red);padding:16px;text-align:center">Ошибка: ${esc(data.error || 'не удалось загрузить варианты')}</div>`;
+      `<div style="color:#e88;padding:20px;text-align:center;font-size:13px">⚠️ ${esc(msg)}</div>`;
     return;
   }
 
   offerOptions = data.options;
+  document.getElementById('modal-sub').innerHTML =
+    `Для <b>${esc(currentGuestName || 'гостя')}</b> ${lvl.emoji} ${lvl.name} — выберите вариант`;
   document.getElementById('offer-options').innerHTML = offerOptions.map((text, i) => `
     <div class="offer-option" onclick="selectOffer(${i})" data-idx="${i}">
       <div class="offer-option-header">
-        <span class="offer-option-num">Вариант ${i+1}</span>
+        <span class="offer-option-num">Вариант ${i + 1}</span>
         <div class="offer-option-check" id="check-${i}"></div>
       </div>
       <div class="offer-option-text">${esc(text)}</div>
@@ -761,16 +1193,17 @@ function selectOffer(idx) {
 }
 
 async function sendOffer() {
-  if (!selectedOffer || !currentGuestId) return;
+  if (!selectedOffer || !currentGuestId || !currentVenue) return;
 
   const btn = document.getElementById('modal-send-btn');
   btn.disabled    = true;
   btn.textContent = 'Отправляем…';
 
   const data = await apiFetch('/api/send-offer', {
-    initData,               // ← global variable
+    initData,
     guestTelegramId: currentGuestId,
     offerText:       selectedOffer,
+    restaurantId:    currentVenue.id,
   });
 
   if (data.error) {
@@ -780,9 +1213,17 @@ async function sendOffer() {
     return;
   }
 
-  closeModal();
+  closeOfferModal();
 
-  // Update button in guest list
+  allOffers.push({
+    id: data.offer?.id || 'new',
+    restaurant_id: currentVenue.id,
+    guest_telegram_id: currentGuestId,
+    offer_text: selectedOffer,
+    status: 'sent',
+    created_at: new Date().toISOString(),
+  });
+
   const sentBtn = document.querySelector(`.action-btn[data-guest-id="${currentGuestId}"]`);
   if (sentBtn) {
     sentBtn.textContent = '✓ Отправлено';
@@ -790,27 +1231,87 @@ async function sendOffer() {
     sentBtn.disabled = true;
   }
 
-  // Update dashData so filter re-render stays correct
-  if (dashData) {
-    const g = dashData.globalGuests.find(x => x.telegram_id === currentGuestId);
-    if (g) g.alreadyTargeted = true;
-  }
+  renderDashboard();
 }
 
-function closeModal() {
+function closeOfferModal() {
   document.getElementById('offer-modal').classList.remove('open');
   selectedOffer = null;
   currentGuestId = null;
 }
 
-// Close modal on overlay tap
 document.getElementById('offer-modal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
+  if (e.target === e.currentTarget) closeOfferModal();
 });
+
+// ─ Upgrade modal ─────────────────────────────────────────────────────────────
+function showUpgradeModal(reason, errorData) {
+  const owner = ownerData;
+  let title = 'Нужен апгрейд';
+  let desc = '';
+
+  if (reason === 'limit_reached') {
+    const current = errorData?.current || venuesData.length;
+    const max = errorData?.max || owner.max_venues;
+    title = 'Достигнут лимит заведений';
+    desc = `Ваш тариф "${owner.plan}" позволяет подключить до ${max} ${max === 1 ? 'заведения' : 'заведений'}. У вас уже ${current}. Выберите расширенный тариф:`;
+  } else if (reason === 'expired') {
+    title = 'Подписка истекла';
+    desc = 'Оформите новую подписку чтобы продолжить работу с гостями:';
+  } else {
+    desc = 'Выберите подходящий тариф:';
+  }
+
+  const currentInfo = `
+    <div class="upgrade-current">
+      <div class="upgrade-current-label">Текущий тариф</div>
+      <div class="upgrade-current-value">${owner.plan === 'trial' ? 'Пробный период' : owner.plan} · ${owner.max_venues} ${owner.max_venues === 1 ? 'заведение' : 'заведения'}</div>
+    </div>
+  `;
+
+  const plansHtml = UPGRADE_PLANS.map(p => `
+    <div class="upgrade-plan">
+      <div class="upgrade-plan-name">${p.label}</div>
+      <div class="upgrade-plan-venues">До ${p.max_venues} ${typeof p.max_venues === 'number' && p.max_venues === 1 ? 'заведения' : 'заведений'}</div>
+      <div class="upgrade-plan-price">${p.price}</div>
+      <button class="upgrade-plan-btn" onclick="contactSupport()">Подключить</button>
+    </div>
+  `).join('');
+
+  document.getElementById('upgrade-content').innerHTML = `
+    <div class="upgrade-title">${title}</div>
+    <div class="upgrade-desc">${desc}</div>
+    ${currentInfo}
+    <div class="upgrade-plans">${plansHtml}</div>
+  `;
+
+  document.getElementById('upgrade-modal').classList.add('open');
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.remove('open');
+}
+
+document.getElementById('upgrade-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeUpgradeModal();
+});
+
+function contactSupport() {
+  window.open('https://t.me/great_guest_support', '_blank');
+}
 
 // ─ Utils ─────────────────────────────────────────────────────────────────────
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(isoStr) {
+  if (!isoStr) return '';
+  try {
+    return new Date(isoStr).toLocaleDateString('ru-RU', {day:'numeric',month:'short',year:'numeric'});
+  } catch(e) {
+    return '';
+  }
 }
 
 // ─ Boot ──────────────────────────────────────────────────────────────────────
