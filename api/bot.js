@@ -37,12 +37,15 @@ function fmtStatus(count) {
   return s;
 }
 
-// ─── Keyboard ─────────────────────────────────────────────────────────────────
+// ─── Keyboards ────────────────────────────────────────────────────────────────
 const mainKb = Markup.keyboard([
-  ['🚀 Открыть Great Guest'],
   ['🎫 Получить QR для визита'],
   ['⭐ Мой статус', '📋 История визитов'],
 ]).resize();
+
+const openBtn = Markup.inlineKeyboard([[
+  Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP),
+]]);
 
 // ─── /start ──────────────────────────────────────────────────────────────────
 bot.start(async (ctx) => {
@@ -52,17 +55,15 @@ bot.start(async (ctx) => {
     { onConflict: 'telegram_id' }
   );
   await ctx.replyWithMarkdown(
-    `👋 Привет, *${u.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности для ресторанов.\n\nКаждый визит в ресторан-партнёр повышает статус: Bronze → Silver → Gold → Platinum.\n\n🚀 Нажми кнопку ниже чтобы открыть приложение — или получи QR прямо здесь.`,
+    `👋 Привет, *${u.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности для ресторанов.\n\nКаждый визит в ресторан-партнёр повышает статус: Bronze → Silver → Gold → Platinum.`,
     mainKb
   );
+  await ctx.reply('👇 Открой приложение:', openBtn);
 });
 
-// ─── 🚀 Открыть приложение ───────────────────────────────────────────────────
-bot.hears('🚀 Открыть Great Guest', async (ctx) => {
-  await ctx.reply(
-    '👇',
-    Markup.inlineKeyboard([[Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP)]])
-  );
+// ─── /app — открыть приложение ───────────────────────────────────────────────
+bot.command('app', async (ctx) => {
+  await ctx.reply('👇 Открой приложение:', openBtn);
 });
 
 // ─── 🎫 QR для визита ─────────────────────────────────────────────────────────
