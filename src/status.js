@@ -1,11 +1,12 @@
 const LEVELS = [
-  { name: 'Bronze',   emoji: '🥉', minVisits: 0,  maxVisits: 4  },
+  { name: 'Bronze',   emoji: '🥉', minVisits: 1,  maxVisits: 4  },
   { name: 'Silver',   emoji: '🥈', minVisits: 5,  maxVisits: 14 },
   { name: 'Gold',     emoji: '🥇', minVisits: 15, maxVisits: 29 },
   { name: 'Platinum', emoji: '💎', minVisits: 30, maxVisits: Infinity },
 ];
 
 function getStatus(visitCount) {
+  if (visitCount === 0) return null;
   return LEVELS.findLast(l => visitCount >= l.minVisits) || LEVELS[0];
 }
 
@@ -14,6 +15,10 @@ function getNextLevel(visitCount) {
 }
 
 function formatStatus(visitCount) {
+  if (visitCount === 0) {
+    return `🎉 *Добро пожаловать!*\nПолучи QR-код и посети первый ресторан-партнёр.\nДо 🥉 Bronze: 1 визит`;
+  }
+
   const current = getStatus(visitCount);
   const next = getNextLevel(visitCount);
   const visitsToNext = next ? next.minVisits - visitCount : 0;

@@ -20,6 +20,15 @@ module.exports = async (req, res) => {
   const { data: pending } = await supabase.from('pending_visits').select('*').eq('token', token).eq('used', false).single();
   if (!pending) return res.status(404).json({ error: 'QR не найден или уже использован' });
 
+  // QR TTL: expire after 60 minutes (replay-attack + stale QR protection)
+  const createdAt = pending.expires_at
+    ? new Date(pending.expires_at)
+    : new Date(pending.created_at ? new Date(pending.created_at).getTime() + 3600000 : 0);
+  if (Date.now() > createdAt.getTime()) {
+    await supabase.from('pending_visits').update({ used: true }).eq('token', token);
+    return res.status(410).json({ error: 'QR-код истёк. Гость должен сгенерировать новый.' });
+  }
+
   const { data: guest } = await supabase.from('guests').select('*').eq('telegram_id', pending.telegram_id).single();
   if (!guest) return res.status(404).json({ error: 'Гость не найден' });
 

@@ -1031,9 +1031,55 @@ footer {
     <li><a href="#">Для ресторанов</a></li>
     <li><a href="#">Для гостей</a></li>
     <li><a href="pitch.html">Инвесторам</a></li>
+    <li><a href="miniapp/privacy.html">Конфиденциальность</a></li>
+    <li><a href="miniapp/terms.html">Условия</a></li>
   </ul>
-  <div class="footer-note">© 2026 Great Guest Service · Pre-Seed</div>
+  <div class="footer-note">© 2026 Great Guest Service · Pre-Seed · <a href="mailto:privacy@great-guest.ru" style="color:inherit;opacity:.6">privacy@great-guest.ru</a></div>
 </footer>
+
+<!-- Cookie consent banner (152-ФЗ / ePrivacy) -->
+<div id="cookie-banner" style="
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:9998;
+  background:rgba(26,16,8,.97); backdrop-filter:blur(12px);
+  border-top:1px solid rgba(140,104,16,.25);
+  padding:16px 24px; display:flex; align-items:center; justify-content:space-between;
+  gap:16px; flex-wrap:wrap; font-family:'Jost',sans-serif; font-size:13px;
+  color:rgba(246,237,212,.75);
+">
+  <span>
+    Мы используем аналитические cookie для улучшения сервиса. Обработка данных — согласно
+    <a href="miniapp/privacy.html" style="color:#c9a96e;text-decoration:none">Политике конфиденциальности</a>
+    (152-ФЗ).
+  </span>
+  <div style="display:flex;gap:10px;flex-shrink:0">
+    <button onclick="cookieDecline()" style="
+      background:transparent; border:1px solid rgba(246,237,212,.2);
+      color:rgba(246,237,212,.6); padding:8px 16px; border-radius:6px;
+      cursor:pointer; font-size:12px; font-family:'Jost',sans-serif;
+    ">Только необходимые</button>
+    <button onclick="cookieAccept()" style="
+      background:#8C6810; border:none; color:#F6EDD4;
+      padding:8px 18px; border-radius:6px; cursor:pointer;
+      font-size:12px; font-weight:600; font-family:'Jost',sans-serif;
+    ">Принять</button>
+  </div>
+</div>
+<script>
+(function() {
+  const COOKIE_KEY = 'gg_cookie_consent';
+  if (!localStorage.getItem(COOKIE_KEY)) {
+    document.getElementById('cookie-banner').style.display = 'flex';
+  }
+  window.cookieAccept = function() {
+    localStorage.setItem(COOKIE_KEY, 'all');
+    document.getElementById('cookie-banner').style.display = 'none';
+  };
+  window.cookieDecline = function() {
+    localStorage.setItem(COOKIE_KEY, 'essential');
+    document.getElementById('cookie-banner').style.display = 'none';
+  };
+})();
+</script>
 
 <script>
 window.addEventListener('scroll',()=>{

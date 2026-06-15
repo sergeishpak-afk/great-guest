@@ -4,14 +4,25 @@
   "framework": null,
   "buildCommand": "",
   "rewrites": [
-    { "source": "/api/guest-preview/:token", "destination": "/api/guest-preview?token=:token" }
+    { "source": "/api/guest-preview/:token", "destination": "/api/guest-preview?token=:token" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/terms",   "destination": "/terms.html" }
   ],
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" }
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options",        "value": "SAMEORIGIN" },
+        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" }
       ]
     }
   ]

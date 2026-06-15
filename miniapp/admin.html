@@ -194,6 +194,12 @@
     .action-btn:hover{background:rgba(201,169,110,.2)}
     .action-btn.sent{background:rgba(76,175,110,.1);border-color:rgba(76,175,110,.3);
       color:var(--green);cursor:default;pointer-events:none}
+    .bonus-btn{flex-shrink:0;background:transparent;
+      border:1px solid rgba(201,169,110,.3);border-radius:10px;
+      padding:6px 10px;color:var(--gold);font-size:11px;font-weight:600;
+      cursor:pointer;transition:.2s;white-space:nowrap;margin-left:6px}
+    .bonus-btn:hover{background:rgba(201,169,110,.1)}
+    .bonus-btn:disabled{opacity:.5;cursor:not-allowed}
 
     /* offers history */
     .history-item{background:var(--card);border:1px solid var(--border);
@@ -361,6 +367,11 @@
 <!-- ─ Dashboard (single venue) ─────────────────────────────────────────── -->
 <div id="s-dash" class="screen">
   <!-- filled by renderDashboard() -->
+  <div id="legal-footer" style="display:none;text-align:center;padding:20px 20px 32px;font-size:11px;color:var(--muted)">
+    <a href="privacy.html" style="color:var(--muted);text-decoration:none;margin:0 8px">Политика конфиденциальности</a>
+    <span style="color:var(--border)">·</span>
+    <a href="terms.html" style="color:var(--muted);text-decoration:none;margin:0 8px">Условия использования</a>
+  </div>
 </div>
 
 <!-- ─ Offer/Invite Modal ────────────────────────────────── -->
@@ -383,6 +394,34 @@
     <div id="upgrade-content">
       <!-- filled by showUpgradeModal() -->
     </div>
+  </div>
+</div>
+
+<!-- ─ Import CSV Modal ────────────────────────────────────── -->
+<div class="modal-overlay" id="import-modal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-title">📥 Импорт гостей</div>
+    <div class="modal-sub">Загрузите список гостей — CSV или построчно</div>
+    <div style="margin-bottom:12px">
+      <textarea id="import-csv-text" placeholder="Имя,+79001234567&#10;Анна,+79001112233&#10;Иван Петров,+79005556677"
+        style="width:100%;min-height:120px;background:var(--card);border:1px solid var(--border);
+        border-radius:10px;padding:12px;color:var(--text);font-size:13px;font-family:monospace;
+        resize:vertical"></textarea>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">
+        Формат: Имя,Телефон — по одному на строке
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <a href="#" onclick="downloadCSVTemplate();return false;"
+        style="font-size:12px;color:var(--gold);text-decoration:none">
+        📄 Скачать шаблон CSV
+      </a>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeImportModal()">Отмена</button>
+      <button class="btn-send" id="import-btn" onclick="importGuests()">Загрузить</button>
+    </div>
+    <div id="import-result" style="margin-top:12px;font-size:13px;text-align:center"></div>
   </div>
 </div>
 
@@ -794,7 +833,10 @@ function renderDashboard() {
 
   const venueOffers = allOffers.filter(o => o.restaurant_id === v.id);
 
-  document.getElementById('s-dash').innerHTML = `
+  const dashContent = document.getElementById('s-dash');
+  const footer = dashContent.querySelector('#legal-footer');
+
+  dashContent.innerHTML = `
     <div class="topbar">
       <div class="topbar-left">
         <div class="topbar-back" onclick="show('s-network')">←</div>
@@ -823,6 +865,12 @@ function renderDashboard() {
       ${renderAIPane(v, globalGuests, isEvent)}
     </div>
   `;
+
+  // Re-append footer
+  if (footer) {
+    dashContent.appendChild(footer);
+    footer.style.display = 'block';
+  }
 
   show('s-dash');
 }
@@ -896,14 +944,22 @@ function renderGuestCards(guests, isEvent) {
             <div class="guest-meta">${metaParts}</div>
           </div>
         </div>
-        <button class="action-btn${alreadyTargeted?' sent':''}"
-          data-guest-id="${esc(g.telegram_id)}"
-          data-guest-name="${esc(g.first_name)}"
-          onclick="openOfferModal(this)"
-          ${alreadyTargeted ? 'disabled' : ''}
-          aria-label="${alreadyTargeted ? 'Отправлено' : btnLabel + ' ' + esc(fullName)}">
-          ${alreadyTargeted ? '✓ Отправлено' : btnLabel}
-        </button>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <button class="action-btn${alreadyTargeted?' sent':''}"
+            data-guest-id="${esc(g.telegram_id)}"
+            data-guest-name="${esc(g.first_name)}"
+            onclick="openOfferModal(this)"
+            ${alreadyTargeted ? 'disabled' : ''}
+            aria-label="${alreadyTargeted ? 'Отправлено' : btnLabel + ' ' + esc(fullName)}">
+            ${alreadyTargeted ? '✓ Отправлено' : btnLabel}
+          </button>
+          <button class="bonus-btn"
+            data-guest-id="${esc(g.telegram_id)}"
+            onclick="addBonusVisit(this)"
+            aria-label="Начислить бонусный визит ${esc(fullName)}">
+            +Бонус
+          </button>
+        </div>
       </div>`;
   }).join('');
 }
@@ -911,12 +967,20 @@ function renderGuestCards(guests, isEvent) {
 // ─ Stats / Event info tab ────────────────────────────────────────────────────
 function renderStatsPane(v) {
   const venueOffers = allOffers.filter(o => o.restaurant_id === v.id);
+  const conversionRate = Math.round((venueOffers.length / Math.max(v.stats.totalVisits, 1)) * 100);
   return `
     <div class="section-title">Статистика</div>
     <div class="stats-grid" style="margin-bottom:20px">
       <div class="stat-card"><div class="stat-n">${v.stats.visits30d}</div><div class="stat-l">Визитов<br>за 30 дн.</div></div>
       <div class="stat-card"><div class="stat-n">${v.stats.totalVisits}</div><div class="stat-l">Всего<br>визитов</div></div>
       <div class="stat-card"><div class="stat-n">${venueOffers.length}</div><div class="stat-l">Офферов<br>отправлено</div></div>
+    </div>
+    <div class="section-title">ROI</div>
+    <div class="info-card" style="margin-bottom:20px">
+      ${infoRow('Конверсия в оффер', conversionRate + '%')}
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        💡 Средний чек — подключите кассу для расчёта ROI
+      </div>
     </div>
     <div class="section-title">О заведении</div>
     <div class="info-card">
@@ -925,6 +989,9 @@ function renderStatsPane(v) {
       ${v.city ? infoRow('Город', v.city) : ''}
       ${v.cuisine ? infoRow('Кухня', v.cuisine) : ''}
     </div>
+    <button class="add-venue-btn" style="margin-top:20px" onclick="showImportModal()">
+      <span style="font-size:18px">📥</span> Импорт гостей
+    </button>
   `;
 }
 
@@ -1018,6 +1085,8 @@ function renderAIPane(v, guests, isEvent) {
         </div>
       </div>
 
+      ${renderDiscoverySection(v, guests, targetedIds)}
+
       <div class="section-title" style="margin-top:4px">Быстрые действия ИИ</div>
 
       ${noGuests
@@ -1084,6 +1153,48 @@ function renderAIPane(v, guests, isEvent) {
         </div>
         <div class="cs-badge">Скоро</div>
       </div>
+    </div>
+  `;
+}
+
+function renderDiscoverySection(v, guests, targetedIds) {
+  const untargetedGuests = guests.filter(g => !targetedIds.has(g.telegram_id));
+  const topUntargeted = untargetedGuests
+    .sort((a, b) => b.visit_count - a.visit_count)
+    .slice(0, 5);
+
+  if (!untargetedGuests.length) return '';
+
+  return `
+    <div class="section-title" style="margin-top:20px">🔍 Незаходившие гости</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;
+        padding:16px;margin-bottom:16px">
+      <div style="font-size:14px;margin-bottom:12px;color:var(--text)">
+        <strong>${untargetedGuests.length}</strong> гостей сети, которые ещё не получили предложение от этого заведения
+      </div>
+      ${topUntargeted.map(g => {
+        const lvl = getLevel(g.visit_count);
+        const fullName = [g.first_name, g.last_name].filter(Boolean).join(' ');
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;
+              padding:8px 0;border-top:1px solid var(--border)">
+            <div>
+              <span style="font-size:13px;font-weight:600">${esc(fullName)}</span>
+              <span class="level-badge lvl-${lvl.name}" style="margin-left:6px">${lvl.emoji} ${lvl.name}</span>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">
+                ${g.visit_count} ${g.visit_count === 1 ? 'визит' : g.visit_count < 5 ? 'визита' : 'визитов'} в сети
+              </div>
+            </div>
+            <button class="action-btn"
+              data-guest-id="${esc(g.telegram_id)}"
+              data-guest-name="${esc(g.first_name)}"
+              onclick="openOfferModal(this)"
+              aria-label="Отправить оффер ${esc(fullName)}">
+              Оффер
+            </button>
+          </div>
+        `;
+      }).join('')}
     </div>
   `;
 }
@@ -1298,6 +1409,165 @@ document.getElementById('upgrade-modal').addEventListener('click', e => {
 
 function contactSupport() {
   window.open('https://t.me/great_guest_support', '_blank');
+}
+
+// ─ Bonus visit ───────────────────────────────────────────────────────────────
+async function addBonusVisit(btn) {
+  if (btn.disabled) return;
+  const guestId = btn.dataset.guestId;
+  if (!guestId || !currentVenue) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳';
+
+  const data = await apiFetch('/api/bonus-visit', {
+    initData,
+    guestTelegramId: guestId,
+    restaurantId: currentVenue.id,
+  });
+
+  if (data.error) {
+    btn.disabled = false;
+    btn.textContent = '+Бонус';
+    showToast('❌ Ошибка: ' + data.error, 'error');
+    return;
+  }
+
+  // Update local guest data
+  const guest = globalGuests.find(g => g.telegram_id === guestId);
+  if (guest) {
+    guest.visit_count = (guest.visit_count || 0) + 1;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '+Бонус';
+  showToast('✅ +1 визит начислен');
+
+  // Re-render guest list to show updated visit count
+  const list = document.getElementById('guest-list');
+  if (list && globalGuests) {
+    list.innerHTML = renderGuestCards(globalGuests, currentVenue?.venue_type === 'event');
+  }
+}
+
+// ─ Import CSV modal ──────────────────────────────────────────────────────────
+function showImportModal() {
+  document.getElementById('import-csv-text').value = '';
+  document.getElementById('import-result').innerHTML = '';
+  document.getElementById('import-btn').disabled = false;
+  document.getElementById('import-modal').classList.add('open');
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal').classList.remove('open');
+}
+
+document.getElementById('import-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeImportModal();
+});
+
+function downloadCSVTemplate() {
+  const csv = 'Имя,Телефон\nАнна Иванова,+79001234567\nИван Петров,+79001112233\nЕлена Сидорова,+79005556677';
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'great-guest-import-template.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importGuests() {
+  const text = (document.getElementById('import-csv-text').value || '').trim();
+  if (!text) {
+    showToast('Введите данные гостей', 'error');
+    return;
+  }
+  if (!currentVenue) {
+    showToast('Выберите заведение', 'error');
+    return;
+  }
+
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const guests = [];
+
+  for (const line of lines) {
+    const parts = line.split(/[,;]/).map(p => p.trim());
+    if (parts.length < 2) continue;
+    const [first_name, phone] = parts;
+    if (first_name && phone) {
+      guests.push({ first_name, phone });
+    }
+  }
+
+  if (!guests.length) {
+    showToast('Не найдено валидных строк. Формат: Имя,Телефон', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('import-btn');
+  btn.disabled = true;
+  btn.textContent = 'Загружаем...';
+  document.getElementById('import-result').innerHTML = '';
+
+  const data = await apiFetch('/api/import-guests', {
+    initData,
+    restaurantId: currentVenue.id,
+    guests,
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Загрузить';
+
+  if (data.error) {
+    document.getElementById('import-result').innerHTML =
+      `<div style="color:var(--red)">❌ ${esc(data.error)}</div>`;
+    return;
+  }
+
+  const count = data.imported || guests.length;
+  document.getElementById('import-result').innerHTML =
+    `<div style="color:var(--green)">✅ Загружено ${count} ${count === 1 ? 'гость' : count < 5 ? 'гостя' : 'гостей'}</div>`;
+
+  // Refresh dashboard data
+  setTimeout(() => {
+    closeImportModal();
+    init(); // Reload full data
+  }, 1500);
+}
+
+// ─ Toast notification ────────────────────────────────────────────────────────
+function showToast(message, type = 'success') {
+  const existing = document.getElementById('toast-notification');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'toast-notification';
+  toast.textContent = message;
+  toast.style.cssText = `
+    position:fixed;top:80px;left:50%;transform:translateX(-50%);
+    background:${type === 'error' ? 'var(--red)' : 'var(--green)'};
+    color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;
+    font-weight:600;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.3);
+    animation:slideIn .3s ease;
+  `;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'slideOut .3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// Add animation keyframes
+if (!document.getElementById('toast-styles')) {
+  const style = document.createElement('style');
+  style.id = 'toast-styles';
+  style.textContent = `
+    @keyframes slideIn { from { opacity:0; transform:translate(-50%,-20px) } to { opacity:1; transform:translate(-50%,0) } }
+    @keyframes slideOut { from { opacity:1; transform:translate(-50%,0) } to { opacity:0; transform:translate(-50%,-20px) } }
+  `;
+  document.head.appendChild(style);
 }
 
 // ─ Utils ─────────────────────────────────────────────────────────────────────

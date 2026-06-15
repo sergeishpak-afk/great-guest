@@ -311,6 +311,16 @@
 
   <!-- Partner panel shortcut (shown only if user is also an owner) -->
   <div id="partner-section" style="margin-bottom:20px"></div>
+
+  <!-- Legal footer -->
+  <footer id="legal-footer" style="text-align:center;padding:28px 20px 16px;font-size:11px;color:#666;border-top:1px solid #1e1e1e;margin-top:16px">
+    <div style="margin-bottom:6px">Great Guest © 2026</div>
+    <div>
+      <a href="privacy.html" style="color:#888;text-decoration:none;margin:0 8px">Политика конфиденциальности</a>
+      <span style="color:#333">·</span>
+      <a href="terms.html" style="color:#888;text-decoration:none;margin:0 8px">Условия использования</a>
+    </div>
+  </footer>
 </div>
 
 <script>
@@ -388,6 +398,35 @@ async function init() {
 
 // ── Status ────────────────────────────────────────────────────────────────────
 function renderStatus(count) {
+  // Special welcome state for new guests
+  if (count === 0) {
+    document.getElementById('status-emoji').textContent  = '🎉';
+    document.getElementById('status-name').textContent   = 'Добро пожаловать!';
+    document.getElementById('visit-count').innerHTML     = `Получите QR-код и посетите ресторан-партнёр — ваш первый визит откроет программу лояльности`;
+    document.getElementById('status-reward').style.display = 'none';
+    document.getElementById('progress-wrap').style.display = 'none';
+
+    // Add consent notice for new guests
+    const consentHtml = `<p style="font-size:11px;color:#555;margin-top:12px;line-height:1.5">
+      Регистрируясь, вы соглашаетесь с
+      <a href="privacy.html" style="color:#888">политикой конфиденциальности</a>
+      и даёте согласие на обработку персональных данных согласно 152-ФЗ.
+    </p>`;
+
+    if (!document.getElementById('consent-notice')) {
+      const consentDiv = document.createElement('div');
+      consentDiv.id = 'consent-notice';
+      consentDiv.innerHTML = consentHtml;
+      document.querySelector('.status-card').appendChild(consentDiv);
+    }
+    return;
+  }
+
+  // Remove consent notice if it exists (for returning guests)
+  const consentNotice = document.getElementById('consent-notice');
+  if (consentNotice) consentNotice.remove();
+
+  // Standard level display for active guests
   const lvl  = getLevel(count);
   const next = getNext(count);
 
@@ -395,6 +434,8 @@ function renderStatus(count) {
   document.getElementById('status-name').textContent   = lvl.name;
   document.getElementById('visit-count').textContent   = `${count} ${declVisit(count)}`;
   document.getElementById('status-reward').textContent = lvl.reward;
+  document.getElementById('status-reward').style.display = 'inline-block';
+  document.getElementById('progress-wrap').style.display = 'block';
 
   if (next) {
     const span = next.min - lvl.min;
