@@ -57,6 +57,14 @@ bot.start(async (ctx) => {
   );
 });
 
+// ─── 🚀 Открыть приложение (если кнопка клавиатуры отправила текст) ───────────
+bot.hears('🚀 Открыть Great Guest', async (ctx) => {
+  await ctx.reply(
+    '👇 Нажми кнопку ниже чтобы открыть приложение:',
+    Markup.inlineKeyboard([[Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP)]])
+  );
+});
+
 // ─── 🎫 QR для визита ─────────────────────────────────────────────────────────
 bot.hears('🎫 Получить QR для визита', async (ctx) => {
   const telegramId = String(ctx.from.id);
