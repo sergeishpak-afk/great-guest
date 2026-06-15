@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
       name:                    name.trim(),
       address:                 (address || '').trim(),
       city:                    (city || 'Москва').trim(),
-      cuisine:                 (cuisine || cuisine || '').trim(),
+      cuisine:                 (cuisine || '').trim(),
       venue_type:              venue_type || 'restaurant',
       event_date:              event_date || null,
       event_type:              (event_type || '').trim(),
