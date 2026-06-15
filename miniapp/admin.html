@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>Great Guest — Панель ресторатора</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --gold:#c9a96e; --gold2:#e8c97e; --bg:#0a0a0a; --card:#141414;
+      --card2:#1c1c1c; --border:#252525; --text:#f0ebe0; --muted:#888;
+      --green:#4caf6e; --red:#e05555;
+    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ── Loading ── */
+    #loading{display:flex;flex-direction:column;align-items:center;
+      justify-content:center;height:100vh;gap:16px}
+    .spinner{width:36px;height:36px;border:3px solid var(--border);
+      border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── Error ── */
+    #error{display:none;padding:32px 20px;text-align:center;color:#e88}
+
+    /* ── Registration ── */
+    #registration{display:none;padding:24px 20px 40px;max-width:480px;margin:0 auto}
+    #registration .logo{font-size:22px;font-weight:800;margin-bottom:4px}
+    #registration .logo span{color:var(--gold)}
+    #registration h2{font-size:20px;font-weight:700;margin:20px 0 6px}
+    #registration p{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:24px}
+    .trial-badge{display:inline-flex;align-items:center;gap:6px;
+      background:rgba(201,169,110,.12);border:1px solid rgba(201,169,110,.3);
+      border-radius:20px;padding:6px 14px;font-size:13px;color:var(--gold);
+      font-weight:600;margin-bottom:20px}
+    .perks{background:var(--card);border:1px solid var(--border);border-radius:14px;
+      padding:16px;margin-bottom:24px}
+    .perk{display:flex;align-items:flex-start;gap:10px;padding:8px 0;
+      font-size:14px;border-bottom:1px solid var(--border)}
+    .perk:last-child{border-bottom:none}
+    .perk-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+    .perk-text strong{display:block;font-size:13px;margin-bottom:2px}
+    .perk-text span{color:var(--muted);font-size:12px}
+
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:12px;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    .field input,.field select{width:100%;background:var(--card);
+      border:1px solid var(--border);border-radius:10px;padding:12px 14px;
+      color:var(--text);font-size:15px;outline:none;transition:border .2s}
+    .field input:focus,.field select:focus{border-color:rgba(201,169,110,.5)}
+    .field select option{background:#1a1a1a}
+
+    .btn-primary{width:100%;background:var(--gold);color:#0a0a0a;
+      border:none;border-radius:12px;padding:15px;font-size:16px;
+      font-weight:700;cursor:pointer;transition:opacity .2s}
+    .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+    .btn-primary:not(:disabled):active{opacity:.85}
+    .price-note{text-align:center;font-size:12px;color:var(--muted);margin-top:12px}
+
+    /* ── Dashboard ── */
+    #dashboard{display:none;padding:0 0 60px}
+
+    .topbar{background:var(--card);border-bottom:1px solid var(--border);
+      padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+    .topbar-left .rest-name{font-size:17px;font-weight:700}
+    .topbar-left .rest-sub{font-size:12px;color:var(--muted)}
+    .sub-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;
+      font-weight:600;padding:4px 10px;border-radius:20px}
+    .sub-trial{background:rgba(201,169,110,.15);color:var(--gold)}
+    .sub-active{background:rgba(76,175,110,.15);color:var(--green)}
+    .sub-expired{background:rgba(224,85,85,.15);color:var(--red)}
+
+    /* tabs */
+    .tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border)}
+    .tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:500;
+      color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+    .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+    .tab-pane{display:none;padding:20px}
+    .tab-pane.active{display:block}
+
+    /* stats */
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+    .stat-card{background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:14px 10px;text-align:center}
+    .stat-n{font-size:28px;font-weight:700;color:var(--gold)}
+    .stat-l{font-size:11px;color:var(--muted);margin-top:2px}
+
+    /* guests */
+    .filter-row{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
+    .filter-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid var(--border);
+      background:transparent;color:var(--muted);font-size:13px;cursor:pointer;transition:.2s}
+    .filter-btn.active{background:rgba(201,169,110,.15);border-color:rgba(201,169,110,.4);color:var(--gold)}
+
+    .guest-card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+      padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+    .guest-info{display:flex;align-items:center;gap:12px}
+    .guest-avatar{width:40px;height:40px;border-radius:50%;background:var(--card2);
+      border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+      font-size:16px;flex-shrink:0}
+    .guest-name{font-size:15px;font-weight:600;margin-bottom:2px}
+    .guest-meta{font-size:12px;color:var(--muted)}
+    .level-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;
+      font-weight:600;padding:3px 8px;border-radius:10px;margin-left:6px}
+    .lvl-Bronze{background:rgba(180,120,60,.15);color:#c47a3d}
+    .lvl-Silver{background:rgba(180,180,200,.12);color:#aaa}
+    .lvl-Gold{background:rgba(201,169,110,.15);color:var(--gold)}
+    .lvl-Platinum{background:rgba(100,160,255,.12);color:#7ab0ff}
+
+    .offer-btn{flex-shrink:0;background:rgba(201,169,110,.12);border:1px solid rgba(201,169,110,.3);
+      border-radius:10px;padding:8px 14px;color:var(--gold);font-size:13px;font-weight:600;
+      cursor:pointer;transition:.2s;white-space:nowrap}
+    .offer-btn:hover{background:rgba(201,169,110,.2)}
+    .offer-btn.sent{background:rgba(76,175,110,.1);border-color:rgba(76,175,110,.3);
+      color:var(--green);cursor:default}
+    .offer-btn:disabled{opacity:.5;cursor:not-allowed}
+
+    /* offers history */
+    .offer-hist{background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:14px;margin-bottom:10px}
+    .offer-hist-name{font-size:14px;font-weight:600;margin-bottom:4px}
+    .offer-hist-text{font-size:13px;color:var(--muted);line-height:1.4;margin-bottom:8px}
+    .offer-hist-meta{display:flex;align-items:center;justify-content:space-between;font-size:11px}
+    .offer-status-sent{color:var(--muted)}
+    .offer-status-accepted{color:var(--green)}
+    .offer-status-declined{color:var(--red)}
+
+    /* Offer modal */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+      z-index:100;align-items:flex-end}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 40px;
+      width:100%;max-height:90vh;overflow-y:auto}
+    .modal-title{font-size:18px;font-weight:700;margin-bottom:6px}
+    .modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+    .offer-option{background:var(--card2);border:1px solid var(--border);
+      border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;
+      transition:border-color .2s;position:relative}
+    .offer-option.selected{border-color:rgba(201,169,110,.6);background:rgba(201,169,110,.05)}
+    .offer-option-text{font-size:13px;line-height:1.5;color:var(--text);white-space:pre-line}
+    .offer-option-check{position:absolute;top:12px;right:12px;width:20px;height:20px;
+      border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;
+      justify-content:center;font-size:12px}
+    .offer-option.selected .offer-option-check{background:var(--gold);border-color:var(--gold);color:#000}
+    .modal-actions{display:flex;gap:10px;margin-top:16px}
+    .btn-cancel{flex:1;background:var(--card2);border:1px solid var(--border);
+      color:var(--muted);border-radius:12px;padding:14px;font-size:15px;cursor:pointer}
+    .btn-send{flex:2;background:var(--gold);color:#0a0a0a;
+      border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer}
+    .btn-send:disabled{opacity:.5;cursor:not-allowed}
+
+    .empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
+    .section-title{font-size:12px;font-weight:600;text-transform:uppercase;
+      letter-spacing:.08em;color:var(--muted);margin-bottom:12px}
+  </style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div></div>
+<div id="error" role="alert"><div style="font-size:28px;margin-bottom:12px">⚠️</div><div id="err-msg"></div></div>
+<div id="registration"></div>
+<div id="dashboard"></div>
+
+<!-- Offer Modal -->
+<div class="modal-overlay" id="offer-modal">
+  <div class="modal">
+    <div class="modal-title">🎁 Отправить предложение</div>
+    <div class="modal-sub" id="modal-guest-name">Выберите вариант</div>
+    <div id="offer-options"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+      <button class="btn-send" id="modal-send-btn" onclick="sendOffer()">Отправить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const tg        = window.Telegram?.WebApp;
+const BASE      = '';  // same-origin API calls
+let dashData    = null;
+let currentGuestId   = null;
+let currentGuestName = null;
+let selectedOffer    = null;
+let activeFilter     = 'all';
+let activeTab        = 'guests';
+
+// ── Level helpers ──────────────────────────────────────────────────────────
+const LEVELS = [
+  {name:'Bronze',  emoji:'🥉', min:0 },
+  {name:'Silver',  emoji:'🥈', min:5 },
+  {name:'Gold',    emoji:'🥇', min:15},
+  {name:'Platinum',emoji:'💎', min:30},
+];
+function getLevel(n){ return [...LEVELS].reverse().find(l=>n>=l.min)||LEVELS[0]; }
+
+// ── Show helpers ────────────────────────────────────────────────────────────
+function show(id){['loading','error','registration','dashboard'].forEach(x=>{
+  document.getElementById(x).style.display = x===id ? 'block' : 'none';
+})}
+function showErr(msg){show('error');document.getElementById('err-msg').textContent=msg;}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+async function init(){
+  if(tg) tg.ready();
+  const initData = tg?.initData||'';
+  if(!initData){showErr('Откройте через @great_guest_bot → /restaurant');return;}
+
+  // Check if registered
+  const r = await apiFetch('/api/restaurant-dashboard',{initData});
+  if(r.error==='not_registered'){
+    renderRegistration(initData);
+    return;
+  }
+  if(!r.restaurant){showErr('Ошибка загрузки: '+(r.error||'неизвестная'));return;}
+
+  dashData = r;
+  renderDashboard(r);
+}
+
+async function apiFetch(url,body){
+  try{
+    const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    return await res.json();
+  }catch(e){return{error:e.message};}
+}
+
+// ── Registration ──────────────────────────────────────────────────────────
+function renderRegistration(initData){
+  show('registration');
+  document.getElementById('registration').innerHTML = `
+    <div class="logo">Great<span>Guest</span></div>
+    <p style="color:var(--muted);font-size:12px;margin-top:4px">Панель ресторатора</p>
+    <h2>Подключите ресторан</h2>
+    <p>Получите доступ к базе гостей всей сети, отправляйте персональные предложения и растите вместе с экосистемой.</p>
+
+    <div class="trial-badge">✨ 14 дней бесплатно</div>
+
+    <div class="perks">
+      <div class="perk"><div class="perk-icon">👥</div><div class="perk-text">
+        <strong>База гостей всей сети</strong>
+        <span>Bronze, Silver, Gold, Platinum — видите всех, даже тех, кто ещё не был у вас</span>
+      </div></div>
+      <div class="perk"><div class="perk-icon">🎁</div><div class="perk-text">
+        <strong>AI-предложения за 1 клик</strong>
+        <span>Система генерирует 3 персональных оффера под статус каждого гостя</span>
+      </div></div>
+      <div class="perk"><div class="perk-icon">📊</div><div class="perk-text">
+        <strong>Аналитика и статистика</strong>
+        <span>Визиты, активность гостей, история предложений</span>
+      </div></div>
+      <div class="perk"><div class="perk-icon">🔗</div><div class="perk-text">
+        <strong>Сетевой эффект</strong>
+        <span>Чем больше партнёров — тем ценнее база для каждого</span>
+      </div></div>
+    </div>
+
+    <div class="field"><label>Название ресторана *</label>
+      <input id="r-name" placeholder="Ресторан «Гаврош»" maxlength="80"/></div>
+    <div class="field"><label>Адрес</label>
+      <input id="r-addr" placeholder="ул. Малая Бронная, 20" maxlength="120"/></div>
+    <div class="field"><label>Город</label>
+      <input id="r-city" placeholder="Москва" maxlength="60" value="Москва"/></div>
+    <div class="field"><label>Кухня</label>
+      <select id="r-cuisine">
+        <option value="">Выберите кухню</option>
+        <option>Европейская</option><option>Русская</option><option>Итальянская</option>
+        <option>Японская</option><option>Грузинская</option><option>Азиатская</option>
+        <option>Средиземноморская</option><option>Мексиканская</option><option>Другая</option>
+      </select></div>
+
+    <button class="btn-primary" id="reg-btn" onclick="register('${initData.replace(/'/g,"\\'")}')">
+      Подключить бесплатно →
+    </button>
+    <div class="price-note">После пробного периода — 2 990 ₽/мес. Отмена в любой момент.</div>
+  `;
+}
+
+async function register(initData){
+  const name = document.getElementById('r-name').value.trim();
+  if(!name){alert('Введите название ресторана');return;}
+  const btn = document.getElementById('reg-btn');
+  btn.disabled=true; btn.textContent='Подключаем…';
+
+  const r = await apiFetch('/api/restaurant-register',{
+    initData, name,
+    address:  document.getElementById('r-addr').value.trim(),
+    city:     document.getElementById('r-city').value.trim()||'Москва',
+    cuisine:  document.getElementById('r-cuisine').value,
+  });
+  if(r.error){btn.disabled=false;btn.textContent='Подключить бесплатно →';alert('Ошибка: '+r.error);return;}
+
+  // Reload dashboard
+  const dash = await apiFetch('/api/restaurant-dashboard',{initData});
+  if(dash.restaurant){dashData=dash;renderDashboard(dash);}
+  else showErr('Зарегистрировано! Перезапустите панель через /restaurant в боте.');
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+function renderDashboard(data){
+  show('dashboard');
+  const {restaurant:r, subscription:sub, stats, globalGuests, offers} = data;
+
+  const subBadge = sub.status==='trial'
+    ? `<span class="sub-badge sub-trial">⏳ Пробный: ${sub.daysLeft} дн.</span>`
+    : sub.isActive
+      ? `<span class="sub-badge sub-active">✅ Активна</span>`
+      : `<span class="sub-badge sub-expired">⛔ Истекла</span>`;
+
+  document.getElementById('dashboard').innerHTML = `
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="rest-name">${esc(r.name)}</div>
+        <div class="rest-sub">${esc(r.cuisine||'')} ${r.city?'· '+esc(r.city):''}</div>
+      </div>
+      ${subBadge}
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('guests')">👥 Гости</div>
+      <div class="tab" onclick="switchTab('stats')">📊 Статистика</div>
+      <div class="tab" onclick="switchTab('offers')">🎁 Предложения</div>
+    </div>
+
+    <div class="tab-pane active" id="tab-guests">
+      ${renderGuestsTab(globalGuests, sub)}
+    </div>
+    <div class="tab-pane" id="tab-stats">
+      ${renderStatsTab(stats, r)}
+    </div>
+    <div class="tab-pane" id="tab-offers">
+      ${renderOffersTab(offers, globalGuests)}
+    </div>
+  `;
+}
+
+function renderGuestsTab(guests, sub){
+  if(!sub.isActive) return `<div class="empty">⛔ Подписка истекла.<br><br>Оформите подписку чтобы видеть гостей сети.<br><br>Свяжитесь с нами: @great_guest_support</div>`;
+  if(!guests.length) return `<div class="empty">В сети пока нет гостей.<br>Отсканируйте первый QR-код!</div>`;
+
+  const filters = [
+    {k:'all',l:'Все'},
+    {k:'Platinum',l:'💎 Platinum'},
+    {k:'Gold',l:'🥇 Gold'},
+    {k:'Silver',l:'🥈 Silver'},
+    {k:'Bronze',l:'🥉 Bronze'},
+  ];
+
+  return `
+    <div class="filter-row">
+      ${filters.map(f=>`<button class="filter-btn${activeFilter===f.k?' active':''}"
+        onclick="setFilter('${f.k}')">${f.l}</button>`).join('')}
+    </div>
+    <div id="guest-list">
+      ${renderGuestCards(guests)}
+    </div>
+  `;
+}
+
+function renderGuestCards(guests){
+  const filtered = activeFilter==='all' ? guests
+    : guests.filter(g=>getLevel(g.visit_count).name===activeFilter);
+
+  if(!filtered.length) return `<div class="empty">Нет гостей с этим статусом</div>`;
+
+  return filtered.map(g=>{
+    const lvl = getLevel(g.visit_count);
+    const initial = (g.first_name||'?')[0].toUpperCase();
+    const lastVisit = g.last_visit_at
+      ? new Date(g.last_visit_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})
+      : 'нет данных';
+    return `
+      <div class="guest-card">
+        <div class="guest-info">
+          <div class="guest-avatar">${initial}</div>
+          <div>
+            <div class="guest-name">${esc(g.first_name)} ${esc((g.last_name||'')[0]||'')}${(g.last_name||'').length>1?'.':''}
+              <span class="level-badge lvl-${lvl.name}">${lvl.emoji} ${lvl.name}</span>
+            </div>
+            <div class="guest-meta">${g.visit_count} визит${g.visit_count===1?'':g.visit_count<5?'а':'ов'} · последний ${lastVisit}</div>
+          </div>
+        </div>
+        <button class="offer-btn${g.alreadyTargeted?' sent':''}"
+          ${g.alreadyTargeted?'disabled':''}
+          onclick="${g.alreadyTargeted?'':'openOfferModal(\''+g.telegram_id+'\',\''+esc(g.first_name)+'\')'}">
+          ${g.alreadyTargeted?'✓ Отправлено':'Оффер'}
+        </button>
+      </div>`;
+  }).join('');
+}
+
+function renderStatsTab(stats, r){
+  return `
+    <div class="section-title">За последние 30 дней</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-n">${stats.visits30d}</div><div class="stat-l">Визитов</div></div>
+      <div class="stat-card"><div class="stat-n">${stats.guests30d}</div><div class="stat-l">Гостей</div></div>
+      <div class="stat-card"><div class="stat-n">${stats.totalVisits}</div><div class="stat-l">Всего</div></div>
+    </div>
+    <div class="section-title" style="margin-top:24px">Ваш ресторан</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:14px;line-height:1.8">
+      <div><span style="color:var(--muted)">Название:</span> ${esc(r.name)}</div>
+      ${r.address?`<div><span style="color:var(--muted)">Адрес:</span> ${esc(r.address)}</div>`:''}
+      ${r.city?`<div><span style="color:var(--muted)">Город:</span> ${esc(r.city)}</div>`:''}
+      ${r.cuisine?`<div><span style="color:var(--muted)">Кухня:</span> ${esc(r.cuisine)}</div>`:''}
+    </div>
+  `;
+}
+
+function renderOffersTab(offers, guests){
+  const guestMap = {};
+  (guests||[]).forEach(g=>guestMap[g.telegram_id]=g);
+
+  if(!offers.length) return `<div class="empty">Предложений ещё не было.<br>Перейдите во вкладку «Гости» и отправьте первый оффер!</div>`;
+
+  return offers.map(o=>{
+    const g = guestMap[o.guest_telegram_id];
+    const name = g ? esc(g.first_name) : 'Гость';
+    const lvl  = g ? getLevel(g.visit_count) : LEVELS[0];
+    const date = new Date(o.created_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+    const statusCls = 'offer-status-'+(o.status||'sent');
+    const statusTxt = o.status==='accepted'?'✓ Принято':o.status==='declined'?'✗ Отклонено':'• Отправлено';
+    return `
+      <div class="offer-hist">
+        <div class="offer-hist-name">${name} <span class="level-badge lvl-${lvl.name}" style="font-size:10px">${lvl.emoji} ${lvl.name}</span></div>
+        <div class="offer-hist-text">${esc(o.offer_text.slice(0,120))}${o.offer_text.length>120?'…':''}</div>
+        <div class="offer-hist-meta">
+          <span class="${statusCls}">${statusTxt}</span>
+          <span style="color:var(--muted)">${date}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function switchTab(name){
+  activeTab=name;
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const tabs=['guests','stats','offers'];
+    t.classList.toggle('active',tabs[i]===name);
+  });
+  document.querySelectorAll('.tab-pane').forEach((p,i)=>{
+    const tabs=['guests','stats','offers'];
+    p.classList.toggle('active',tabs[i]===name);
+  });
+}
+
+function setFilter(f){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent.includes(f)||f==='all'&&b.textContent==='Все');
+  });
+  document.getElementById('guest-list').innerHTML=renderGuestCards(dashData.globalGuests);
+}
+
+// ── Offer Modal ────────────────────────────────────────────────────────────
+async function openOfferModal(guestId, guestName){
+  currentGuestId   = guestId;
+  currentGuestName = guestName;
+  selectedOffer    = null;
+
+  document.getElementById('modal-guest-name').textContent = `Для ${guestName} — выберите вариант`;
+  document.getElementById('offer-options').innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted)">Генерируем предложения…</div>`;
+  document.getElementById('modal-send-btn').disabled = true;
+  document.getElementById('offer-modal').classList.add('open');
+
+  const r = await apiFetch('/api/send-offer',{initData:tg?.initData,guestTelegramId:guestId});
+  if(r.error||!r.options){
+    document.getElementById('offer-options').innerHTML=`<div style="color:var(--red);padding:16px">Ошибка: ${r.error||'нет вариантов'}</div>`;
+    return;
+  }
+
+  document.getElementById('offer-options').innerHTML = r.options.map((text,i)=>`
+    <div class="offer-option" onclick="selectOffer(${i})" data-idx="${i}">
+      <div class="offer-option-text">${esc(text)}</div>
+      <div class="offer-option-check" id="check-${i}"></div>
+    </div>`).join('');
+
+  // Store options globally
+  window._offerOptions = r.options;
+}
+
+function selectOffer(idx){
+  selectedOffer = window._offerOptions[idx];
+  document.querySelectorAll('.offer-option').forEach((el,i)=>{
+    el.classList.toggle('selected',i===idx);
+    document.getElementById('check-'+i).textContent = i===idx?'✓':'';
+  });
+  document.getElementById('modal-send-btn').disabled=false;
+}
+
+async function sendOffer(){
+  if(!selectedOffer) return;
+  const btn=document.getElementById('modal-send-btn');
+  btn.disabled=true; btn.textContent='Отправляем…';
+
+  const r = await apiFetch('/api/send-offer',{
+    initData:tg?.initData,
+    guestTelegramId:currentGuestId,
+    offerText:selectedOffer,
+  });
+
+  if(r.error){btn.disabled=false;btn.textContent='Отправить';alert('Ошибка: '+r.error);return;}
+
+  closeModal();
+  // Mark as sent in UI
+  const card = document.querySelector(`.offer-btn[onclick*="${currentGuestId}"]`);
+  if(card){card.textContent='✓ Отправлено';card.classList.add('sent');card.disabled=true;card.onclick=null;}
+
+  // Update dashData
+  const g = dashData.globalGuests.find(x=>x.telegram_id===currentGuestId);
+  if(g) g.alreadyTargeted=true;
+}
+
+function closeModal(){
+  document.getElementById('offer-modal').classList.remove('open');
+  document.getElementById('modal-send-btn').textContent='Отправить';
+  selectedOffer=null; currentGuestId=null;
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+init();
+</script>
+</body>
+</html>

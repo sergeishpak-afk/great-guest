@@ -11,6 +11,7 @@
 
     :root {
       --gold: #c9a96e;
+      --gold-light: #e8c97e;
       --bg: #0f0f0f;
       --card: #1a1a1a;
       --border: #2a2a2a;
@@ -23,7 +24,6 @@
       background: var(--tg-theme-bg-color, var(--bg));
       color: var(--tg-theme-text-color, var(--text));
       min-height: 100vh;
-      padding: 0;
     }
 
     #loading {
@@ -43,16 +43,18 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    #app { display: none; padding: 24px 20px 40px; }
+    #app { display: none; padding: 24px 20px 48px; }
 
+    /* ── Header ── */
     .header {
       text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
     .logo { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
     .logo span { color: var(--gold); }
     .greeting { color: var(--muted); font-size: 14px; margin-top: 4px; }
 
+    /* ── Status card ── */
     .status-card {
       background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
       border: 1px solid var(--border);
@@ -68,12 +70,23 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
-      background: linear-gradient(90deg, var(--gold), #e8c97e, var(--gold));
+      background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
     }
 
     .status-emoji { font-size: 48px; margin-bottom: 8px; }
     .status-name { font-size: 24px; font-weight: 700; color: var(--gold); }
-    .visit-count { font-size: 14px; color: var(--muted); margin-top: 6px; }
+    .visit-count { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+    .status-reward {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 6px 14px;
+      background: rgba(201,169,110,.12);
+      border: 1px solid rgba(201,169,110,.25);
+      border-radius: 99px;
+      font-size: 13px;
+      color: var(--gold-light);
+    }
 
     .progress-wrap { margin-top: 16px; }
     .progress-label {
@@ -91,11 +104,12 @@
     }
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--gold), #e8c97e);
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
       border-radius: 99px;
       transition: width .6s ease;
     }
 
+    /* ── Section titles ── */
     .section-title {
       font-size: 13px;
       font-weight: 600;
@@ -105,6 +119,7 @@
       margin-bottom: 12px;
     }
 
+    /* ── QR ── */
     .qr-section { margin-bottom: 20px; }
     .qr-btn {
       width: 100%;
@@ -123,6 +138,7 @@
       transition: opacity .2s, transform .1s;
     }
     .qr-btn:active { transform: scale(.97); opacity: .85; }
+    .qr-btn:disabled { opacity: .5; cursor: default; }
 
     .qr-display {
       display: none;
@@ -135,6 +151,49 @@
     .qr-display img { width: 200px; height: 200px; }
     .qr-hint { font-size: 12px; color: #666; margin-top: 8px; }
 
+    /* ── Offers ── */
+    .offers-section { margin-bottom: 20px; }
+
+    .offer-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .offer-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--gold), var(--gold-light));
+    }
+
+    .offer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .offer-restaurant {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .offer-date {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .offer-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text);
+      white-space: pre-line;
+    }
+
+    /* ── Visit history ── */
     .visits-section { margin-bottom: 20px; }
     .visit-item {
       display: flex;
@@ -150,7 +209,12 @@
     .visit-restaurant { font-weight: 500; }
     .visit-date { color: var(--muted); font-size: 13px; }
 
-    .empty { text-align: center; color: var(--muted); padding: 20px; font-size: 14px; }
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 20px;
+      font-size: 14px;
+    }
 
     #error {
       display: none;
@@ -178,10 +242,12 @@
     <div class="greeting" id="greeting">Добро пожаловать</div>
   </div>
 
-  <div class="status-card">
-    <div class="status-emoji" id="status-emoji">🥉</div>
+  <!-- Status card -->
+  <div class="status-card" role="region" aria-label="Ваш статус">
+    <div class="status-emoji" id="status-emoji" aria-hidden="true">🥉</div>
     <div class="status-name" id="status-name">Bronze</div>
     <div class="visit-count" id="visit-count">0 визитов</div>
+    <div class="status-reward" id="status-reward"></div>
     <div class="progress-wrap" id="progress-wrap">
       <div class="progress-label">
         <span id="progress-from"></span>
@@ -194,17 +260,25 @@
     </div>
   </div>
 
+  <!-- QR -->
   <div class="qr-section">
     <h2 class="section-title">Визит</h2>
-    <button class="qr-btn" onclick="getQR()">
+    <button class="qr-btn" id="qr-btn" onclick="getQR()">
       <span aria-hidden="true">🎫</span> Получить QR для визита
     </button>
-    <div class="qr-display" id="qr-display">
+    <div class="qr-display" id="qr-display" role="img" aria-label="QR-код для визита">
       <img id="qr-img" src="" alt="QR-код для визита" />
       <div class="qr-hint">Покажи код администратору ресторана</div>
     </div>
   </div>
 
+  <!-- Offers from restaurants -->
+  <div class="offers-section" id="offers-section" style="display:none">
+    <h2 class="section-title">Предложения для вас</h2>
+    <div id="offers-list"></div>
+  </div>
+
+  <!-- Visit history -->
   <div class="visits-section">
     <h2 class="section-title">История визитов</h2>
     <div id="visits-list"><div class="empty">Визитов пока нет</div></div>
@@ -215,22 +289,19 @@
 const SUPABASE_URL = 'https://wjlhaizrygeyeishbycp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps';
 
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const tg = window.Telegram?.WebApp;
+const db  = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const tg  = window.Telegram?.WebApp;
 
 const LEVELS = [
-  { name: 'Bronze',   emoji: '🥉', min: 0,  max: 4  },
-  { name: 'Silver',   emoji: '🥈', min: 5,  max: 14 },
-  { name: 'Gold',     emoji: '🥇', min: 15, max: 29 },
-  { name: 'Platinum', emoji: '💎', min: 30, max: Infinity },
+  { name: 'Bronze',   emoji: '🥉', min: 0,  max: 4,        reward: 'Добро пожаловать в программу' },
+  { name: 'Silver',   emoji: '🥈', min: 5,  max: 14,       reward: 'Скидка 5% + приоритетная бронь' },
+  { name: 'Gold',     emoji: '🥇', min: 15, max: 29,       reward: 'Скидка 10% + комплимент от шефа' },
+  { name: 'Platinum', emoji: '💎', min: 30, max: Infinity, reward: 'Скидка 15% + VIP-обслуживание' },
 ];
 
-function getLevel(n) {
-  return [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0];
-}
-function getNext(n) {
-  return LEVELS.find(l => l.min > n);
-}
+function getLevel(n)  { return [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0]; }
+function getNext(n)   { return LEVELS.find(l => l.min > n); }
+
 function declVisit(n) {
   if (n % 10 === 1 && n % 100 !== 11) return 'визит';
   if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'визита';
@@ -239,14 +310,14 @@ function declVisit(n) {
 
 function showError(msg) {
   document.getElementById('loading').style.display = 'none';
-  document.getElementById('error').style.display = 'block';
+  document.getElementById('error').style.display   = 'block';
   document.getElementById('error-msg').textContent = msg;
 }
 
+// ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   if (tg) tg.ready();
 
-  // initData может быть пустым только если открыто не из Telegram
   const initData = tg?.initData || '';
   if (!initData) {
     showError('Открой приложение через @great_guest_bot в Telegram');
@@ -255,44 +326,53 @@ async function init() {
 
   let res, payload;
   try {
-    res = await fetch('/api/webapp-init', {
-      method: 'POST',
+    res     = await fetch('/api/webapp-init', {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData }),
+      body:    JSON.stringify({ initData }),
     });
     payload = await res.json();
   } catch(e) {
     showError('Сетевая ошибка: ' + e.message);
     return;
   }
+
   if (!res.ok || !payload.guest) {
     showError('Ошибка: ' + (payload?.error || res.status));
     return;
   }
-  const guest = payload.guest;
+
+  const { guest } = payload;
 
   document.getElementById('greeting').textContent = `Привет, ${guest.first_name}! 👋`;
   renderStatus(guest.visit_count);
-  await renderHistory(guest.telegram_id);
+
+  // Load history and offers in parallel
+  await Promise.all([
+    renderHistory(guest.telegram_id),
+    renderOffers(initData),
+  ]);
 
   document.getElementById('loading').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+  document.getElementById('app').style.display     = 'block';
 }
 
+// ── Status ────────────────────────────────────────────────────────────────────
 function renderStatus(count) {
-  const lvl = getLevel(count);
+  const lvl  = getLevel(count);
   const next = getNext(count);
 
-  document.getElementById('status-emoji').textContent = lvl.emoji;
-  document.getElementById('status-name').textContent = lvl.name;
-  document.getElementById('visit-count').textContent = `${count} ${declVisit(count)}`;
+  document.getElementById('status-emoji').textContent  = lvl.emoji;
+  document.getElementById('status-name').textContent   = lvl.name;
+  document.getElementById('visit-count').textContent   = `${count} ${declVisit(count)}`;
+  document.getElementById('status-reward').textContent = lvl.reward;
 
   if (next) {
     const span = next.min - lvl.min;
     const done = count - lvl.min;
-    const pct = Math.round((done / span) * 100);
+    const pct  = Math.min(100, Math.round((done / span) * 100));
     document.getElementById('progress-from').textContent = `${lvl.emoji} ${lvl.name}`;
-    document.getElementById('progress-to').textContent = `${getNext(count).emoji} ${next.name}`;
+    document.getElementById('progress-to').textContent   = `${next.emoji} ${next.name}`;
     const fill = document.getElementById('progress-fill');
     fill.style.width = pct + '%';
     fill.setAttribute('aria-valuenow', pct);
@@ -301,6 +381,41 @@ function renderStatus(count) {
   }
 }
 
+// ── Offers ────────────────────────────────────────────────────────────────────
+async function renderOffers(initData) {
+  try {
+    const res  = await fetch('/api/guest-offers', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ initData }),
+    });
+    const data = await res.json();
+    const offers = data.offers || [];
+    if (!offers.length) return;
+
+    const section = document.getElementById('offers-section');
+    const list    = document.getElementById('offers-list');
+    section.style.display = 'block';
+
+    list.innerHTML = offers.map(o => {
+      const rname = o.restaurants?.name || 'Ресторан-партнёр';
+      const date  = new Date(o.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      const text  = o.offer_text || '';
+      return `
+        <article class="offer-card">
+          <div class="offer-header">
+            <span class="offer-restaurant">🏪 ${escHtml(rname)}</span>
+            <span class="offer-date">${date}</span>
+          </div>
+          <div class="offer-text">${escHtml(text)}</div>
+        </article>`;
+    }).join('');
+  } catch {
+    // Non-critical — silently skip if offers unavailable
+  }
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
 async function renderHistory(telegramId) {
   const { data: visits } = await db
     .from('visits')
@@ -310,32 +425,58 @@ async function renderHistory(telegramId) {
     .limit(10);
 
   const list = document.getElementById('visits-list');
-  if (!visits || visits.length === 0) {
+  if (!visits?.length) {
     list.innerHTML = '<div class="empty">Визитов пока нет — получи QR и посети ресторан!</div>';
     return;
   }
   list.innerHTML = visits.map(v => {
     const date = new Date(v.visited_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
     const name = v.restaurants?.name || 'Ресторан-партнёр';
-    return `<div class="visit-item"><span class="visit-restaurant">🍽 ${name}</span><span class="visit-date">${date}</span></div>`;
+    return `<div class="visit-item">
+      <span class="visit-restaurant">🍽 ${escHtml(name)}</span>
+      <span class="visit-date">${date}</span>
+    </div>`;
   }).join('');
 }
 
+// ── QR ────────────────────────────────────────────────────────────────────────
 async function getQR() {
   if (!tg?.initData) return;
+  const btn = document.getElementById('qr-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span aria-hidden="true">⏳</span> Создаём QR...';
 
-  // ✅ Server creates QR token after HMAC validation
-  const res = await fetch('/api/create-qr', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ initData: tg.initData }),
-  });
-  const data = await res.json();
-  if (!res.ok || !data.visitUrl) { alert(data.error || 'Ошибка создания QR'); return; }
+  try {
+    const res  = await fetch('/api/create-qr', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ initData: tg.initData }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.visitUrl) {
+      alert(data.error || 'Ошибка создания QR');
+      btn.disabled = false;
+      btn.innerHTML = '<span aria-hidden="true">🎫</span> Получить QR для визита';
+      return;
+    }
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.visitUrl)}&ecc=H`;
+    document.getElementById('qr-img').src     = qrUrl;
+    document.getElementById('qr-display').style.display = 'block';
+    btn.innerHTML = '<span aria-hidden="true">✅</span> QR готов';
+  } catch(e) {
+    alert('Ошибка: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '<span aria-hidden="true">🎫</span> Получить QR для визита';
+  }
+}
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.visitUrl)}&ecc=H`;
-  document.getElementById('qr-img').src = qrUrl;
-  document.getElementById('qr-display').style.display = 'block';
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
 
 init();
