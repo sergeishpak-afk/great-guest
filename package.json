@@ -14,7 +14,8 @@
     "express": "^4.21.2",
     "qrcode": "^1.5.4",
     "telegraf": "^4.16.3",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "@radix-ui/react-slot": "^1.2.4",
