@@ -39,7 +39,7 @@ function fmtStatus(count) {
 
 // ─── Keyboard ─────────────────────────────────────────────────────────────────
 const mainKb = Markup.keyboard([
-  [Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP)],
+  ['🚀 Открыть Great Guest'],
   ['🎫 Получить QR для визита'],
   ['⭐ Мой статус', '📋 История визитов'],
 ]).resize();
@@ -57,10 +57,10 @@ bot.start(async (ctx) => {
   );
 });
 
-// ─── 🚀 Открыть приложение (если кнопка клавиатуры отправила текст) ───────────
+// ─── 🚀 Открыть приложение ───────────────────────────────────────────────────
 bot.hears('🚀 Открыть Great Guest', async (ctx) => {
   await ctx.reply(
-    '👇 Нажми кнопку ниже чтобы открыть приложение:',
+    '👇',
     Markup.inlineKeyboard([[Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP)]])
   );
 });
