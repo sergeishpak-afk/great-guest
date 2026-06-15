@@ -246,17 +246,10 @@ function showError(msg) {
 async function init() {
   if (tg) tg.ready();
 
-  const tgUser = tg?.initDataUnsafe?.user;
-
-  // DEBUG: показать состояние при открытии
-  if (!tgUser?.id) {
-    const dbg = [
-      'tg: ' + (tg ? 'есть' : 'нет'),
-      'initData: ' + (tg?.initData ? tg.initData.slice(0,40)+'…' : 'пусто'),
-      'user: ' + JSON.stringify(tg?.initDataUnsafe?.user || null),
-      'platform: ' + (tg?.platform || 'неизвестно'),
-    ].join('\n');
-    showError('Нет данных пользователя.\n\n' + dbg);
+  // initData может быть пустым только если открыто не из Telegram
+  const initData = tg?.initData || '';
+  if (!initData) {
+    showError('Открой приложение через @great_guest_bot в Telegram');
     return;
   }
 
@@ -265,7 +258,7 @@ async function init() {
     res = await fetch('/api/webapp-init', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: tg.initData }),
+      body: JSON.stringify({ initData }),
     });
     payload = await res.json();
   } catch(e) {
@@ -273,7 +266,7 @@ async function init() {
     return;
   }
   if (!res.ok || !payload.guest) {
-    showError('Ошибка API ' + res.status + ': ' + (payload?.error || 'нет данных гостя'));
+    showError('Ошибка: ' + (payload?.error || res.status));
     return;
   }
   const guest = payload.guest;
