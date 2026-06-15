@@ -247,8 +247,16 @@ async function init() {
   if (tg) tg.ready();
 
   const tgUser = tg?.initDataUnsafe?.user;
+
+  // DEBUG: показать состояние при открытии
   if (!tgUser?.id) {
-    showError('Нажми кнопку «🚀 Открыть приложение» в клавиатуре бота — не синюю кнопку меню слева, а кнопку в чате после /start');
+    const dbg = [
+      'tg: ' + (tg ? 'есть' : 'нет'),
+      'initData: ' + (tg?.initData ? tg.initData.slice(0,40)+'…' : 'пусто'),
+      'user: ' + JSON.stringify(tg?.initDataUnsafe?.user || null),
+      'platform: ' + (tg?.platform || 'неизвестно'),
+    ].join('\n');
+    showError('Нет данных пользователя.\n\n' + dbg);
     return;
   }
 
