@@ -1,9 +1,9 @@
 /**
  * api/send-offer.js
- * POST — generate AI offer options + send chosen one to guest via bot
+ * POST — generate AI offer/invite options + send chosen one to guest via bot
  * Body: { initData, guestTelegramId, offerText? }
+ *   - if offerText not provided → return 3 generated options
  *   - if offerText provided → send that one directly
- *   - if not → return 3 generated options for restaurant to choose
  */
 const crypto = require('crypto');
 const { Telegraf } = require('telegraf');
@@ -33,8 +33,8 @@ function validateInitData(initData, token) {
   } catch { return false; }
 }
 
-// Smart template-based offer generation
-function generateOffers(guest, restaurant) {
+// ── Restaurant offer templates ─────────────────────────────────────────────
+function generateRestaurantOffers(guest, restaurant) {
   const lvl   = getLevel(guest.visit_count);
   const name  = guest.first_name;
   const rname = restaurant.name;
@@ -64,6 +64,30 @@ function generateOffers(guest, restaurant) {
   };
 
   return byLevel[lvl.name] || byLevel.Bronze;
+}
+
+// ── Event invitation templates ─────────────────────────────────────────────
+function generateEventInvites(guest, restaurant) {
+  const lvl   = getLevel(guest.visit_count);
+  const name  = guest.first_name;
+  const ename = restaurant.name;
+  const date  = restaurant.event_date
+    ? new Date(restaurant.event_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+    : 'в ближайшее время';
+  const etype = restaurant.event_type || 'мероприятие';
+
+  return [
+    `${name}, вас ждут на ${ename}! 🎉\n\n${date} — особенный вечер для особенных гостей. Для вас зарезервировано место как для ${lvl.emoji} ${lvl.name}-гостя программы Great Guest.\n\nОтветьте «+» чтобы подтвердить участие.`,
+    `${name}, персональное приглашение для вас 💌\n\n${ename} — ${date}. Мы выбрали вас из базы Great Guest как ${lvl.emoji} ${lvl.name}-гостя. Ваш статус открывает приоритетный вход.\n\nМест немного — подтвердите участие до конца недели.`,
+    `${name}, вас заметили! ✨\n\nПриглашаем на ${ename} — ${date}. Специально для гостей уровня ${lvl.emoji} ${lvl.name} предусмотрены особые условия и привилегии.\n\nПодтвердите участие в ответ на это сообщение.`,
+  ];
+}
+
+function generateOffers(guest, restaurant) {
+  if (restaurant.venue_type === 'event') {
+    return generateEventInvites(guest, restaurant);
+  }
+  return generateRestaurantOffers(guest, restaurant);
 }
 
 module.exports = async (req, res) => {
@@ -103,32 +127,35 @@ module.exports = async (req, res) => {
 
   if (!guest) return res.status(404).json({ error: 'guest_not_found' });
 
-  // If no offerText → return 3 options for restaurant to pick
+  // No offerText → return 3 options
   if (!offerText) {
     const options = generateOffers(guest, restaurant);
     return res.status(200).json({ options });
   }
 
-  // Send the chosen offer via bot
-  const lvl = getLevel(guest.visit_count);
+  // Send the chosen offer/invite via bot
+  const lvl       = getLevel(guest.visit_count);
+  const isEvent   = restaurant.venue_type === 'event';
+  const typeLabel = isEvent ? 'Приглашение' : 'Персональное предложение';
+  const footer    = isEvent
+    ? `_Приглашение от ${restaurant.name} через Great Guest ${lvl.emoji}_`
+    : `_Предложение от партнёра Great Guest ${lvl.emoji} для ${lvl.name}-гостей_`;
+
   const msg = [
-    `🎁 *Персональное предложение от «${restaurant.name}»*`,
+    `🎁 *${typeLabel} от «${restaurant.name}»*`,
     '',
     offerText,
     '',
     restaurant.address ? `📍 ${restaurant.address}` : null,
-    `\n_Предложение от партнёра Great Guest ${lvl.emoji} для ${lvl.name}-гостей_`,
+    `\n${footer}`,
   ].filter(Boolean).join('\n');
 
   try {
-    await bot.telegram.sendMessage(guestTelegramId, msg, {
-      parse_mode: 'Markdown',
-    });
+    await bot.telegram.sendMessage(guestTelegramId, msg, { parse_mode: 'Markdown' });
   } catch (e) {
     return res.status(500).json({ error: 'telegram_send_failed', detail: e.message });
   }
 
-  // Record offer
   await db.from('offers').insert({
     restaurant_id:     restaurant.id,
     guest_telegram_id: guestTelegramId,

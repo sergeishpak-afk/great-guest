@@ -1,7 +1,6 @@
 /**
  * api/restaurant-register.js
- * POST — register a restaurant owner + start 14-day free trial
- * Called from admin Mini App on first setup
+ * POST — register a restaurant/event + start 14-day free trial
  */
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
@@ -26,7 +25,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  const { initData, name, address, city, description, cuisine } = req.body || {};
+  const { initData, name, address, city, cuisine, venue_type, event_date, event_type } = req.body || {};
   if (!initData || !name) return res.status(400).json({ error: 'initData and name required' });
   if (!validateInitData(initData, process.env.BOT_TOKEN))
     return res.status(401).json({ error: 'Invalid signature' });
@@ -44,21 +43,22 @@ module.exports = async (req, res) => {
 
   if (existing) return res.status(200).json({ restaurant: existing, alreadyExists: true });
 
-  // Create restaurant with 14-day trial
   const now      = new Date();
   const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
   const { data: restaurant, error } = await db
     .from('restaurants')
     .insert({
-      name:                   name.trim(),
-      address:                (address || '').trim(),
-      city:                   (city || 'Москва').trim(),
-      description:            (description || '').trim(),
-      cuisine:                (cuisine || '').trim(),
-      owner_telegram_id:      ownerId,
-      subscription_status:    'trial',
-      trial_started_at:       now.toISOString(),
+      name:                    name.trim(),
+      address:                 (address || '').trim(),
+      city:                    (city || 'Москва').trim(),
+      cuisine:                 (cuisine || cuisine || '').trim(),
+      venue_type:              venue_type || 'restaurant',
+      event_date:              event_date || null,
+      event_type:              (event_type || '').trim(),
+      owner_telegram_id:       ownerId,
+      subscription_status:     'trial',
+      trial_started_at:        now.toISOString(),
       subscription_expires_at: trialEnd.toISOString(),
     })
     .select()
