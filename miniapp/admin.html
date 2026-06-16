@@ -443,6 +443,9 @@ let currentGuestName = null;
 let selectedOffer = null;
 let offerOptions = [];
 
+// Map for venues to avoid JSON in onclick (handles apostrophes in names)
+const venuesMap = new Map();
+
 // ─ Levels ────────────────────────────────────────────────────────────────────
 const LEVELS = [
   { name:'Bronze',  emoji:'🥉', min:0  },
@@ -582,13 +585,14 @@ function renderNetwork() {
   } else {
     content += `<div class="venues-grid">`;
     venues.forEach(v => {
+      venuesMap.set(v.id, v); // Store venue in map to avoid JSON in onclick
       const icon = v.venue_type === 'event' ? '🎉' : '🍽';
       const subtitle = v.venue_type === 'event'
         ? (v.event_type || 'Мероприятие')
         : (v.cuisine || 'Ресторан');
       const location = [v.city, subtitle].filter(Boolean).join(' · ');
       content += `
-        <div class="venue-card" onclick='openVenue(${JSON.stringify(v)})'>
+        <div class="venue-card" onclick="openVenueById('${v.id}')">
           <div class="venue-icon">${icon}</div>
           <div class="venue-name">${esc(v.name)}</div>
           <div class="venue-loc">${esc(location)}</div>
@@ -800,6 +804,10 @@ async function register() {
 }
 
 // ─ Open venue ────────────────────────────────────────────────────────────────
+function openVenueById(id) {
+  openVenue(venuesMap.get(id));
+}
+
 function openVenue(venue) {
   currentVenue = venue;
   activeFilter = 'all';
@@ -907,7 +915,7 @@ function renderGuestCards(guests, isEvent) {
   if (!currentVenue) return '';
 
   const venueOffers = allOffers.filter(o => o.restaurant_id === currentVenue.id);
-  const targetedIds = new Set(venueOffers.map(o => o.guest_telegram_id));
+  const targetedIds = new Set(venueOffers.map(o => String(o.guest_telegram_id)));
 
   const filtered = activeFilter === 'all'
     ? guests
@@ -920,7 +928,7 @@ function renderGuestCards(guests, isEvent) {
   const btnLabel = isEvent ? 'Пригласить' : 'Оффер';
 
   return filtered.map(g => {
-    const alreadyTargeted = targetedIds.has(g.telegram_id);
+    const alreadyTargeted = targetedIds.has(String(g.telegram_id));
     const lvl      = getLevel(g.visit_count);
     const initial  = (g.first_name || '?')[0].toUpperCase();
     const fullName = [g.first_name, g.last_name].filter(Boolean).join(' ');
@@ -946,7 +954,7 @@ function renderGuestCards(guests, isEvent) {
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
           <button class="action-btn${alreadyTargeted?' sent':''}"
-            data-guest-id="${esc(g.telegram_id)}"
+            data-guest-id="${String(g.telegram_id)}"
             data-guest-name="${esc(g.first_name)}"
             onclick="openOfferModal(this)"
             ${alreadyTargeted ? 'disabled' : ''}
@@ -954,7 +962,7 @@ function renderGuestCards(guests, isEvent) {
             ${alreadyTargeted ? '✓ Отправлено' : btnLabel}
           </button>
           <button class="bonus-btn"
-            data-guest-id="${esc(g.telegram_id)}"
+            data-guest-id="${String(g.telegram_id)}"
             onclick="addBonusVisit(this)"
             aria-label="Начислить бонусный визит ${esc(fullName)}">
             +Бонус
@@ -1027,7 +1035,7 @@ function infoRow(label, value) {
 // ─ Offers/Invites history ────────────────────────────────────────────────────
 function renderHistoryPane(offers, guests, isEvent) {
   const guestMap = {};
-  (guests||[]).forEach(g => guestMap[g.telegram_id] = g);
+  (guests||[]).forEach(g => guestMap[String(g.telegram_id)] = g);
 
   if (!offers || !offers.length) {
     const cta = isEvent ? 'Перейдите в «Гости» и отправьте первое приглашение!' : 'Перейдите в «Гости» и отправьте первый оффер!';
@@ -1035,7 +1043,7 @@ function renderHistoryPane(offers, guests, isEvent) {
   }
 
   return offers.map(o => {
-    const g    = guestMap[o.guest_telegram_id];
+    const g    = guestMap[String(o.guest_telegram_id)];
     const name = g ? esc(g.first_name) : 'Гость';
     const lvl  = g ? getLevel(g.visit_count) : LEVELS[0];
     const date = new Date(o.created_at).toLocaleDateString('ru-RU', {day:'numeric',month:'short'});
@@ -1058,11 +1066,11 @@ function renderHistoryPane(offers, guests, isEvent) {
 // ─ AI tab ────────────────────────────────────────────────────────────────────
 function renderAIPane(v, guests, isEvent) {
   const venueOffers  = allOffers.filter(o => o.restaurant_id === v.id);
-  const targetedIds  = new Set(venueOffers.map(o => o.guest_telegram_id));
+  const targetedIds  = new Set(venueOffers.map(o => String(o.guest_telegram_id)));
   const totalGuests  = guests.length;
   const platinum     = guests.filter(g => getLevel(g.visit_count).name === 'Platinum').length;
   const gold         = guests.filter(g => getLevel(g.visit_count).name === 'Gold').length;
-  const untargeted   = guests.filter(g => !targetedIds.has(g.telegram_id)).length;
+  const untargeted   = guests.filter(g => !targetedIds.has(String(g.telegram_id))).length;
 
   const noGuests = !ownerData?.is_active || !totalGuests;
 
@@ -1158,7 +1166,7 @@ function renderAIPane(v, guests, isEvent) {
 }
 
 function renderDiscoverySection(v, guests, targetedIds) {
-  const untargetedGuests = guests.filter(g => !targetedIds.has(g.telegram_id));
+  const untargetedGuests = guests.filter(g => !targetedIds.has(String(g.telegram_id)));
   const topUntargeted = untargetedGuests
     .sort((a, b) => b.visit_count - a.visit_count)
     .slice(0, 5);
@@ -1186,7 +1194,7 @@ function renderDiscoverySection(v, guests, targetedIds) {
               </div>
             </div>
             <button class="action-btn"
-              data-guest-id="${esc(g.telegram_id)}"
+              data-guest-id="${String(g.telegram_id)}"
               data-guest-name="${esc(g.first_name)}"
               onclick="openOfferModal(this)"
               aria-label="Отправить оффер ${esc(fullName)}">
@@ -1248,7 +1256,7 @@ async function openOfferModal(btn) {
 
   const isEvent    = currentVenue?.venue_type === 'event';
   const modalLabel = isEvent ? '📨 Отправить приглашение' : '🎁 Отправить предложение';
-  const guest      = globalGuests.find(g => g.telegram_id === currentGuestId);
+  const guest      = globalGuests.find(g => String(g.telegram_id) === String(currentGuestId));
   const lvl        = guest ? getLevel(guest.visit_count) : LEVELS[0];
 
   document.getElementById('modal-title').textContent = modalLabel;
@@ -1335,14 +1343,12 @@ async function sendOffer() {
     created_at: new Date().toISOString(),
   });
 
-  const sentBtn = document.querySelector(`.action-btn[data-guest-id="${currentGuestId}"]`);
-  if (sentBtn) {
+  // Update all buttons for this guest (may appear in multiple places)
+  document.querySelectorAll(`.action-btn[data-guest-id="${currentGuestId}"]`).forEach(sentBtn => {
     sentBtn.textContent = '✓ Отправлено';
     sentBtn.classList.add('sent');
     sentBtn.disabled = true;
-  }
-
-  renderDashboard();
+  });
 }
 
 function closeOfferModal() {
@@ -1434,7 +1440,7 @@ async function addBonusVisit(btn) {
   }
 
   // Update local guest data
-  const guest = globalGuests.find(g => g.telegram_id === guestId);
+  const guest = globalGuests.find(g => String(g.telegram_id) === String(guestId));
   if (guest) {
     guest.visit_count = (guest.visit_count || 0) + 1;
   }
@@ -1489,9 +1495,15 @@ async function importGuests() {
   }
 
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  // Skip header row if detected
+  const dataLines = (lines[0]?.toLowerCase().includes('телефон') ||
+                     lines[0]?.toLowerCase().includes('phone') ||
+                     lines[0]?.toLowerCase().includes('имя') ||
+                     lines[0]?.toLowerCase().includes('name'))
+    ? lines.slice(1) : lines;
   const guests = [];
 
-  for (const line of lines) {
+  for (const line of dataLines) {
     const parts = line.split(/[,;]/).map(p => p.trim());
     if (parts.length < 2) continue;
     const [first_name, phone] = parts;

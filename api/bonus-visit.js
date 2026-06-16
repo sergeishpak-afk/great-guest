@@ -16,12 +16,12 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-// In-memory rate limit: max 60 bonus-visits per owner per minute
+// In-memory rate limit: max 10 bonus-visits per owner per minute
 const RL_MAP = new Map();
 function checkRateLimit(ownerId) {
   const now = Date.now();
   const window = 60_000;
-  const limit = 60;
+  const limit = 10;
   const entry = RL_MAP.get(ownerId) || { count: 0, start: now };
   if (now - entry.start > window) { entry.count = 0; entry.start = now; }
   entry.count++;
@@ -89,6 +89,21 @@ module.exports = async (req, res) => {
     .eq('telegram_id', guestTelegramId)
     .single();
   if (!guest) return res.status(404).json({ error: 'guest_not_found' });
+
+  // Per-guest rate limit: max 1 bonus per guest per restaurant per hour
+  const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+  const { data: recentBonus } = await db
+    .from('visits')
+    .select('id')
+    .eq('telegram_id', guestTelegramId)
+    .eq('restaurant_id', restaurant.id)
+    .eq('visit_type', 'bonus')
+    .gte('created_at', oneHourAgo)
+    .limit(1);
+
+  if (recentBonus && recentBonus.length > 0) {
+    return res.status(429).json({ error: 'Бонус этому гостю уже начислен в последний час' });
+  }
 
   const newCount = guest.visit_count + 1;
 
