@@ -351,7 +351,10 @@ function showError(msg) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-  if (tg) tg.ready();
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
 
   const initData = tg?.initData || '';
   if (!initData) {
@@ -483,26 +486,31 @@ async function renderOffers(initData) {
 
 // ── History ───────────────────────────────────────────────────────────────────
 async function renderHistory(telegramId) {
-  const { data: visits } = await db
-    .from('visits')
-    .select('visited_at, restaurants(name)')
-    .eq('telegram_id', telegramId)
-    .order('visited_at', { ascending: false })
-    .limit(10);
+  try {
+    const { data: visits } = await db
+      .from('visits')
+      .select('visited_at, restaurants(name)')
+      .eq('telegram_id', telegramId)
+      .order('visited_at', { ascending: false })
+      .limit(10);
 
-  const list = document.getElementById('visits-list');
-  if (!visits?.length) {
-    list.innerHTML = '<div class="empty">Визитов пока нет — получи QR и посети ресторан!</div>';
-    return;
+    const list = document.getElementById('visits-list');
+    if (!visits?.length) {
+      list.innerHTML = '<div class="empty">Визитов пока нет — получи QR и посети ресторан!</div>';
+      return;
+    }
+    list.innerHTML = visits.map(v => {
+      const date = new Date(v.visited_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      const name = v.restaurants?.name || 'Ресторан-партнёр';
+      return `<div class="visit-item">
+        <span class="visit-restaurant">🍽 ${escHtml(name)}</span>
+        <span class="visit-date">${date}</span>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    const list = document.getElementById('visits-list');
+    if (list) list.innerHTML = '<div class="empty">Не удалось загрузить историю</div>';
   }
-  list.innerHTML = visits.map(v => {
-    const date = new Date(v.visited_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-    const name = v.restaurants?.name || 'Ресторан-партнёр';
-    return `<div class="visit-item">
-      <span class="visit-restaurant">🍽 ${escHtml(name)}</span>
-      <span class="visit-date">${date}</span>
-    </div>`;
-  }).join('');
 }
 
 // ── QR ────────────────────────────────────────────────────────────────────────
@@ -520,17 +528,23 @@ async function getQR() {
     });
     const data = await res.json();
     if (!res.ok || !data.visitUrl) {
-      alert(data.error || 'Ошибка создания QR');
+      showAlert(data.error || 'Ошибка создания QR');
       btn.disabled = false;
       btn.innerHTML = '<span aria-hidden="true">🎫</span> Получить QR для визита';
       return;
     }
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.visitUrl)}&ecc=H`;
-    document.getElementById('qr-img').src     = qrUrl;
+    const img = document.getElementById('qr-img');
+    img.src = qrUrl;
+    img.onerror = () => {
+      img.style.display = 'none';
+      showAlert('Не удалось загрузить QR-код');
+    };
     document.getElementById('qr-display').style.display = 'block';
-    btn.innerHTML = '<span aria-hidden="true">✅</span> QR готов';
+    btn.disabled = true;
+    btn.innerHTML = '<span aria-hidden="true">✓</span> QR активен';
   } catch(e) {
-    alert('Ошибка: ' + e.message);
+    showAlert('Ошибка: ' + e.message);
     btn.disabled = false;
     btn.innerHTML = '<span aria-hidden="true">🎫</span> Получить QR для визита';
   }
@@ -543,6 +557,14 @@ function escHtml(s) {
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
+}
+
+function showAlert(msg) {
+  if (window.Telegram?.WebApp?.showAlert) {
+    window.Telegram.WebApp.showAlert(msg);
+  } else {
+    alert(msg);
+  }
 }
 
 init();
