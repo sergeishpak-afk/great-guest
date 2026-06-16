@@ -94,7 +94,7 @@
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { }
     body {
       font-family: 'DM Sans', sans-serif;
       background: #09080F;
@@ -882,7 +882,7 @@
   <a href="#restaurant" onclick="closeMobNav()">Рестораны</a>
   <a href="#events"     onclick="closeMobNav()">Мероприятия</a>
   <a href="#community"  onclick="closeMobNav()">Комьюнити</a>
-  <a href="#cta" class="nav-cta" onclick="closeMobNav()">Попробовать →</a>
+  <a href="https://t.me/great_guest_bot" class="nav-cta" onclick="closeMobNav()">Попробовать →</a>
 </div>
 
 <nav id="nav">
@@ -1639,268 +1639,18 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 /* ── Smooth anchor scroll ── */
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    const t = document.querySelector(a.getAttribute('href'));
-    if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
+if (typeof Lenis !== 'undefined' && typeof lenis !== 'undefined') {
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const href = a.getAttribute('href');
+      if (href !== '#') {
+        e.preventDefault();
+        lenis.scrollTo(href);
+      }
+    });
   });
-});
+}
 
-/* ── Three.js 3D Objects ── (removed) */
-(function init3D() {
-  return; // 3D objects removed
-  if (window.matchMedia('(hover: none)').matches) return;
-
-  const T = THREE;
-  const GOLD  = 0xC9A96E;
-  const GOLD2 = 0xE8C98A;
-  const DARK  = 0x0C0B09;
-
-  function makeRenderer(canvas, w, h) {
-    const r = new T.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    r.setPixelRatio(Math.min(devicePixelRatio, 2));
-    r.setSize(w, h);
-    r.setClearColor(0x000000, 0);
-    r.toneMapping = T.ACESFilmicToneMapping;
-    r.toneMappingExposure = 1.3;
-    return r;
-  }
-
-  function makeScene() {
-    const s = new T.Scene();
-    s.add(new T.AmbientLight(0xffffff, 0.5));
-    const l1 = new T.PointLight(GOLD, 3, 12);
-    l1.position.set(2, 3, 3);
-    s.add(l1);
-    const l2 = new T.PointLight(0xffffff, 1.5, 12);
-    l2.position.set(-2, -1, 2);
-    s.add(l2);
-    const l3 = new T.PointLight(GOLD2, 1, 8);
-    l3.position.set(0, -2, 1);
-    s.add(l3);
-    return s;
-  }
-
-  /* ─────────────────────────────────────────
-     1. WINE GLASS  — Hero section
-  ───────────────────────────────────────── */
-  const glassCanvas = document.getElementById('c-glass');
-  if (glassCanvas) {
-    const W = 200, H = 340;
-    const renderer = makeRenderer(glassCanvas, W, H);
-    const scene    = makeScene();
-    const camera   = new T.PerspectiveCamera(42, W / H, 0.1, 50);
-    camera.position.set(0, 0.35, 2.8);
-    camera.lookAt(0, 0.35, 0);
-
-    const glassMat = new T.MeshPhysicalMaterial({
-      color: GOLD, metalness: 0.05, roughness: 0.02,
-      transmission: 0.9, transparent: true, opacity: 0.72,
-      side: T.DoubleSide, envMapIntensity: 2,
-    });
-    const stemMat = new T.MeshPhysicalMaterial({
-      color: GOLD2, metalness: 0.1, roughness: 0.05,
-      transmission: 0.85, transparent: true, opacity: 0.8,
-    });
-    const wineMat = new T.MeshPhysicalMaterial({
-      color: 0x6B0F1A, metalness: 0, roughness: 0.4,
-      transparent: true, opacity: 0.65,
-    });
-
-    const group = new T.Group();
-
-    // Lathe profile — wine glass silhouette
-    const pts = [
-      new T.Vector2(0,     0),
-      new T.Vector2(0.12,  0.022),
-      new T.Vector2(0.055, 0.11),
-      new T.Vector2(0.042, 0.24),
-      new T.Vector2(0.09,  0.32),
-      new T.Vector2(0.21,  0.50),
-      new T.Vector2(0.30,  0.68),
-      new T.Vector2(0.285, 0.79),
-      new T.Vector2(0.305, 0.84),
-    ];
-    group.add(new T.Mesh(new T.LatheGeometry(pts, 64), glassMat));
-
-    // Foot disc
-    const footDisc = new T.Mesh(new T.CylinderGeometry(0.12, 0.135, 0.022, 48), stemMat);
-    footDisc.position.set(0, 0.011, 0);
-    group.add(footDisc);
-
-    // Wine fill
-    const wine = new T.Mesh(new T.CylinderGeometry(0.235, 0.155, 0.22, 48), wineMat);
-    wine.position.y = 0.605;
-    group.add(wine);
-
-    // Wine surface disc
-    const wineSurface = new T.Mesh(new T.CircleGeometry(0.235, 48), wineMat);
-    wineSurface.position.set(0, 0.716, 0);
-    wineSurface.rotation.x = -Math.PI / 2;
-    group.add(wineSurface);
-
-    // Rim highlight ring
-    const rimMat = new T.MeshBasicMaterial({ color: GOLD2, transparent: true, opacity: 0.5 });
-    const rimRing = new T.Mesh(new T.TorusGeometry(0.302, 0.006, 8, 64), rimMat);
-    rimRing.position.set(0, 0.84, 0);
-    group.add(rimRing);
-
-    group.position.y = -0.42;
-    group.rotation.x = 0.08;
-    scene.add(group);
-
-    let ft = 0, mx = 0, my = 0;
-    document.addEventListener('mousemove', e => {
-      mx = (e.clientX / innerWidth  - 0.5) * 0.4;
-      my = (e.clientY / innerHeight - 0.5) * 0.25;
-    });
-
-    (function loop() {
-      requestAnimationFrame(loop);
-      ft += 0.008;
-      group.rotation.y  += 0.004;
-      group.rotation.x   = 0.08 + my * 0.5;
-      group.rotation.z   = mx  * 0.3;
-      group.position.y   = -0.42 + Math.sin(ft) * 0.055;
-      renderer.render(scene, camera);
-    })();
-  }
-
-  /* ─────────────────────────────────────────
-     2. CROWN  — Numbers section
-  ───────────────────────────────────────── */
-  const crownCanvas = document.getElementById('c-crown');
-  if (crownCanvas) {
-    const W = 160, H = 160;
-    const renderer = makeRenderer(crownCanvas, W, H);
-    const scene    = makeScene();
-    const camera   = new T.PerspectiveCamera(42, W / H, 0.1, 50);
-    camera.position.set(0, 0.18, 2.4);
-    camera.lookAt(0, 0.10, 0);
-
-    const goldMat = new T.MeshStandardMaterial({
-      color: GOLD, metalness: 0.92, roughness: 0.08,
-      emissive: 0x3d2a10, emissiveIntensity: 0.25,
-    });
-    const gemMat = new T.MeshPhysicalMaterial({
-      color: GOLD2, metalness: 0, roughness: 0,
-      transmission: 0.88, transparent: true, opacity: 0.9,
-    });
-
-    const g = new T.Group();
-
-    // Band (open cylinder)
-    g.add(new T.Mesh(new T.CylinderGeometry(0.5, 0.48, 0.16, 48, 1, true), goldMat));
-    // Bottom torus
-    g.add(new T.Mesh(new T.TorusGeometry(0.49, 0.022, 8, 48), goldMat));
-    // Top torus
-    const topTorus = new T.Mesh(new T.TorusGeometry(0.49, 0.018, 8, 48), goldMat);
-    topTorus.position.y = 0.16;
-    g.add(topTorus);
-
-    // 5 spikes
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * Math.PI * 2;
-      const spike = new T.Mesh(new T.ConeGeometry(0.065, 0.42, 5), goldMat);
-      spike.position.set(Math.sin(a) * 0.47, 0.37, Math.cos(a) * 0.47);
-      g.add(spike);
-    }
-    // 5 gems between spikes
-    for (let i = 0; i < 5; i++) {
-      const a = ((i + 0.5) / 5) * Math.PI * 2;
-      const gem = new T.Mesh(new T.SphereGeometry(0.062, 16, 16), gemMat);
-      gem.position.set(Math.sin(a) * 0.47, 0.04, Math.cos(a) * 0.47);
-      g.add(gem);
-    }
-    // Center top gem
-    const topGem = new T.Mesh(new T.SphereGeometry(0.09, 20, 20), gemMat);
-    topGem.position.y = 0.65;
-    g.add(topGem);
-
-    g.position.y = -0.1;
-    scene.add(g);
-
-    let ct = 0;
-    (function loop() {
-      requestAnimationFrame(loop);
-      ct += 0.007;
-      g.rotation.y  += 0.009;
-      g.position.y   = -0.1 + Math.sin(ct) * 0.05;
-      renderer.render(scene, camera);
-    })();
-  }
-
-  /* ─────────────────────────────────────────
-     3. DIAMOND  — CTA section
-  ───────────────────────────────────────── */
-  const diamCanvas = document.getElementById('c-diamond');
-  if (diamCanvas) {
-    const W = 180, H = 220;
-    const renderer = makeRenderer(diamCanvas, W, H);
-    const scene    = makeScene();
-    const camera   = new T.PerspectiveCamera(40, W / H, 0.1, 50);
-    camera.position.set(0, 0, 3.2);
-    camera.lookAt(0, 0, 0);
-
-    const faceMat = new T.MeshPhysicalMaterial({
-      color: GOLD2, metalness: 0, roughness: 0,
-      transmission: 0.94, transparent: true, opacity: 0.88,
-      thickness: 1.2, ior: 2.42, envMapIntensity: 4,
-      side: T.DoubleSide,
-    });
-    const edgeMat = new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.35 });
-
-    const dg = new T.Group();
-
-    // Upper girdle — table + star facets (cone top)
-    const top = new T.Mesh(new T.ConeGeometry(0.58, 0.28, 8, 1), faceMat);
-    top.position.y = 0.28;
-    dg.add(top);
-
-    // Crown (8-sided frustum between table and girdle)
-    const crown = new T.Mesh(new T.CylinderGeometry(0.40, 0.58, 0.18, 8, 1), faceMat);
-    crown.position.y = 0.09;
-    dg.add(crown);
-
-    // Girdle ring
-    const girdle = new T.Mesh(new T.CylinderGeometry(0.58, 0.58, 0.04, 8), faceMat);
-    girdle.position.y = 0.0;
-    dg.add(girdle);
-
-    // Pavilion (lower cone — pointed)
-    const pavilion = new T.Mesh(new T.ConeGeometry(0.58, 0.72, 8, 1), faceMat);
-    pavilion.rotation.z = Math.PI;
-    pavilion.position.y = -0.38;
-    dg.add(pavilion);
-
-    // Wireframe edges for sparkle
-    const wf = new T.Mesh(new T.OctahedronGeometry(0.5, 0), edgeMat);
-    wf.scale.set(1, 1.5, 1);
-    dg.add(wf);
-
-    // Inner glow
-    const glowMat = new T.MeshBasicMaterial({ color: GOLD2, transparent: true, opacity: 0.08 });
-    dg.add(new T.Mesh(new T.OctahedronGeometry(0.38, 0), glowMat));
-
-    scene.add(dg);
-
-    let dt = 0, dmx = 0, dmy = 0;
-    document.addEventListener('mousemove', e => {
-      dmx = (e.clientX / innerWidth  - 0.5) * 0.6;
-      dmy = (e.clientY / innerHeight - 0.5) * 0.4;
-    });
-
-    (function loop() {
-      requestAnimationFrame(loop);
-      dt += 0.009;
-      dg.rotation.y += 0.014;
-      dg.rotation.x  = dmy * 0.4;
-      dg.rotation.z  = dmx * 0.25;
-      dg.position.y  = Math.sin(dt) * 0.07;
-      renderer.render(scene, camera);
-    })();
-  }
-})();
 
 /* ── Mobile nav ── */
 function toggleMobNav() { document.body.classList.toggle('menu-open'); }
@@ -1920,49 +1670,6 @@ if (window.matchMedia('(hover: none)').matches) {
   });
 }
 
-/* ── GSAP + Lenis smooth scroll & animations ── */
-window.addEventListener('DOMContentLoaded', () => {
-  // Lenis smooth scroll
-  if (typeof Lenis !== 'undefined') {
-    const lenis = new Lenis({ lerp: 0.08, smoothWheel: true });
-    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-  }
-
-  // GSAP ScrollTrigger
-  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-    gsap.registerPlugin(ScrollTrigger);
-
-    // Staggered card reveals
-    gsap.utils.toArray('.vert-card, .feat, .tg-card, .step').forEach(el => {
-      gsap.fromTo(el,
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
-          scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
-        }
-      );
-    });
-
-    // Number counter animation
-    gsap.utils.toArray('.num-val').forEach(el => {
-      const targetText = el.textContent.trim();
-      const target = parseFloat(targetText.replace(/[^0-9.]/g, ''));
-      const suffix = targetText.replace(/[0-9.]/g, '').trim();
-      ScrollTrigger.create({
-        trigger: el,
-        start: 'top 80%',
-        onEnter: () => {
-          gsap.fromTo({ val: 0 }, { val: target, duration: 2, ease: 'power2.out',
-            onUpdate: function() {
-              el.innerHTML = Math.round(this.targets()[0].val) + suffix;
-            }
-          });
-        },
-        once: true
-      });
-    });
-  }
-});
 </script>
 </body>
 </html>
