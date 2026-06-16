@@ -1391,9 +1391,49 @@
 <!-- FOOTER -->
 <footer>
   <a href="#" class="ft-logo">Great<em>Guest</em></a>
-  <div class="ft-links"><a href="#how">Как работает</a><a href="https://t.me/great_guest_bot">Telegram-бот</a><a href="/pitch.html">Питч</a></div>
-  <div class="ft-r">© 2026 Great Guest</div>
+  <div class="ft-links">
+    <a href="#how">Как работает</a>
+    <a href="https://t.me/great_guest_bot">Telegram-бот</a>
+    <a href="/pitch.html">Питч</a>
+    <a href="/privacy.html">Конфиденциальность</a>
+    <a href="/terms.html">Условия</a>
+  </div>
+  <div class="ft-r">© 2026 Great Guest · <a href="mailto:privacy@great-guest.ru" style="color:inherit;opacity:.5;text-decoration:none">privacy@great-guest.ru</a></div>
 </footer>
+
+<!-- Cookie consent (152-ФЗ) -->
+<div id="cookie-banner" style="
+  position:fixed;bottom:0;left:0;right:0;z-index:9999;
+  background:rgba(13,11,8,.96);backdrop-filter:blur(14px);
+  border-top:1px solid rgba(201,169,110,.18);
+  padding:14px 24px;display:none;align-items:center;
+  justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:13px;color:rgba(255,255,255,.55);
+">
+  <span>Мы используем аналитические cookie.
+    <a href="/privacy.html" style="color:var(--gold);text-decoration:none">Политика конфиденциальности</a> (152-ФЗ).
+  </span>
+  <div style="display:flex;gap:10px;flex-shrink:0">
+    <button onclick="cookieDecline()" style="
+      background:transparent;border:1px solid rgba(255,255,255,.15);
+      color:rgba(255,255,255,.45);padding:7px 14px;border-radius:6px;
+      cursor:pointer;font-size:12px;font-family:inherit;
+    ">Только необходимые</button>
+    <button onclick="cookieAccept()" style="
+      background:var(--gold);border:none;color:#0D0B08;
+      padding:7px 16px;border-radius:6px;cursor:pointer;
+      font-size:12px;font-weight:600;font-family:inherit;
+    ">Принять</button>
+  </div>
+</div>
+<script>
+(function(){
+  var b=document.getElementById('cookie-banner');
+  if(!localStorage.getItem('gg_cookie'))b.style.display='flex';
+  window.cookieAccept=function(){localStorage.setItem('gg_cookie','all');b.style.display='none';};
+  window.cookieDecline=function(){localStorage.setItem('gg_cookie','essential');b.style.display='none';};
+})();
+</script>
 
 <script>
 /* ── Scroll progress ── */
