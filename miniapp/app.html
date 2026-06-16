@@ -309,9 +309,6 @@
     <div id="visits-list"><div class="empty">Визитов пока нет</div></div>
   </div>
 
-  <!-- Partner panel shortcut (shown only if user is also an owner) -->
-  <div id="partner-section" style="margin-bottom:20px"></div>
-
   <!-- Legal footer -->
   <footer id="legal-footer" style="text-align:center;padding:28px 20px 16px;font-size:11px;color:#666;border-top:1px solid #1e1e1e;margin-top:16px">
     <div style="margin-bottom:6px">Great Guest © 2026</div>
@@ -389,7 +386,6 @@ async function init() {
   await Promise.all([
     renderHistory(guest.telegram_id),
     renderOffers(initData),
-    checkPartnerRole(initData),
   ]);
 
   document.getElementById('loading').style.display = 'none';
@@ -507,49 +503,6 @@ async function renderHistory(telegramId) {
       <span class="visit-date">${date}</span>
     </div>`;
   }).join('');
-}
-
-// ── Partner role check ────────────────────────────────────────────────────────
-async function checkPartnerRole(initData) {
-  try {
-    const res  = await fetch('/api/restaurant-dashboard', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ initData }),
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (!data.owner) return;
-
-    const owner     = data.owner;
-    const venues    = data.venues || [];
-    const planNames = { trial: 'Старт', basic: 'Базовый', network: 'Сеть', empire: 'Империя' };
-    const planLabel = planNames[owner.plan] || owner.plan;
-    const vCount    = venues.length;
-    const subLabel  = owner.is_active
-      ? `${planLabel} · ${vCount} заведени${vCount === 1 ? 'е' : 'й'}`
-      : 'Подписка истекла — нужна активация';
-
-    const section = document.getElementById('partner-section');
-    if (!section) return;
-    section.innerHTML = `
-      <h2 class="section-title">Вы также партнёр</h2>
-      <a href="admin.html" style="
-        display:flex;align-items:center;gap:14px;
-        background:linear-gradient(135deg,rgba(201,169,110,.08),rgba(201,169,110,.04));
-        border:1px solid rgba(201,169,110,.3);border-radius:16px;
-        padding:16px 18px;text-decoration:none;color:inherit;
-        transition:border-color .2s">
-        <span style="font-size:28px">🏪</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;margin-bottom:3px">Панель управления</div>
-          <div style="font-size:12px;color:var(--muted)">${escHtml(subLabel)}</div>
-        </div>
-        <span style="color:var(--gold);font-size:18px">→</span>
-      </a>`;
-  } catch {
-    // non-critical — silently skip
-  }
 }
 
 // ── QR ────────────────────────────────────────────────────────────────────────
