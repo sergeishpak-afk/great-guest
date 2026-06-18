@@ -1125,6 +1125,135 @@
       #events { padding:56px 16px; }
       #community { padding:56px 16px; }
     }
+
+    /* ── Quick Start (owner) ── */
+    #quickstart {
+      padding:100px 48px; background:var(--bg2);
+      text-align:center;
+    }
+    #quickstart .sec-hdr { margin-bottom:56px; }
+    .qs-grid {
+      display:grid; grid-template-columns:repeat(3,1fr);
+      gap:0; max-width:860px; margin:0 auto; position:relative;
+    }
+    .qs-connector {
+      position:absolute; top:40px; left:calc(33.33% + 0px); right:calc(33.33% + 0px);
+      height:2px; background:linear-gradient(90deg, var(--gold), var(--gold2));
+      opacity:.3; pointer-events:none;
+    }
+    .qs-step {
+      display:flex; flex-direction:column; align-items:center;
+      padding:0 24px; position:relative;
+    }
+    .qs-num {
+      width:80px; height:80px; border-radius:50%;
+      background:var(--surface); border:2px solid var(--gold);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Cormorant Garamond',serif;
+      font-size:32px; font-weight:500; color:var(--gold);
+      margin-bottom:20px; position:relative; z-index:1;
+    }
+    .qs-title {
+      font-size:16px; font-weight:600; color:var(--text);
+      margin-bottom:10px;
+    }
+    .qs-desc {
+      font-size:14px; line-height:1.7; color:var(--muted);
+    }
+    .qs-time {
+      display:inline-block; margin-top:10px;
+      font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+      color:var(--gold); background:var(--goldDim);
+      border:1px solid rgba(201,169,110,.25);
+      border-radius:4px; padding:3px 10px;
+    }
+    @media(max-width:768px) {
+      #quickstart { padding:64px 20px; }
+      .qs-grid { grid-template-columns:1fr; gap:32px; }
+      .qs-connector { display:none; }
+      .qs-step { padding:0; }
+    }
+
+    /* ── Pricing ── */
+    #pricing {
+      padding:100px 48px; background:var(--bg);
+      text-align:center;
+    }
+    #pricing .sec-hdr { margin-bottom:56px; }
+    .pr-grid {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      gap:20px; max-width:1100px; margin:0 auto;
+      text-align:left;
+    }
+    .pr-card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:16px; padding:32px 28px;
+      display:flex; flex-direction:column;
+      transition:box-shadow .2s, transform .2s;
+      position:relative;
+    }
+    .pr-card:hover {
+      box-shadow:0 8px 32px rgba(0,0,0,0.1);
+      transform:translateY(-4px);
+    }
+    .pr-card.pr-pop {
+      border-color:var(--gold); border-width:2px;
+      box-shadow:0 4px 24px rgba(201,169,110,0.15);
+    }
+    .pr-badge {
+      position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+      background:var(--gold); color:white;
+      font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+      padding:4px 16px; border-radius:20px; white-space:nowrap;
+    }
+    .pr-name {
+      font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+      color:var(--muted); margin-bottom:10px;
+    }
+    .pr-price {
+      font-family:'Cormorant Garamond',serif;
+      font-size:42px; font-weight:500; color:var(--text);
+      line-height:1; margin-bottom:4px;
+    }
+    .pr-price sup { font-size:20px; vertical-align:super; line-height:0; }
+    .pr-period { font-size:12px; color:var(--muted); margin-bottom:24px; }
+    .pr-divider { border:none; border-top:1px solid var(--border); margin-bottom:20px; }
+    .pr-features { list-style:none; display:flex; flex-direction:column; gap:10px; flex:1; }
+    .pr-features li {
+      font-size:13px; color:var(--text); line-height:1.5;
+      display:flex; align-items:flex-start; gap:8px;
+    }
+    .pr-features li::before {
+      content:'✓'; color:var(--gold); font-weight:700;
+      flex-shrink:0; margin-top:1px;
+    }
+    .pr-features li.pr-miss { color:var(--muted); }
+    .pr-features li.pr-miss::before { content:'–'; color:var(--muted); font-weight:400; }
+    .pr-cta {
+      display:block; text-align:center;
+      margin-top:24px; padding:13px 20px; border-radius:8px;
+      font-size:13px; font-weight:600; text-decoration:none;
+      transition:all .2s;
+    }
+    .pr-cta-outline {
+      border:1px solid var(--border); color:var(--text);
+      background:transparent;
+    }
+    .pr-cta-outline:hover { border-color:var(--gold); color:var(--gold); }
+    .pr-cta-gold {
+      background:var(--gold); color:white;
+      border:1px solid var(--gold);
+      box-shadow:0 4px 14px rgba(201,169,110,0.25);
+    }
+    .pr-cta-gold:hover { background:var(--gold2); }
+    @media(max-width:900px) {
+      #pricing { padding:72px 20px; }
+      .pr-grid { grid-template-columns:repeat(2,1fr); }
+    }
+    @media(max-width:540px) {
+      #pricing { padding:60px 16px; }
+      .pr-grid { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
@@ -1132,25 +1261,23 @@
 <!-- NAV -->
 <!-- Mobile overlay nav -->
 <div class="mob-nav" id="mobNav">
-  <a href="#verticals"  onclick="closeMobNav()">Три рынка</a>
-  <a href="#how"        onclick="closeMobNav()">Как работает</a>
-  <a href="#restaurant" onclick="closeMobNav()">Рестораны</a>
-  <a href="#events"     onclick="closeMobNav()">Мероприятия</a>
-  <a href="#community"  onclick="closeMobNav()">Комьюнити</a>
-  <a href="https://t.me/great_guest_bot" class="nav-cta" onclick="closeMobNav()">Попробовать →</a>
+  <a href="#how"      onclick="closeMobNav()">Как работает</a>
+  <a href="#features" onclick="closeMobNav()">Возможности</a>
+  <a href="#pricing"  onclick="closeMobNav()">Цены</a>
+  <a href="#verticals" onclick="closeMobNav()">Рынки</a>
+  <a href="https://t.me/great_guest_bot" class="nav-cta" onclick="closeMobNav()">Подключить бесплатно →</a>
 </div>
 
 <nav id="nav">
   <a href="#" class="nav-logo">Great<em>Guest</em></a>
   <div class="nav-links">
-    <a href="#verticals">Рынки</a>
     <a href="#how">Как работает</a>
-    <a href="#restaurant">Рестораны</a>
-    <a href="#events">Мероприятия</a>
-    <a href="#community">Комьюнити</a>
+    <a href="#features">Возможности</a>
+    <a href="#pricing">Цены</a>
+    <a href="#verticals">Рынки</a>
   </div>
   <div style="display:flex;align-items:center;gap:14px">
-    <a href="https://t.me/great_guest_bot" class="nav-cta">Попробовать →</a>
+    <a href="https://t.me/great_guest_bot" class="nav-cta">Подключить бесплатно →</a>
     <button class="ham" id="hamBtn" onclick="toggleMobNav()" aria-label="Меню">
       <span></span><span></span><span></span>
     </button>
@@ -1164,15 +1291,15 @@
   <div class="hero-3d"><div class="dot-grid"></div></div>
 
   <div class="hero-left">
-    <div class="hero-eyebrow">Loyalty 2.0 · HoReCa · События · Комьюнити</div>
+    <div class="hero-eyebrow">Запуск за 15 минут · Без приложений · Telegram</div>
     <h1 class="hero-title">
-      <span class="ln"><span class="li">Лояльность</span></span>
-      <span class="ln"><span class="li">нового</span></span>
-      <span class="ln"><span class="li"><em>поколения</em></span></span>
+      <span class="ln"><span class="li">Гости</span></span>
+      <span class="ln"><span class="li">возвращаются</span></span>
+      <span class="ln"><span class="li"><em>чаще</em></span></span>
     </h1>
-    <p class="hero-sub">Гость получает персональный QR в Telegram. Ресторан, организатор мероприятия или комьюнити сканирует — видит статус, историю и предпочтения. Без приложений. Без карточек.</p>
+    <p class="hero-sub">QR-лояльность через Telegram: гость сканирует код при входе — вы видите имя, статус, историю визитов. Подключите ресторан за 15 минут. Бесплатно.</p>
     <div class="hero-actions">
-      <a href="#cta" class="btn-m btn-p"><span>Подключить бесплатно →</span></a>
+      <a href="https://t.me/great_guest_bot" class="btn-m btn-p"><span>Подключить бесплатно — 15 мин →</span></a>
       <a href="https://t.me/great_guest_bot" class="btn-m btn-g">Попробовать как гость →</a>
     </div>
     <div class="scroll-hint"><div class="sl"></div>Узнать больше</div>
@@ -1226,26 +1353,26 @@
 <!-- MARQUEE -->
 <div class="marquee-wrap">
   <div class="marquee">
-    <div class="mq-item">Рестораны<span class="mq-sep"></span></div>
-    <div class="mq-item"><em>Мероприятия</em><span class="mq-sep"></span></div>
-    <div class="mq-item">Комьюнити<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Запуск за 15 минут</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Гости возвращаются чаще<span class="mq-sep"></span></div>
     <div class="mq-item">Без приложений<span class="mq-sep"></span></div>
     <div class="mq-item"><em>Telegram Mini App</em><span class="mq-sep"></span></div>
-    <div class="mq-item">Bronze → Silver → Gold → <em>Platinum</em><span class="mq-sep"></span></div>
     <div class="mq-item">QR-чек-ин на входе<span class="mq-sep"></span></div>
-    <div class="mq-item">База гостей<span class="mq-sep"></span></div>
-    <div class="mq-item"><em>Закрытые мероприятия</em><span class="mq-sep"></span></div>
-    <div class="mq-item">Уведомления в Telegram<span class="mq-sep"></span></div>
-    <div class="mq-item">Рестораны<span class="mq-sep"></span></div>
-    <div class="mq-item"><em>Мероприятия</em><span class="mq-sep"></span></div>
-    <div class="mq-item">Комьюнити<span class="mq-sep"></span></div>
+    <div class="mq-item">Рестораны · Мероприятия · Комьюнити<span class="mq-sep"></span></div>
+    <div class="mq-item">Bronze → Silver → Gold → <em>Platinum</em><span class="mq-sep"></span></div>
+    <div class="mq-item">База гостей — одним кликом<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Бесплатный старт</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Push-уведомления в Telegram<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Запуск за 15 минут</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Гости возвращаются чаще<span class="mq-sep"></span></div>
     <div class="mq-item">Без приложений<span class="mq-sep"></span></div>
     <div class="mq-item"><em>Telegram Mini App</em><span class="mq-sep"></span></div>
-    <div class="mq-item">Bronze → Silver → Gold → <em>Platinum</em><span class="mq-sep"></span></div>
     <div class="mq-item">QR-чек-ин на входе<span class="mq-sep"></span></div>
-    <div class="mq-item">База гостей<span class="mq-sep"></span></div>
-    <div class="mq-item"><em>Закрытые мероприятия</em><span class="mq-sep"></span></div>
-    <div class="mq-item">Уведомления в Telegram<span class="mq-sep"></span></div>
+    <div class="mq-item">Рестораны · Мероприятия · Комьюнити<span class="mq-sep"></span></div>
+    <div class="mq-item">Bronze → Silver → Gold → <em>Platinum</em><span class="mq-sep"></span></div>
+    <div class="mq-item">База гостей — одним кликом<span class="mq-sep"></span></div>
+    <div class="mq-item"><em>Бесплатный старт</em><span class="mq-sep"></span></div>
+    <div class="mq-item">Push-уведомления в Telegram<span class="mq-sep"></span></div>
   </div>
 </div>
 
@@ -1478,6 +1605,40 @@
       <p class="feat-desc">Данные хранятся на серверах в РФ (Supabase), шифрование SSL, соответствие 152-ФЗ. Гость контролирует свои данные.</p>
       <div class="feat-tag">152-ФЗ</div>
     </div>
+  </div>
+</section>
+
+<!-- QUICK START (Owner onboarding) -->
+<section id="quickstart">
+  <div class="sec-hdr reveal">
+    <div class="sec-lbl">Начало работы</div>
+    <h2 class="sec-title">Запуск за <em>15 минут</em> — без программистов</h2>
+  </div>
+  <div class="qs-grid reveal">
+    <div class="qs-connector"></div>
+    <div class="qs-step">
+      <div class="qs-num">1</div>
+      <div class="qs-title">Откройте бота в Telegram</div>
+      <p class="qs-desc">Нажмите «Подключить бесплатно», перейдите в @great_guest_bot и нажмите /start. Зарегистрируйте заведение — имя и описание.</p>
+      <span class="qs-time">~5 минут</span>
+    </div>
+    <div class="qs-step">
+      <div class="qs-num">2</div>
+      <div class="qs-title">Откройте панель управления</div>
+      <p class="qs-desc">Бот выдаст ссылку на веб-панель. Войдите через Telegram — никаких паролей. Введите данные о заведении.</p>
+      <span class="qs-time">~5 минут</span>
+    </div>
+    <div class="qs-step">
+      <div class="qs-num">3</div>
+      <div class="qs-title">Распечатайте QR и встречайте гостей</div>
+      <p class="qs-desc">Скачайте QR-код вашего заведения, распечатайте и поставьте на стойку. Гости сканируют — регистрируются автоматически.</p>
+      <span class="qs-time">~5 минут</span>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:48px">
+    <a href="https://t.me/great_guest_bot" class="btn-m btn-p" style="display:inline-flex;justify-content:center">
+      <span>Начать прямо сейчас →</span>
+    </a>
   </div>
 </section>
 
@@ -1727,6 +1888,97 @@
       <p class="tg-desc">Данные хранятся на серверах в РФ, шифрование SSL. Гость контролирует свои данные и может удалить их в любой момент.</p>
     </div>
   </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="sec-hdr reveal">
+    <div class="sec-lbl">Тарифы</div>
+    <h2 class="sec-title">Начните бесплатно, <em>растите</em> без ограничений</h2>
+  </div>
+  <div class="pr-grid reveal">
+
+    <!-- Старт -->
+    <div class="pr-card">
+      <div class="pr-name">Старт</div>
+      <div class="pr-price">0<sup>₽</sup></div>
+      <div class="pr-period">навсегда бесплатно</div>
+      <hr class="pr-divider"/>
+      <ul class="pr-features">
+        <li>До 100 гостей</li>
+        <li>1 заведение</li>
+        <li>QR-чек-ин</li>
+        <li>База гостей и история</li>
+        <li>Веб-панель управления</li>
+        <li class="pr-miss">Push-рассылки</li>
+        <li class="pr-miss">Аналитика и отчёты</li>
+        <li class="pr-miss">Закрытые мероприятия</li>
+      </ul>
+      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-outline">Подключить бесплатно</a>
+    </div>
+
+    <!-- Базовый -->
+    <div class="pr-card pr-pop">
+      <div class="pr-badge">Популярный</div>
+      <div class="pr-name">Базовый</div>
+      <div class="pr-price">2 990<sup>₽</sup></div>
+      <div class="pr-period">в месяц · без скрытых платежей</div>
+      <hr class="pr-divider"/>
+      <ul class="pr-features">
+        <li>До 1 000 гостей</li>
+        <li>1 заведение</li>
+        <li>QR-чек-ин</li>
+        <li>База гостей и история</li>
+        <li>Веб-панель управления</li>
+        <li>Push-рассылки гостям</li>
+        <li>Базовая аналитика</li>
+        <li class="pr-miss">Закрытые мероприятия</li>
+      </ul>
+      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-gold">Начать за 2 990₽</a>
+    </div>
+
+    <!-- Сеть -->
+    <div class="pr-card">
+      <div class="pr-name">Сеть</div>
+      <div class="pr-price">7 990<sup>₽</sup></div>
+      <div class="pr-period">в месяц · для сетей и сообществ</div>
+      <hr class="pr-divider"/>
+      <ul class="pr-features">
+        <li>До 5 000 гостей</li>
+        <li>До 5 заведений</li>
+        <li>QR-чек-ин</li>
+        <li>База гостей и история</li>
+        <li>Веб-панель управления</li>
+        <li>Push-рассылки гостям</li>
+        <li>Полная аналитика и отчёты</li>
+        <li>Закрытые мероприятия</li>
+      </ul>
+      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-outline">Подключить</a>
+    </div>
+
+    <!-- Империя -->
+    <div class="pr-card">
+      <div class="pr-name">Империя</div>
+      <div class="pr-price">19 990<sup>₽</sup></div>
+      <div class="pr-period">в месяц · для крупных игроков</div>
+      <hr class="pr-divider"/>
+      <ul class="pr-features">
+        <li>Неограниченно гостей</li>
+        <li>Неограниченно заведений</li>
+        <li>QR-чек-ин</li>
+        <li>База гостей и история</li>
+        <li>Веб-панель управления</li>
+        <li>Push-рассылки гостям</li>
+        <li>Полная аналитика и API</li>
+        <li>Закрытые мероприятия</li>
+      </ul>
+      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-outline">Обсудить условия</a>
+    </div>
+
+  </div>
+  <p style="text-align:center;margin-top:28px;font-size:13px;color:var(--muted)">
+    Все тарифы включают поддержку в Telegram. Смена тарифа — в любой момент.
+  </p>
 </section>
 
 <!-- CTA -->
