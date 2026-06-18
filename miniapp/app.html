@@ -277,6 +277,93 @@
       color: #F87171;
     }
 
+    /* ── Mode switcher ── */
+    .mode-switcher {
+      display: none; /* shown only when user owns venues */
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 5px;
+      margin-bottom: 20px;
+      gap: 4px;
+    }
+    .mode-switcher.visible { display: flex; }
+    .mode-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+      letter-spacing: -0.2px;
+    }
+    .mode-btn.active {
+      background: var(--gold);
+      color: #0D0C12;
+    }
+
+    /* ── Network view (owner) ── */
+    #network-view { display: none; }
+    .venue-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .venue-info { flex: 1; min-width: 0; }
+    .venue-name {
+      font-size: 15px; font-weight: 600;
+      color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .venue-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .venue-btn {
+      flex-shrink: 0;
+      background: var(--gold-bg);
+      border: 1px solid rgba(201,169,110,0.3);
+      color: var(--gold);
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background .2s;
+    }
+    .venue-btn:active { background: rgba(201,169,110,0.2); }
+    .open-admin-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 16px;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+      transition: border-color .2s, color .2s;
+      text-decoration: none;
+    }
+    .open-admin-btn:active { border-color: var(--gold); color: var(--gold); }
+
   </style>
 </head>
 <body>
@@ -297,46 +384,68 @@
     <div class="greeting" id="greeting">Добро пожаловать</div>
   </div>
 
-  <!-- Status card -->
-  <div class="status-card" role="region" aria-label="Ваш статус">
-    <div class="status-emoji" id="status-emoji" aria-hidden="true">🥉</div>
-    <div class="status-name" id="status-name">Bronze</div>
-    <div class="visit-count" id="visit-count">0 визитов</div>
-    <div class="status-reward" id="status-reward"></div>
-    <div class="progress-wrap" id="progress-wrap">
-      <div class="progress-label">
-        <span id="progress-from"></span>
-        <span id="progress-to"></span>
+  <!-- Mode switcher — visible only for venue owners -->
+  <div class="mode-switcher" id="mode-switcher" role="tablist" aria-label="Режим">
+    <button class="mode-btn active" id="btn-guest" role="tab" aria-selected="true"
+            onclick="switchMode('guest')">👤 Гость</button>
+    <button class="mode-btn" id="btn-network" role="tab" aria-selected="false"
+            onclick="switchMode('network')">🏪 Моя сеть</button>
+  </div>
+
+  <!-- GUEST VIEW -->
+  <div id="guest-view">
+    <!-- Status card -->
+    <div class="status-card" role="region" aria-label="Ваш статус">
+      <div class="status-emoji" id="status-emoji" aria-hidden="true">🥉</div>
+      <div class="status-name" id="status-name">Bronze</div>
+      <div class="visit-count" id="visit-count">0 визитов</div>
+      <div class="status-reward" id="status-reward"></div>
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-label">
+          <span id="progress-from"></span>
+          <span id="progress-to"></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width:0%"
+            role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
       </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill" style="width:0%"
-          role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+
+    <!-- QR -->
+    <div class="qr-section">
+      <h2 class="section-title">Визит</h2>
+      <button class="qr-btn" id="qr-btn" onclick="getQR()">
+        <span aria-hidden="true">🎫</span> Получить QR для визита
+      </button>
+      <div class="qr-display" id="qr-display" role="img" aria-label="QR-код для визита">
+        <img id="qr-img" src="" alt="QR-код для визита" />
+        <div class="qr-hint">Покажи код администратору ресторана</div>
       </div>
+    </div>
+
+    <!-- Offers from restaurants -->
+    <div class="offers-section" id="offers-section" style="display:none">
+      <h2 class="section-title">Предложения для вас</h2>
+      <div id="offers-list"></div>
+    </div>
+
+    <!-- Visit history -->
+    <div class="visits-section">
+      <h2 class="section-title">История визитов</h2>
+      <div id="visits-list"><div class="empty">Визитов пока нет</div></div>
     </div>
   </div>
 
-  <!-- QR -->
-  <div class="qr-section">
-    <h2 class="section-title">Визит</h2>
-    <button class="qr-btn" id="qr-btn" onclick="getQR()">
-      <span aria-hidden="true">🎫</span> Получить QR для визита
-    </button>
-    <div class="qr-display" id="qr-display" role="img" aria-label="QR-код для визита">
-      <img id="qr-img" src="" alt="QR-код для визита" />
-      <div class="qr-hint">Покажи код администратору ресторана</div>
+  <!-- NETWORK VIEW (owner only) -->
+  <div id="network-view" role="tabpanel" aria-label="Моя сеть">
+    <h2 class="section-title" style="margin-bottom:16px">Мои заведения</h2>
+    <div id="venues-list">
+      <div class="empty">Загрузка...</div>
     </div>
-  </div>
-
-  <!-- Offers from restaurants -->
-  <div class="offers-section" id="offers-section" style="display:none">
-    <h2 class="section-title">Предложения для вас</h2>
-    <div id="offers-list"></div>
-  </div>
-
-  <!-- Visit history -->
-  <div class="visits-section">
-    <h2 class="section-title">История визитов</h2>
-    <div id="visits-list"><div class="empty">Визитов пока нет</div></div>
+    <a href="admin.html" class="open-admin-btn" id="admin-link">
+      <span aria-hidden="true">⚙️</span> Открыть полную панель управления
+    </a>
   </div>
 
   <!-- Legal footer -->
@@ -415,10 +524,11 @@ async function init() {
   document.getElementById('greeting').textContent = `Привет, ${guest.first_name}! 👋`;
   renderStatus(guest.visit_count);
 
-  // Load history, offers, and partner role in parallel
+  // Load history, offers, and owner check in parallel
   await Promise.all([
     renderHistory(guest.telegram_id),
     renderOffers(initData),
+    checkOwnerStatus(guest.telegram_id),
   ]);
 
   document.getElementById('loading').style.display = 'none';
@@ -578,6 +688,56 @@ async function getQR() {
     btn.disabled = false;
     btn.innerHTML = '<span aria-hidden="true">🎫</span> Получить QR для визита';
   }
+}
+
+// ── Owner / Network ───────────────────────────────────────────────────────────
+async function checkOwnerStatus(telegramId) {
+  try {
+    const { data: venues, error } = await db
+      .from('restaurants')
+      .select('id, name, created_at')
+      .eq('owner_telegram_id', telegramId)
+      .limit(20);
+
+    if (error || !venues?.length) return; // not an owner, switcher stays hidden
+
+    renderNetworkView(venues);
+    document.getElementById('mode-switcher').classList.add('visible');
+  } catch {
+    // non-critical — guest mode works as usual
+  }
+}
+
+function renderNetworkView(venues) {
+  const list = document.getElementById('venues-list');
+  list.innerHTML = venues.map(v => {
+    const since = new Date(v.created_at).toLocaleDateString('ru-RU', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
+    return `
+      <div class="venue-card">
+        <div class="venue-info">
+          <div class="venue-name">🍽 ${escHtml(v.name)}</div>
+          <div class="venue-meta">С ${since}</div>
+        </div>
+        <a href="admin.html" class="venue-btn">Управлять →</a>
+      </div>`;
+  }).join('');
+}
+
+function switchMode(mode) {
+  const guestView   = document.getElementById('guest-view');
+  const networkView = document.getElementById('network-view');
+  const btnGuest    = document.getElementById('btn-guest');
+  const btnNetwork  = document.getElementById('btn-network');
+
+  const isGuest = mode === 'guest';
+  guestView.style.display   = isGuest ? 'block' : 'none';
+  networkView.style.display = isGuest ? 'none'  : 'block';
+  btnGuest.classList.toggle('active', isGuest);
+  btnNetwork.classList.toggle('active', !isGuest);
+  btnGuest.setAttribute('aria-selected', isGuest);
+  btnNetwork.setAttribute('aria-selected', !isGuest);
 }
 
 // ── Utils ─────────────────────────────────────────────────────────────────────

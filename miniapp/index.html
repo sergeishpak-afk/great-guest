@@ -225,17 +225,7 @@
     }
     .phone-scene { position:relative; }
 
-    /* Sonar rings around phone */
-    .sonar-ring {
-      position:absolute; border-radius:36px;
-      border:1px solid rgba(201,169,110,.3);
-      animation:sonarPulse 3.5s ease-out infinite;
-      pointer-events:none;
-    }
-    .sonar-ring:nth-child(1) { inset:-20px; animation-delay:0s; }
-    .sonar-ring:nth-child(2) { inset:-40px; animation-delay:1.2s; }
-    .sonar-ring:nth-child(3) { inset:-60px; animation-delay:2.4s; }
-    @keyframes sonarPulse { 0%{opacity:.4;transform:scale(.98)} 100%{opacity:0;transform:scale(1.08)} }
+    /* Sonar rings removed — were distracting on mobile */
 
     .phone-wrap { animation:floatPhone 6s ease-in-out infinite; }
     @keyframes floatPhone { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-16px) rotate(1deg)} }
@@ -1307,7 +1297,6 @@
 
   <div class="hero-right">
     <div class="phone-scene">
-      <div class="sonar-ring"></div><div class="sonar-ring"></div><div class="sonar-ring"></div>
       <div class="phone-wrap" id="phoneMock">
         <div class="phone phone-live">
           <div class="pscreen">
