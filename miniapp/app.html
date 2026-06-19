@@ -16,7 +16,7 @@
       --muted: rgba(240,235,224,0.45); --green: #4ADE80;
       --green-bg: rgba(74,222,128,0.1); --nav-h: 64px;
     }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--tg-theme-bg-color, var(--bg)); color: var(--tg-theme-text-color, var(--text)); min-height: 100vh; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
     #loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 14px; background: var(--bg); }
     .spinner { width: 36px; height: 36px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--gold); border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -150,6 +150,9 @@
 
   <!-- TAB 2: Мой кабинет -->
   <div id="cabinet-view" style="display:none" role="region" aria-label="Мой кабинет">
+    <button class="back-btn" onclick="switchTab('card')" aria-label="Вернуться к карте лояльности">
+      <span class="back-btn-arrow">‹</span> Карта лояльности
+    </button>
     <div class="cabinet-profile">
       <div class="cabinet-avatar" id="cabinet-avatar">👤</div>
       <div class="cabinet-info">
@@ -206,6 +209,9 @@
 
   <!-- TAB 3: Моя сеть (только для владельцев) -->
   <div id="network-view" style="display:none" role="region" aria-label="Моя сеть">
+    <button class="back-btn" onclick="switchTab('card')" aria-label="Вернуться к карте лояльности">
+      <span class="back-btn-arrow">‹</span> Карта лояльности
+    </button>
     <h2 class="section-title" style="margin-bottom:16px">Мои заведения</h2>
     <div id="venues-list"><div class="empty">Загрузка...</div></div>
     <a href="admin.html" class="open-admin-btn">
@@ -429,3 +435,5 @@ init();
 </script>
 </body>
 </html>
+
+
