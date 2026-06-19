@@ -29,16 +29,16 @@ bot.start(async (ctx) => {
   }
 
   await ctx.replyWithMarkdown(
-    `👋 Привет, *${tgUser.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности для ресторанов.\n\nКаждый визит в ресторан-партнёр повышает твой статус и открывает привилегии.`,
+    `👋 Привет, *${tgUser.first_name}*!\n\nДобро пожаловать в *Great Guest* — твоя членская карта в Telegram.\n\nСканируй QR на мероприятиях, в заведениях и клубах — каждый визит повышает твой статус и открывает привилегии.\n\n🥉 Bronze → 🥈 Silver → 🥇 Gold → 💎 Platinum`,
     Markup.keyboard([
-      ['🎫 Получить QR для визита'],
+      ['🎫 Получить QR для чек-ина'],
       ['⭐ Мой статус', '📋 История визитов'],
     ]).resize()
   );
 });
 
 // ─── QR для визита ────────────────────────────────────────────────────────────
-bot.hears('🎫 Получить QR для визита', async (ctx) => {
+bot.hears('🎫 Получить QR для чек-ина', async (ctx) => {
   const telegramId = String(ctx.from.id);
 
   // Создаём одноразовый токен визита
@@ -62,7 +62,7 @@ bot.hears('🎫 Получить QR для визита', async (ctx) => {
   await ctx.replyWithPhoto(
     { source: qrBuffer },
     {
-      caption: `🎫 *Твой QR-код для визита*\n\nПокажи этот код администратору ресторана.\nКод действителен для одного визита.`,
+      caption: `🎫 *Твой QR-код для чек-ина*\n\nПокажи этот код организатору на входе.\nКод действителен для одного чек-ина.`,
       parse_mode: 'Markdown',
     }
   );
@@ -103,12 +103,12 @@ bot.hears('📋 История визитов', async (ctx) => {
   }
 
   if (!visits || visits.length === 0) {
-    return ctx.replyWithMarkdown('📋 *История пустая*\n\nПолучи QR-код и посети ресторан-партнёр!');
+    return ctx.replyWithMarkdown('📋 *История пустая*\n\nПолучи QR-код и покажи его на своём первом мероприятии или в заведении!');
   }
 
   const lines = visits.map((v, i) => {
     const date = new Date(v.visited_at).toLocaleDateString('ru-RU');
-    const restaurant = v.restaurants?.name || 'Ресторан';
+    const restaurant = v.restaurants?.name || 'Мероприятие';
     return `${i + 1}. ${restaurant} — ${date}`;
   });
 
