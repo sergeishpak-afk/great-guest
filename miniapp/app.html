@@ -150,7 +150,7 @@
 
   <!-- TAB 2: Мой кабинет -->
   <div id="cabinet-view" style="display:none" role="region" aria-label="Мой кабинет">
-    <button class="back-btn" onclick="switchTab('card')" aria-label="Вернуться к карте лояльности">
+    <button class="back-btn" id="back-from-cabinet" aria-label="Вернуться к карте лояльности">
       <span class="back-btn-arrow">‹</span> Карта лояльности
     </button>
     <div class="cabinet-profile">
@@ -209,7 +209,7 @@
 
   <!-- TAB 3: Моя сеть (только для владельцев) -->
   <div id="network-view" style="display:none" role="region" aria-label="Моя сеть">
-    <button class="back-btn" onclick="switchTab('card')" aria-label="Вернуться к карте лояльности">
+    <button class="back-btn" id="back-from-network" aria-label="Вернуться к карте лояльности">
       <span class="back-btn-arrow">‹</span> Карта лояльности
     </button>
     <h2 class="section-title" style="margin-bottom:16px">Мои заведения</h2>
@@ -281,7 +281,7 @@ function switchTab(tab) {
     tab !== 'card' ? tg.BackButton.show() : tg.BackButton.hide();
   }
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo(0, 0);
 }
 
 async function init() {
@@ -431,9 +431,20 @@ function showAlert(msg) {
   if (window.Telegram?.WebApp?.showAlert) window.Telegram.WebApp.showAlert(msg); else alert(msg);
 }
 
+// Back buttons — addEventListener is more reliable in Telegram WebApp than onclick
+document.addEventListener('DOMContentLoaded', function() {
+  var backCabinet = document.getElementById('back-from-cabinet');
+  var backNetwork = document.getElementById('back-from-network');
+  if (backCabinet) backCabinet.addEventListener('click', function() { switchTab('card'); });
+  if (backNetwork) backNetwork.addEventListener('click', function() { switchTab('card'); });
+});
 init();
 </script>
 </body>
 </html>
+
+
+
+
 
 
