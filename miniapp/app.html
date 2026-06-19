@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
@@ -9,361 +9,84 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --gold: #C9A96E;
-      --gold2: #E8C97E;
-      --gold-bg: rgba(201,169,110,0.1);
-      --bg: #0D0C12;
-      --card: #161520;
-      --card2: #1E1D2A;
-      --border: rgba(255,255,255,0.08);
-      --text: #F0EBE0;
-      --muted: rgba(240,235,224,0.45);
-      --green: #4ADE80;
-      --green-bg: rgba(74,222,128,0.1);
+      --gold: #C9A96E; --gold2: #E8C97E; --gold-bg: rgba(201,169,110,0.1);
+      --bg: #0D0C12; --card: #161520; --card2: #1E1D2A;
+      --border: rgba(255,255,255,0.08); --text: #F0EBE0;
+      --muted: rgba(240,235,224,0.45); --green: #4ADE80;
+      --green-bg: rgba(74,222,128,0.1); --nav-h: 64px;
     }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--tg-theme-bg-color, var(--bg));
-      color: var(--tg-theme-text-color, var(--text));
-      min-height: 100vh;
-    }
-
-    #loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      gap: 14px;
-      background: var(--bg);
-    }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 2px solid rgba(255,255,255,0.1);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--tg-theme-bg-color, var(--bg)); color: var(--tg-theme-text-color, var(--text)); min-height: 100vh; }
+    #loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 14px; background: var(--bg); }
+    .spinner { width: 36px; height: 36px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--gold); border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    #app { display: none; padding: 20px 18px 60px; }
-
-    /* ── Header ── */
-    .header {
-      text-align: center;
-      padding: 8px 0 20px;
-    }
-    .logo {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      color: var(--text);
-    }
-    .logo span { color: var(--gold); font-style: normal; }
+    #app { display: none; padding: 20px 18px calc(var(--nav-h) + 20px); }
+    .header { text-align: center; padding: 8px 0 20px; }
+    .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+    .logo span { color: var(--gold); }
     .greeting { color: var(--muted); font-size: 14px; margin-top: 6px; }
-
-    /* ── Status card ── */
-    .status-card {
-      background: linear-gradient(145deg, var(--card) 0%, var(--card2) 100%);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 24px;
-      padding: 28px 24px;
-      margin-bottom: 20px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .status-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--gold), var(--gold2), transparent);
-    }
-    .status-card::after {
-      content: '';
-      position: absolute;
-      top: -40px; left: 50%; transform: translateX(-50%);
-      width: 200px; height: 100px;
-      background: radial-gradient(ellipse, rgba(201,169,110,0.12) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .status-emoji {
-      font-size: 40px;
-      width: 72px; height: 72px;
-      background: rgba(201,169,110,0.08);
-      border: 1px solid rgba(201,169,110,0.2);
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 12px;
-    }
-    .status-name {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--gold);
-      margin-bottom: 4px;
-      letter-spacing: -0.3px;
-    }
-    .visit-count {
-      font-size: 14px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .status-reward {
-      display: inline-block;
-      margin-top: 14px;
-      padding: 7px 16px;
-      background: rgba(201,169,110,0.1);
-      border: 1px solid rgba(201,169,110,0.2);
-      border-radius: 99px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--gold2);
-      line-height: 1.4;
-    }
-
+    .status-card { background: linear-gradient(145deg, var(--card) 0%, var(--card2) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 28px 24px; margin-bottom: 20px; text-align: center; position: relative; overflow: hidden; }
+    .status-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), var(--gold2), transparent); }
+    .status-card::after { content: ''; position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 200px; height: 100px; background: radial-gradient(ellipse, rgba(201,169,110,0.12) 0%, transparent 70%); pointer-events: none; }
+    .status-emoji { font-size: 40px; width: 72px; height: 72px; background: rgba(201,169,110,0.08); border: 1px solid rgba(201,169,110,0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .status-name { font-size: 22px; font-weight: 700; color: var(--gold); margin-bottom: 4px; letter-spacing: -0.3px; }
+    .visit-count { font-size: 14px; color: var(--muted); margin-top: 4px; }
+    .status-reward { display: inline-block; margin-top: 14px; padding: 7px 16px; background: rgba(201,169,110,0.1); border: 1px solid rgba(201,169,110,0.2); border-radius: 99px; font-size: 12px; font-weight: 500; color: var(--gold2); line-height: 1.4; }
     .progress-wrap { margin-top: 20px; }
-    .progress-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-    .progress-bar {
-      height: 4px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--gold), var(--gold2));
-      border-radius: 99px;
-      transition: width .8s cubic-bezier(.16,1,.3,1);
-    }
-
-    /* ── Section titles ── */
-    .section-title {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 12px;
-    }
-
-    /* ── QR ── */
+    .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+    .progress-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); border-radius: 99px; transition: width .8s cubic-bezier(.16,1,.3,1); }
+    .section-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
     .qr-section { margin-bottom: 20px; }
-    .qr-btn {
-      width: 100%;
-      background: var(--gold);
-      color: #0D0C12;
-      border: none;
-      border-radius: 16px;
-      font-size: 16px;
-      font-weight: 700;
-      padding: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: opacity .2s, transform .15s;
-      letter-spacing: -0.2px;
-      box-shadow: 0 8px 24px rgba(201,169,110,0.25);
-    }
+    .qr-btn { width: 100%; background: var(--gold); color: #0D0C12; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; padding: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: opacity .2s, transform .15s; letter-spacing: -0.2px; box-shadow: 0 8px 24px rgba(201,169,110,0.25); }
     .qr-btn:active { transform: scale(.97); }
-    .qr-btn:disabled {
-      background: rgba(201,169,110,0.3);
-      color: rgba(13,12,18,0.5);
-      box-shadow: none;
-      cursor: default;
-    }
-
-    .qr-display {
-      display: none;
-      background: #FFFFFF;
-      border-radius: 20px;
-      padding: 24px;
-      text-align: center;
-      margin-top: 12px;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.4);
-    }
+    .qr-btn:disabled { background: rgba(201,169,110,0.3); color: rgba(13,12,18,0.5); box-shadow: none; cursor: default; }
+    .qr-display { display: none; background: #FFFFFF; border-radius: 20px; padding: 24px; text-align: center; margin-top: 12px; box-shadow: 0 4px 32px rgba(0,0,0,0.4); }
     .qr-display img { width: 200px; height: 200px; border-radius: 8px; }
     .qr-hint { font-size: 13px; color: #666; margin-top: 10px; font-weight: 500; }
-
-    /* ── Offers ── */
     .offers-section { margin-bottom: 20px; }
-
-    .offer-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 18px;
-      margin-bottom: 10px;
-      position: relative;
-      overflow: hidden;
-    }
-    .offer-card::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 3px;
-      background: linear-gradient(180deg, var(--gold), var(--gold2));
-      border-radius: 0 2px 2px 0;
-    }
-
-    .offer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .offer-restaurant {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--gold);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .offer-date {
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .offer-text {
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--text);
-      white-space: pre-line;
-      margin-top: 8px;
-    }
-
-    /* ── Visit history ── */
+    .offer-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; margin-bottom: 10px; position: relative; overflow: hidden; }
+    .offer-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--gold), var(--gold2)); border-radius: 0 2px 2px 0; }
+    .offer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .offer-restaurant { font-size: 12px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 0.06em; }
+    .offer-date { font-size: 11px; color: var(--muted); }
+    .offer-text { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-line; margin-top: 8px; }
     .visits-section { margin-bottom: 20px; }
-    .visit-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 16px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      margin-bottom: 8px;
-    }
+    .visit-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; }
     .visit-restaurant { font-weight: 500; font-size: 14px; }
     .visit-date { color: var(--muted); font-size: 12px; }
-
-    .empty {
-      text-align: center;
-      color: var(--muted);
-      padding: 32px 20px;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    #error {
-      display: none;
-      text-align: center;
-      padding: 60px 24px;
-      color: #F87171;
-    }
-
-    /* ── Mode switcher ── */
-    .mode-switcher {
-      display: none; /* shown only when user owns venues */
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 5px;
-      margin-bottom: 20px;
-      gap: 4px;
-    }
-    .mode-switcher.visible { display: flex; }
-    .mode-btn {
-      flex: 1;
-      padding: 10px 16px;
-      border-radius: 12px;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background .2s, color .2s;
-      letter-spacing: -0.2px;
-    }
-    .mode-btn.active {
-      background: var(--gold);
-      color: #0D0C12;
-    }
-
-    /* ── Network view (owner) ── */
-    #network-view { display: none; }
-    .venue-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 18px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
+    .cabinet-profile { display: flex; align-items: center; gap: 16px; background: linear-gradient(145deg, var(--card) 0%, var(--card2) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; margin-bottom: 20px; position: relative; overflow: hidden; }
+    .cabinet-profile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), var(--gold2), transparent); }
+    .cabinet-avatar { width: 60px; height: 60px; border-radius: 50%; background: rgba(201,169,110,0.1); border: 2px solid rgba(201,169,110,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: var(--gold); flex-shrink: 0; overflow: hidden; }
+    .cabinet-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .cabinet-info { flex: 1; min-width: 0; }
+    .cabinet-name { font-size: 17px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cabinet-since { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .cabinet-badge { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; padding: 4px 10px; background: rgba(201,169,110,0.1); border: 1px solid rgba(201,169,110,0.2); border-radius: 99px; font-size: 12px; font-weight: 600; color: var(--gold2); }
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
+    .stat-label { font-size: 11px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+    .menu-list { margin-bottom: 20px; }
+    .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; text-decoration: none; color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; width: 100%; transition: border-color .2s; }
+    .menu-item:active { border-color: rgba(201,169,110,0.3); }
+    .menu-item-left { display: flex; align-items: center; gap: 12px; }
+    .menu-icon { width: 36px; height: 36px; background: var(--card2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .menu-arrow { color: var(--muted); font-size: 16px; }
+    .venue-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .venue-info { flex: 1; min-width: 0; }
-    .venue-name {
-      font-size: 15px; font-weight: 600;
-      color: var(--text);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .venue-name { font-size: 15px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .venue-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
-    .venue-btn {
-      flex-shrink: 0;
-      background: var(--gold-bg);
-      border: 1px solid rgba(201,169,110,0.3);
-      color: var(--gold);
-      padding: 9px 14px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      text-decoration: none;
-      white-space: nowrap;
-      transition: background .2s;
-    }
-    .venue-btn:active { background: rgba(201,169,110,0.2); }
-    .open-admin-btn {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: 16px;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 16px;
-      cursor: pointer;
-      font-family: inherit;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 4px;
-      transition: border-color .2s, color .2s;
-      text-decoration: none;
-    }
-    .open-admin-btn:active { border-color: var(--gold); color: var(--gold); }
-
+    .venue-btn { flex-shrink: 0; background: var(--gold-bg); border: 1px solid rgba(201,169,110,0.3); color: var(--gold); padding: 9px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none; white-space: nowrap; }
+    .open-admin-btn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 16px; font-size: 14px; font-weight: 600; padding: 16px; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; text-decoration: none; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(13,12,18,0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border); display: flex; align-items: stretch; z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0); }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: transparent; border: none; cursor: pointer; font-family: inherit; color: var(--muted); font-size: 10px; font-weight: 500; padding: 0; transition: color .2s; }
+    .nav-icon { font-size: 22px; line-height: 1; }
+    .nav-btn.active { color: var(--gold); }
+    .nav-btn-owner { display: none; }
+    .nav-btn-owner.visible { display: flex; }
+    .empty { text-align: center; color: var(--muted); padding: 32px 20px; font-size: 14px; line-height: 1.6; }
+    #error { display: none; text-align: center; padding: 60px 24px; color: #F87171; }
   </style>
 </head>
 <body>
@@ -384,17 +107,8 @@
     <div class="greeting" id="greeting">Добро пожаловать</div>
   </div>
 
-  <!-- Mode switcher — visible only for venue owners -->
-  <div class="mode-switcher" id="mode-switcher" role="tablist" aria-label="Режим">
-    <button class="mode-btn active" id="btn-guest" role="tab" aria-selected="true"
-            onclick="switchMode('guest')">👤 Гость</button>
-    <button class="mode-btn" id="btn-network" role="tab" aria-selected="false"
-            onclick="switchMode('network')">🏪 Моя сеть</button>
-  </div>
-
-  <!-- GUEST VIEW -->
-  <div id="guest-view">
-    <!-- Status card -->
+  <!-- TAB 1: Карта лояльности -->
+  <div id="card-view">
     <div class="status-card" role="region" aria-label="Ваш статус">
       <div class="status-emoji" id="status-emoji" aria-hidden="true">🥉</div>
       <div class="status-name" id="status-name">Bronze</div>
@@ -412,7 +126,6 @@
       </div>
     </div>
 
-    <!-- QR -->
     <div class="qr-section">
       <h2 class="section-title">Визит</h2>
       <button class="qr-btn" id="qr-btn" onclick="getQR()">
@@ -420,51 +133,109 @@
       </button>
       <div class="qr-display" id="qr-display" role="img" aria-label="QR-код для визита">
         <img id="qr-img" src="" alt="QR-код для визита" />
-        <div class="qr-hint">Покажи код администратору ресторана</div>
+        <div class="qr-hint">Покажи код организатору на входе</div>
       </div>
     </div>
 
-    <!-- Offers from restaurants -->
     <div class="offers-section" id="offers-section" style="display:none">
       <h2 class="section-title">Предложения для вас</h2>
       <div id="offers-list"></div>
     </div>
 
-    <!-- Visit history -->
     <div class="visits-section">
       <h2 class="section-title">История визитов</h2>
       <div id="visits-list"><div class="empty">Визитов пока нет</div></div>
     </div>
   </div>
 
-  <!-- NETWORK VIEW (owner only) -->
-  <div id="network-view" role="tabpanel" aria-label="Моя сеть">
-    <h2 class="section-title" style="margin-bottom:16px">Мои заведения</h2>
-    <div id="venues-list">
-      <div class="empty">Загрузка...</div>
+  <!-- TAB 2: Мой кабинет -->
+  <div id="cabinet-view" style="display:none" role="region" aria-label="Мой кабинет">
+    <div class="cabinet-profile">
+      <div class="cabinet-avatar" id="cabinet-avatar">👤</div>
+      <div class="cabinet-info">
+        <div class="cabinet-name" id="cabinet-name">—</div>
+        <div class="cabinet-since" id="cabinet-since"></div>
+        <div class="cabinet-badge" id="cabinet-badge">🥉 Bronze</div>
+      </div>
     </div>
-    <a href="admin.html" class="open-admin-btn" id="admin-link">
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-value" id="cabinet-visits-total">0</div>
+        <div class="stat-label">визитов всего</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="cabinet-next-visits">—</div>
+        <div class="stat-label" id="cabinet-next-label">до следующего уровня</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Меню</h2>
+    <div class="menu-list">
+      <button class="menu-item" onclick="switchTab('card')">
+        <div class="menu-item-left">
+          <div class="menu-icon">🎫</div>
+          <span>Карта лояльности</span>
+        </div>
+        <span class="menu-arrow" aria-hidden="true">›</span>
+      </button>
+      <a href="https://t.me/great_guest_bot" class="menu-item">
+        <div class="menu-item-left">
+          <div class="menu-icon">💬</div>
+          <span>Написать в поддержку</span>
+        </div>
+        <span class="menu-arrow" aria-hidden="true">›</span>
+      </a>
+      <a href="privacy.html" class="menu-item">
+        <div class="menu-item-left">
+          <div class="menu-icon">🔒</div>
+          <span>Политика конфиденциальности</span>
+        </div>
+        <span class="menu-arrow" aria-hidden="true">›</span>
+      </a>
+      <a href="terms.html" class="menu-item">
+        <div class="menu-item-left">
+          <div class="menu-icon">📄</div>
+          <span>Условия использования</span>
+        </div>
+        <span class="menu-arrow" aria-hidden="true">›</span>
+      </a>
+    </div>
+    <div style="text-align:center;font-size:11px;color:rgba(240,235,224,0.25);padding:4px 0 8px">Great Guest © 2026</div>
+  </div>
+
+  <!-- TAB 3: Моя сеть (только для владельцев) -->
+  <div id="network-view" style="display:none" role="region" aria-label="Моя сеть">
+    <h2 class="section-title" style="margin-bottom:16px">Мои заведения</h2>
+    <div id="venues-list"><div class="empty">Загрузка...</div></div>
+    <a href="admin.html" class="open-admin-btn">
       <span aria-hidden="true">⚙️</span> Открыть полную панель управления
     </a>
   </div>
-
-  <!-- Legal footer -->
-  <footer id="legal-footer" style="text-align:center;padding:28px 20px 24px;font-size:11px;color:rgba(240,235,224,0.3);border-top:1px solid rgba(255,255,255,0.06);margin-top:24px">
-    <div style="margin-bottom:6px">Great Guest © 2026</div>
-    <div>
-      <a href="privacy.html" style="color:rgba(240,235,224,0.3);text-decoration:none;margin:0 8px">Политика конфиденциальности</a>
-      <span style="color:rgba(255,255,255,0.06)">·</span>
-      <a href="terms.html" style="color:rgba(240,235,224,0.3);text-decoration:none;margin:0 8px">Условия использования</a>
-    </div>
-  </footer>
 </div>
+
+<!-- Нижняя навигация -->
+<nav class="bottom-nav" id="bottom-nav" role="tablist" aria-label="Навигация" style="display:none">
+  <button class="nav-btn active" id="tab-card" role="tab" aria-selected="true" onclick="switchTab('card')">
+    <span class="nav-icon" aria-hidden="true">🎫</span>
+    <span>Карта</span>
+  </button>
+  <button class="nav-btn" id="tab-cabinet" role="tab" aria-selected="false" onclick="switchTab('cabinet')">
+    <span class="nav-icon" aria-hidden="true">👤</span>
+    <span>Кабинет</span>
+  </button>
+  <button class="nav-btn nav-btn-owner" id="tab-network" role="tab" aria-selected="false" onclick="switchTab('network')">
+    <span class="nav-icon" aria-hidden="true">🏪</span>
+    <span>Сеть</span>
+  </button>
+</nav>
 
 <script>
 const SUPABASE_URL = 'https://wjlhaizrygeyeishbycp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps';
 
-const db  = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const tg  = window.Telegram?.WebApp;
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const tg = window.Telegram?.WebApp;
 
 const LEVELS = [
   { name: 'Bronze',   emoji: '🥉', min: 0,  max: 4,        reward: 'Добро пожаловать в программу' },
@@ -472,6 +243,8 @@ const LEVELS = [
   { name: 'Gold',     emoji: '🥇', min: 15, max: 29,       reward: 'Скидка 10% + комплимент от шефа' },
   { name: 'Platinum', emoji: '💎', min: 30, max: Infinity, reward: 'Скидка 15% + VIP-обслуживание' },
 ];
+
+let guestData = null;
 
 function getLevel(n)  { return [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0]; }
 function getNext(n)   { return LEVELS.find(l => l.min > n); }
@@ -488,273 +261,168 @@ function showError(msg) {
   document.getElementById('error-msg').textContent = msg;
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('card-view').style.display    = tab === 'card'    ? 'block' : 'none';
+  document.getElementById('cabinet-view').style.display = tab === 'cabinet' ? 'block' : 'none';
+  document.getElementById('network-view').style.display = tab === 'network' ? 'block' : 'none';
+
+  ['card','cabinet','network'].forEach(t => {
+    const btn = document.getElementById('tab-' + t);
+    if (btn) { btn.classList.toggle('active', t === tab); btn.setAttribute('aria-selected', t === tab); }
+  });
+
+  if (tg?.BackButton) {
+    tab !== 'card' ? tg.BackButton.show() : tg.BackButton.hide();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 async function init() {
   if (tg) {
     tg.ready();
     tg.expand();
+    tg.BackButton.onClick(() => switchTab('card'));
   }
 
   const initData = tg?.initData || '';
-  if (!initData) {
-    showError('Открой приложение через @great_guest_bot в Telegram');
-    return;
-  }
+  if (!initData) { showError('Открой приложение через @great_guest_bot в Telegram'); return; }
 
   let res, payload;
   try {
-    res     = await fetch('/api/webapp-init', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ initData }),
-    });
+    res     = await fetch('/api/webapp-init', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData }) });
     payload = await res.json();
-  } catch(e) {
-    showError('Сетевая ошибка: ' + e.message);
-    return;
-  }
+  } catch(e) { showError('Сетевая ошибка: ' + e.message); return; }
 
-  if (!res.ok || !payload.guest) {
-    showError('Ошибка: ' + (payload?.error || res.status));
-    return;
-  }
+  if (!res.ok || !payload.guest) { showError('Ошибка: ' + (payload?.error || res.status)); return; }
 
-  const { guest } = payload;
+  guestData = payload.guest;
+  document.getElementById('greeting').textContent = `Привет, ${guestData.first_name}! 👋`;
+  renderStatus(guestData.visit_count);
+  renderCabinet(guestData);
 
-  document.getElementById('greeting').textContent = `Привет, ${guest.first_name}! 👋`;
-  renderStatus(guest.visit_count);
+  await Promise.all([renderHistory(guestData.telegram_id), renderOffers(initData), checkOwnerStatus(guestData.telegram_id)]);
 
-  // Load history, offers, and owner check in parallel
-  await Promise.all([
-    renderHistory(guest.telegram_id),
-    renderOffers(initData),
-    checkOwnerStatus(guest.telegram_id),
-  ]);
-
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('app').style.display     = 'block';
+  document.getElementById('loading').style.display   = 'none';
+  document.getElementById('app').style.display       = 'block';
+  document.getElementById('bottom-nav').style.display = 'flex';
 }
 
-// ── Status ────────────────────────────────────────────────────────────────────
 function renderStatus(count) {
-  // Special welcome state for new guests
   if (count === 0) {
-    document.getElementById('status-emoji').textContent  = '🎉';
-    document.getElementById('status-name').textContent   = 'Добро пожаловать!';
-    document.getElementById('visit-count').innerHTML     = `Получите QR-код и посетите ресторан-партнёр — ваш первый визит откроет программу лояльности`;
+    document.getElementById('status-emoji').textContent   = '🎉';
+    document.getElementById('status-name').textContent    = 'Добро пожаловать!';
+    document.getElementById('visit-count').textContent    = 'Получите QR-код и отметьтесь — первый визит откроет карту лояльности';
     document.getElementById('status-reward').style.display = 'none';
     document.getElementById('progress-wrap').style.display = 'none';
-
-    // Add consent notice for new guests
-    const consentHtml = `<p style="font-size:11px;color:#555;margin-top:12px;line-height:1.5">
-      Регистрируясь, вы соглашаетесь с
-      <a href="privacy.html" style="color:#888">политикой конфиденциальности</a>
-      и даёте согласие на обработку персональных данных согласно 152-ФЗ.
-    </p>`;
-
     if (!document.getElementById('consent-notice')) {
-      const consentDiv = document.createElement('div');
-      consentDiv.id = 'consent-notice';
-      consentDiv.innerHTML = consentHtml;
-      document.querySelector('.status-card').appendChild(consentDiv);
+      const d = document.createElement('div'); d.id = 'consent-notice';
+      d.innerHTML = '<p style="font-size:11px;color:#555;margin-top:12px;line-height:1.5">Регистрируясь, вы соглашаетесь с <a href="privacy.html" style="color:#888">политикой конфиденциальности</a> и даёте согласие на обработку персональных данных согласно 152-ФЗ.</p>';
+      document.querySelector('.status-card').appendChild(d);
     }
     return;
   }
-
-  // Remove consent notice if it exists (for returning guests)
   const consentNotice = document.getElementById('consent-notice');
   if (consentNotice) consentNotice.remove();
-
-  // Standard level display for active guests
-  const lvl  = getLevel(count);
-  const next = getNext(count);
-
-  document.getElementById('status-emoji').textContent  = lvl.emoji;
-  document.getElementById('status-name').textContent   = lvl.name;
-  document.getElementById('visit-count').textContent   = `${count} ${declVisit(count)}`;
-  document.getElementById('status-reward').textContent = lvl.reward;
+  const lvl = getLevel(count); const next = getNext(count);
+  document.getElementById('status-emoji').textContent   = lvl.emoji;
+  document.getElementById('status-name').textContent    = lvl.name;
+  document.getElementById('visit-count').textContent    = `${count} ${declVisit(count)}`;
+  document.getElementById('status-reward').textContent  = lvl.reward;
   document.getElementById('status-reward').style.display = 'inline-block';
   document.getElementById('progress-wrap').style.display = 'block';
-
   if (next) {
-    const span = next.min - lvl.min;
-    const done = count - lvl.min;
-    const pct  = Math.min(100, Math.round((done / span) * 100));
+    const pct = Math.min(100, Math.round(((count - lvl.min) / (next.min - lvl.min)) * 100));
     document.getElementById('progress-from').textContent = `${lvl.emoji} ${lvl.name}`;
     document.getElementById('progress-to').textContent   = `${next.emoji} ${next.name}`;
     const fill = document.getElementById('progress-fill');
-    fill.style.width = pct + '%';
-    fill.setAttribute('aria-valuenow', pct);
+    fill.style.width = pct + '%'; fill.setAttribute('aria-valuenow', pct);
+  } else { document.getElementById('progress-wrap').style.display = 'none'; }
+}
+
+function renderCabinet(guest) {
+  const count = guest.visit_count; const lvl = getLevel(count); const next = getNext(count);
+  const avatarEl = document.getElementById('cabinet-avatar');
+  if (guest.photo_url) {
+    avatarEl.innerHTML = `<img src="${escHtml(guest.photo_url)}" alt="Фото профиля" />`;
   } else {
-    document.getElementById('progress-wrap').style.display = 'none';
+    avatarEl.textContent = guest.first_name?.[0]?.toUpperCase() || '👤';
+  }
+  document.getElementById('cabinet-name').textContent   = [guest.first_name, guest.last_name].filter(Boolean).join(' ');
+  document.getElementById('cabinet-since').textContent  = guest.created_at
+    ? 'Участник с ' + new Date(guest.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+    : 'Участник клуба';
+  document.getElementById('cabinet-badge').textContent  = `${lvl.emoji} ${lvl.name}`;
+  document.getElementById('cabinet-visits-total').textContent = count;
+  if (next) {
+    document.getElementById('cabinet-next-visits').textContent = next.min - count;
+    document.getElementById('cabinet-next-label').textContent  = `до ${next.emoji} ${next.name}`;
+  } else {
+    document.getElementById('cabinet-next-visits').textContent = '💎';
+    document.getElementById('cabinet-next-label').textContent  = 'максимальный уровень';
   }
 }
 
-// ── Offers ────────────────────────────────────────────────────────────────────
 async function renderOffers(initData) {
   try {
-    const res  = await fetch('/api/guest-offers', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ initData }),
-    });
+    const res = await fetch('/api/guest-offers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData }) });
     const data = await res.json();
     const offers = data.offers || [];
     if (!offers.length) return;
-
-    const section = document.getElementById('offers-section');
-    const list    = document.getElementById('offers-list');
-    section.style.display = 'block';
-
-    list.innerHTML = offers.map(o => {
+    document.getElementById('offers-section').style.display = 'block';
+    document.getElementById('offers-list').innerHTML = offers.map(o => {
       const rname = o.restaurants?.name || 'Ресторан-партнёр';
       const date  = new Date(o.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-      const text  = o.offer_text || '';
-      return `
-        <article class="offer-card">
-          <div class="offer-header">
-            <span class="offer-restaurant">🏪 ${escHtml(rname)}</span>
-            <span class="offer-date">${date}</span>
-          </div>
-          <div class="offer-text">${escHtml(text)}</div>
-        </article>`;
+      return `<article class="offer-card"><div class="offer-header"><span class="offer-restaurant">🏪 ${escHtml(rname)}</span><span class="offer-date">${date}</span></div><div class="offer-text">${escHtml(o.offer_text || '')}</div></article>`;
     }).join('');
-  } catch {
-    // Non-critical — silently skip if offers unavailable
-  }
+  } catch {}
 }
 
-// ── History ───────────────────────────────────────────────────────────────────
 async function renderHistory(telegramId) {
   try {
-    const { data: visits } = await db
-      .from('visits')
-      .select('visited_at, restaurants(name)')
-      .eq('telegram_id', telegramId)
-      .order('visited_at', { ascending: false })
-      .limit(10);
-
+    const { data: visits } = await db.from('visits').select('visited_at, restaurants(name)').eq('telegram_id', telegramId).order('visited_at', { ascending: false }).limit(10);
     const list = document.getElementById('visits-list');
-    if (!visits?.length) {
-      list.innerHTML = '<div class="empty">Визитов пока нет — получи QR и посети ресторан!</div>';
-      return;
-    }
+    if (!visits?.length) { list.innerHTML = '<div class="empty">Визитов пока нет — получи QR и посети заведение!</div>'; return; }
     list.innerHTML = visits.map(v => {
       const date = new Date(v.visited_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-      const name = v.restaurants?.name || 'Ресторан-партнёр';
-      return `<div class="visit-item">
-        <span class="visit-restaurant">🍽 ${escHtml(name)}</span>
-        <span class="visit-date">${date}</span>
-      </div>`;
+      return `<div class="visit-item"><span class="visit-restaurant">🍽 ${escHtml(v.restaurants?.name || 'Заведение')}</span><span class="visit-date">${date}</span></div>`;
     }).join('');
-  } catch (e) {
-    const list = document.getElementById('visits-list');
-    if (list) list.innerHTML = '<div class="empty">Не удалось загрузить историю</div>';
-  }
+  } catch { document.getElementById('visits-list').innerHTML = '<div class="empty">Не удалось загрузить историю</div>'; }
 }
 
-// ── QR ────────────────────────────────────────────────────────────────────────
 async function getQR() {
   if (!tg?.initData) return;
   const btn = document.getElementById('qr-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span aria-hidden="true">⏳</span> Создаём QR...';
-
+  btn.disabled = true; btn.innerHTML = '<span aria-hidden="true">⏳</span> Создаём QR...';
   try {
-    const res  = await fetch('/api/create-qr', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ initData: tg.initData }),
-    });
+    const res  = await fetch('/api/create-qr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: tg.initData }) });
     const data = await res.json();
-    if (!res.ok || !data.visitUrl) {
-      showAlert(data.error || 'Ошибка создания QR');
-      btn.disabled = false;
-      btn.innerHTML = '<span aria-hidden="true">🎫</span> Получить QR для визита';
-      return;
-    }
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.visitUrl)}&ecc=H`;
+    if (!res.ok || !data.visitUrl) { showAlert(data.error || 'Ошибка создания QR'); btn.disabled = false; btn.innerHTML = '<span aria-hidden="true">🎫</span> Получить QR для визита'; return; }
     const img = document.getElementById('qr-img');
-    img.src = qrUrl;
-    img.onerror = () => {
-      img.style.display = 'none';
-      showAlert('Не удалось загрузить QR-код');
-    };
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.visitUrl)}&ecc=H`;
+    img.onerror = () => { img.style.display = 'none'; showAlert('Не удалось загрузить QR-код'); };
     document.getElementById('qr-display').style.display = 'block';
-    btn.disabled = true;
-    btn.innerHTML = '<span aria-hidden="true">✓</span> QR активен';
-  } catch(e) {
-    showAlert('Ошибка: ' + e.message);
-    btn.disabled = false;
-    btn.innerHTML = '<span aria-hidden="true">🎫</span> Получить QR для визита';
-  }
+    btn.disabled = true; btn.innerHTML = '<span aria-hidden="true">✓</span> QR активен';
+  } catch(e) { showAlert('Ошибка: ' + e.message); btn.disabled = false; btn.innerHTML = '<span aria-hidden="true">🎫</span> Получить QR для визита'; }
 }
 
-// ── Owner / Network ───────────────────────────────────────────────────────────
 async function checkOwnerStatus(telegramId) {
   try {
-    const { data: venues, error } = await db
-      .from('restaurants')
-      .select('id, name, created_at')
-      .eq('owner_telegram_id', telegramId)
-      .limit(20);
-
-    if (error || !venues?.length) return; // not an owner, switcher stays hidden
-
-    renderNetworkView(venues);
-    document.getElementById('mode-switcher').classList.add('visible');
-  } catch {
-    // non-critical — guest mode works as usual
-  }
+    const { data: venues, error } = await db.from('restaurants').select('id, name, created_at').eq('owner_telegram_id', telegramId).limit(20);
+    if (error || !venues?.length) return;
+    document.getElementById('venues-list').innerHTML = venues.map(v => {
+      const since = new Date(v.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+      return `<div class="venue-card"><div class="venue-info"><div class="venue-name">🍽 ${escHtml(v.name)}</div><div class="venue-meta">С ${since}</div></div><a href="admin.html" class="venue-btn">Управлять →</a></div>`;
+    }).join('');
+    document.getElementById('tab-network').classList.add('visible');
+  } catch {}
 }
 
-function renderNetworkView(venues) {
-  const list = document.getElementById('venues-list');
-  list.innerHTML = venues.map(v => {
-    const since = new Date(v.created_at).toLocaleDateString('ru-RU', {
-      day: 'numeric', month: 'short', year: 'numeric'
-    });
-    return `
-      <div class="venue-card">
-        <div class="venue-info">
-          <div class="venue-name">🍽 ${escHtml(v.name)}</div>
-          <div class="venue-meta">С ${since}</div>
-        </div>
-        <a href="admin.html" class="venue-btn">Управлять →</a>
-      </div>`;
-  }).join('');
-}
-
-function switchMode(mode) {
-  const guestView   = document.getElementById('guest-view');
-  const networkView = document.getElementById('network-view');
-  const btnGuest    = document.getElementById('btn-guest');
-  const btnNetwork  = document.getElementById('btn-network');
-
-  const isGuest = mode === 'guest';
-  guestView.style.display   = isGuest ? 'block' : 'none';
-  networkView.style.display = isGuest ? 'none'  : 'block';
-  btnGuest.classList.toggle('active', isGuest);
-  btnNetwork.classList.toggle('active', !isGuest);
-  btnGuest.setAttribute('aria-selected', isGuest);
-  btnNetwork.setAttribute('aria-selected', !isGuest);
-}
-
-// ── Utils ─────────────────────────────────────────────────────────────────────
 function escHtml(s) {
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
 function showAlert(msg) {
-  if (window.Telegram?.WebApp?.showAlert) {
-    window.Telegram.WebApp.showAlert(msg);
-  } else {
-    alert(msg);
-  }
+  if (window.Telegram?.WebApp?.showAlert) window.Telegram.WebApp.showAlert(msg); else alert(msg);
 }
 
 init();
