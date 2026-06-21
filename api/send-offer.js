@@ -154,6 +154,26 @@ module.exports = async (req, res) => {
 
   if (!guest) return res.status(404).json({ error: 'guest_not_found' });
 
+  // Verify guest belongs to this owner's venue network (defense in depth)
+  const { data: ownerVenueRows } = await db
+    .from('restaurants')
+    .select('id')
+    .eq('owner_telegram_id', ownerId);
+
+  const ownerVenueIds = (ownerVenueRows || []).map(v => v.id);
+
+  if (ownerVenueIds.length > 0) {
+    const { count: visitCount } = await db
+      .from('visits')
+      .select('*', { count: 'exact', head: true })
+      .eq('telegram_id', guestTelegramId)
+      .in('restaurant_id', ownerVenueIds);
+
+    if (!visitCount || visitCount === 0) {
+      return res.status(403).json({ error: 'guest_not_in_your_network' });
+    }
+  }
+
   // No offerText → return 3 options
   if (!offerText) {
     const options = generateOffers(guest, restaurant);

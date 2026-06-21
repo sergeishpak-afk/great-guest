@@ -41,20 +41,31 @@ module.exports = async (req, res) => {
 
   const pending = claimedVisit;
 
-  const { data: guest } = await supabase.from('guests').select('*').eq('telegram_id', pending.telegram_id).single();
-  if (!guest) return res.status(404).json({ error: 'Гость не найден' });
+  // Fetch guest name + restaurant name in parallel
+  const [guestResult, restResult] = await Promise.all([
+    supabase.from('guests').select('first_name, last_name').eq('telegram_id', pending.telegram_id).single(),
+    restaurantId && UUID_RE.test(restaurantId)
+      ? supabase.from('restaurants').select('name').eq('id', restaurantId).single()
+      : Promise.resolve({ data: null }),
+  ]);
 
-  const newCount = guest.visit_count + 1;
-  let restaurantName = 'ресторан-партнёр';
-  if (restaurantId) {
-    if (!UUID_RE.test(restaurantId)) return res.status(400).json({ error: 'invalid restaurantId' });
-    const { data: rest } = await supabase.from('restaurants').select('name').eq('id', restaurantId).single();
-    if (!rest) return res.status(404).json({ error: 'Ресторан не найден' });
-    restaurantName = rest.name;
+  if (!guestResult.data) return res.status(404).json({ error: 'Гость не найден' });
+  if (restaurantId && !UUID_RE.test(restaurantId)) return res.status(400).json({ error: 'invalid restaurantId' });
+  if (restaurantId && !restResult.data) return res.status(404).json({ error: 'Ресторан не найден' });
+
+  const guest = guestResult.data;
+  const restaurantName = restResult.data?.name || 'ресторан-партнёр';
+
+  // Atomic visit_count increment (prevents race condition on simultaneous scans)
+  const { data: newCount, error: rpcError } = await supabase
+    .rpc('increment_guest_visits', { p_telegram_id: pending.telegram_id });
+
+  if (rpcError || newCount === null) {
+    console.error('increment_guest_visits error:', rpcError?.message);
+    return res.status(500).json({ error: 'Ошибка обновления счётчика' });
   }
 
   await supabase.from('visits').insert({ telegram_id: pending.telegram_id, restaurant_id: restaurantId || null, visit_token: token });
-  await supabase.from('guests').update({ visit_count: newCount }).eq('telegram_id', pending.telegram_id);
   // pending_visits already marked as used atomically above
 
   try {

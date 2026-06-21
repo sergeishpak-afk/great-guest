@@ -155,24 +155,32 @@ module.exports = async (req, res) => {
   let globalGuests = [];
   let offers = [];
 
-  if (isActive) {
+  if (isActive && venueIds.length > 0) {
+    // Get distinct guest IDs who have visited this owner's venues (scoped, not global)
+    const { data: visitRows } = await db
+      .from('visits')
+      .select('telegram_id')
+      .in('restaurant_id', venueIds);
+
+    const uniqueGuestIds = [...new Set((visitRows || []).map(v => v.telegram_id))];
+
     const [guestsResult, offersResult] = await Promise.all([
-      // Global guests (top 200 by visit_count)
-      db
-        .from('guests')
-        .select('telegram_id, first_name, last_name, visit_count, last_visit_at')
-        .gt('visit_count', 0)
-        .order('visit_count', { ascending: false })
-        .limit(200),
-      // Offers across all venues (last 100)
-      venueIds.length > 0
+      // Own venue guests only
+      uniqueGuestIds.length > 0
         ? db
-            .from('offers')
-            .select('id, restaurant_id, guest_telegram_id, offer_text, status, created_at')
-            .in('restaurant_id', venueIds)
-            .order('created_at', { ascending: false })
-            .limit(100)
-        : { data: [] },
+            .from('guests')
+            .select('telegram_id, first_name, last_name, visit_count, last_visit_at')
+            .in('telegram_id', uniqueGuestIds)
+            .order('visit_count', { ascending: false })
+            .limit(200)
+        : Promise.resolve({ data: [] }),
+      // Offers across all venues (last 100)
+      db
+        .from('offers')
+        .select('id, restaurant_id, guest_telegram_id, offer_text, status, created_at')
+        .in('restaurant_id', venueIds)
+        .order('created_at', { ascending: false })
+        .limit(100),
     ]);
 
     globalGuests = guestsResult.data || [];

@@ -11,6 +11,8 @@ function validateInitData(initData, botToken) {
     const params = new URLSearchParams(initData);
     const receivedHash = params.get('hash');
     if (!receivedHash) return false;
+    const authDate = parseInt(params.get('auth_date') || '0', 10);
+    if (!authDate || Date.now() / 1000 - authDate > 3600) return false;
     params.delete('hash');
     const checkString = Array.from(params.entries())
       .sort(([a], [b]) => a.localeCompare(b))

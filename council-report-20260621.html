@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Council — Great Guest Автономность</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; color: #212529; line-height: 1.6; }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+
+  /* Header */
+  .header { background: #1a1a2e; color: #fff; padding: 40px; border-radius: 12px; margin-bottom: 32px; }
+  .header .badge { display: inline-block; background: #4361ee; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; }
+  .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 12px; }
+  .header .question { background: rgba(255,255,255,0.08); border-left: 3px solid #4361ee; padding: 16px; border-radius: 0 8px 8px 0; font-size: 14px; color: rgba(255,255,255,0.85); line-height: 1.7; }
+  .header .meta { margin-top: 16px; font-size: 12px; color: rgba(255,255,255,0.45); }
+
+  /* Verdict */
+  .verdict { background: #fff; border: 2px solid #4361ee; border-radius: 12px; padding: 32px; margin-bottom: 24px; }
+  .verdict h2 { font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  .verdict h2::before { content: '⚖️'; }
+  .verdict-section { margin-bottom: 24px; }
+  .verdict-section:last-child { margin-bottom: 0; }
+  .verdict-section h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6c757d; margin-bottom: 10px; }
+  .verdict-section p { font-size: 15px; color: #343a40; }
+  .verdict-section ul { padding-left: 20px; }
+  .verdict-section ul li { font-size: 15px; color: #343a40; margin-bottom: 6px; }
+  .verdict-divider { border: none; border-top: 1px solid #e9ecef; margin: 20px 0; }
+
+  /* Action box */
+  .action-box { background: #1a1a2e; color: #fff; border-radius: 12px; padding: 28px 32px; margin-bottom: 32px; }
+  .action-box h3 { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4cc9f0; margin-bottom: 12px; }
+  .action-box p { font-size: 17px; font-weight: 600; line-height: 1.5; }
+
+  /* Security + QA Summary */
+  .findings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  @media (max-width: 600px) { .findings-grid { grid-template-columns: 1fr; } }
+  .findings-card { background: #fff; border-radius: 10px; padding: 20px; border-top: 4px solid #ef233c; }
+  .findings-card.qa { border-top-color: #f77f00; }
+  .findings-card h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  .findings-card h3 span { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px; }
+  .findings-card.sec h3 span { background: #fde8ea; color: #ef233c; }
+  .findings-card.qa h3 span { background: #fef0e0; color: #f77f00; }
+  .finding-item { font-size: 13px; color: #495057; padding: 8px 0; border-bottom: 1px solid #f1f3f5; }
+  .finding-item:last-child { border-bottom: none; }
+  .finding-item strong { color: #212529; }
+  .badge-crit { background: #fde8ea; color: #ef233c; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-right: 6px; }
+  .badge-high { background: #fff3cd; color: #856404; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-right: 6px; }
+  .badge-med { background: #d1ecf1; color: #0c5460; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-right: 6px; }
+
+  /* Agreement visual */
+  .agreement-grid { background: #fff; border-radius: 12px; padding: 28px; margin-bottom: 24px; }
+  .agreement-grid h2 { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; }
+  .options-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 600px) { .options-grid { grid-template-columns: repeat(2, 1fr); } }
+  .option-card { text-align: center; padding: 16px 8px; border-radius: 8px; border: 2px solid transparent; }
+  .option-card.strong { border-color: #198754; background: #d1e7dd; }
+  .option-card.medium { border-color: #6c757d; background: #f8f9fa; }
+  .option-card.weak { border-color: #dee2e6; background: #f8f9fa; opacity: 0.6; }
+  .option-card .label { font-size: 20px; font-weight: 800; }
+  .option-card .name { font-size: 11px; color: #6c757d; margin-top: 4px; }
+  .option-card .votes { font-size: 13px; font-weight: 600; margin-top: 8px; }
+  .option-card.strong .votes { color: #198754; }
+  .option-card.medium .votes { color: #6c757d; }
+
+  /* Advisor positions */
+  .positions-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; }
+  .positions-table th { background: #f8f9fa; padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #6c757d; border-bottom: 2px solid #e9ecef; }
+  .positions-table td { padding: 10px 12px; border-bottom: 1px solid #f1f3f5; vertical-align: top; }
+  .positions-table tr:last-child td { border-bottom: none; }
+  .pos-c { background: #d1e7dd; color: #198754; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+  .pos-d { background: #cff4fc; color: #0c5460; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+  .pos-a { background: #fff3cd; color: #856404; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+
+  /* Collapsible advisor sections */
+  details { background: #fff; border-radius: 10px; border: 1px solid #e9ecef; margin-bottom: 12px; overflow: hidden; }
+  details[open] { border-color: #4361ee; }
+  summary { padding: 16px 20px; cursor: pointer; font-size: 14px; font-weight: 600; color: #343a40; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; font-size: 18px; color: #adb5bd; transition: transform 0.2s; }
+  details[open] summary::after { content: '−'; }
+  .advisor-content { padding: 0 20px 20px; font-size: 14px; line-height: 1.75; color: #495057; border-top: 1px solid #f1f3f5; padding-top: 16px; }
+  .advisor-tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; margin-right: 8px; }
+  .tag-contrarian { background: #fde8ea; color: #ef233c; }
+  .tag-first { background: #e8f4fd; color: #0066cc; }
+  .tag-expansionist { background: #e8f5e9; color: #198754; }
+  .tag-outsider { background: #fff8e1; color: #f59f00; }
+  .tag-executor { background: #f3e8ff; color: #7c3aed; }
+
+  .section-title { font-size: 16px; font-weight: 700; color: #1a1a2e; margin: 32px 0 16px; }
+  .peer-summary { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 12px; border-left: 3px solid #4361ee; }
+  .peer-summary h4 { font-size: 13px; font-weight: 700; color: #343a40; margin-bottom: 8px; }
+  .peer-summary p { font-size: 13px; color: #6c757d; line-height: 1.6; }
+  .peer-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .peer-pill { font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+  .pill-strong { background: #d1e7dd; color: #198754; }
+  .pill-blind { background: #fde8ea; color: #ef233c; }
+
+  .footer { text-align: center; padding: 32px; color: #adb5bd; font-size: 12px; border-top: 1px solid #e9ecef; margin-top: 40px; }
+
+  /* Priority list */
+  .priority-list { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .priority-list h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: #1a1a2e; }
+  .priority-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f3f5; }
+  .priority-item:last-child { border-bottom: none; }
+  .priority-num { min-width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .num-red { background: #ef233c; }
+  .num-orange { background: #f77f00; }
+  .num-blue { background: #4361ee; }
+  .priority-item p { font-size: 14px; color: #343a40; }
+  .priority-item small { font-size: 12px; color: #6c757d; display: block; margin-top: 3px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">LLM Council · Great Guest · 21 июня 2026</div>
+    <h1>Что построить первым для автономной работы системы?</h1>
+    <div class="question">
+      Сергей (соло, не технарь, HoReCa-эксперт) начинает первые продажи Great Guest. MVP работает.
+      Что ОДНО нужно сделать первым, чтобы система могла работать без его участия?
+      <br><br>
+      Варианты: (A) Платёжная интеграция ЮKасса · (B) Self-service онбординг в боте · (C) Критические баги безопасности · (D) GitHub→Vercel auto-deploy
+    </div>
+    <div class="meta">5 советников · 5 рецензентов · Синтез председателя · + Аудит безопасности + QA-ревью</div>
+  </div>
+
+  <!-- Verdict -->
+  <div class="verdict">
+    <h2>Вердикт совета</h2>
+
+    <div class="verdict-section">
+      <h3>Где совет согласен</h3>
+      <ul>
+        <li><strong>C (безопасность) — блокер, не опция.</strong> Четыре из пяти советников и все пять рецензентов сошлись на этом независимо. Открытый RLS = данные ресторана A видны ресторану B. В HoReCa один такой инцидент — конец репутации до масштабирования.</li>
+        <li><strong>A (ЮKасса) — последняя.</strong> Единогласно. Регистрация 2–4 недели, юридическая ответственность при утечке, первые клиенты закрываются вручную.</li>
+        <li><strong>Сергей не технарь — нужен человек с руками.</strong> Все рецензенты зафиксировали: без технического исполнителя все решения совета — теория.</li>
+      </ul>
+    </div>
+
+    <hr class="verdict-divider">
+
+    <div class="verdict-section">
+      <h3>Где совет расходится</h3>
+      <p><strong>C против D — что первее?</strong> Outsider говорит: без auto-deploy исправленная безопасность не попадёт в прод. Executor и First Principles говорят: C первее, потому что деплой поверх дырявой базы только ускоряет катастрофу. Разногласие разрешимо — D занимает 1–2 часа и не конфликтует с C: это порядок в рамках одного рабочего дня.</p>
+    </div>
+
+    <hr class="verdict-divider">
+
+    <div class="verdict-section">
+      <h3>Слепые пятна, которые поймал совет</h3>
+      <ul>
+        <li>Никто не спросил: есть ли живые клиенты прямо сейчас? Если есть — безопасность горит немедленно.</li>
+        <li>Техпартнёр/фрилансер не обсуждался как первый шаг. Для нетехнаря первое действие — не "открой GitHub", а "найди человека, который откроет GitHub".</li>
+        <li>B (онбординг) может быть просто задокументированным 10-минутным Telegram-скриптом, а не автоматизацией.</li>
+      </ul>
+    </div>
+
+    <hr class="verdict-divider">
+
+    <div class="verdict-section">
+      <h3>Рекомендация</h3>
+      <p><strong>C, начиная сегодня, через найм технического исполнителя на 8–10 часов.</strong> Порядок работ: RLS политики → auth_date validation → atomic counter → тест → D (auto-deploy). Всё закрывается за один рабочий день при наличии правильного человека. После — B онбординг как задокументированный скрипт. A ЮKасса — после первых 3 клиентов.</p>
+    </div>
+  </div>
+
+  <!-- One action -->
+  <div class="action-box">
+    <h3>Одно действие прямо сейчас</h3>
+    <p>Написать в Telegram: «Ищу Node.js/Supabase разработчика на 8–10 часов, задача — закрыть критические дыры безопасности (RLS + auth), оплата сегодня» — и отправить в три чата: локальный dev-чат, Upwork или к знакомому технарю из сети. Без технического исполнителя все остальные решения совета — теория.</p>
+  </div>
+
+  <!-- Agreement visual -->
+  <div class="agreement-grid">
+    <h2>Позиции советников</h2>
+    <div class="options-grid">
+      <div class="option-card strong">
+        <div class="label">C</div>
+        <div class="name">Безопасность</div>
+        <div class="votes">4/5 советников</div>
+      </div>
+      <div class="option-card medium">
+        <div class="label">D</div>
+        <div class="name">Auto-deploy</div>
+        <div class="votes">1/5 советников</div>
+      </div>
+      <div class="option-card medium">
+        <div class="label">A</div>
+        <div class="name">ЮKасса</div>
+        <div class="votes">1/5 советников</div>
+      </div>
+      <div class="option-card weak">
+        <div class="label">B</div>
+        <div class="name">Онбординг</div>
+        <div class="votes">0/5 советников</div>
+      </div>
+    </div>
+    <table class="positions-table" style="margin-top: 20px;">
+      <thead>
+        <tr><th>Советник</th><th>Главная позиция</th><th>Порядок</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>🔥 The Contrarian</td><td><span class="pos-c">C</span> Безопасность — условие существования</td><td>C первый</td></tr>
+        <tr><td>🧮 First Principles</td><td><span class="pos-c">C</span> Фундамент, не автоматизация</td><td>C только C</td></tr>
+        <tr><td>🚀 The Expansionist</td><td><span class="pos-a">A</span> Первый рубль = unit economics</td><td>A → данные → платформа</td></tr>
+        <tr><td>👁️ The Outsider</td><td><span class="pos-d">D</span> Без auto-deploy всё остальное рискованно</td><td>D → C → B → A</td></tr>
+        <tr><td>⚡ The Executor</td><td><span class="pos-c">C</span> 6 часов работы, конкретный план</td><td>C → D → B → A</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Security + QA consolidated findings -->
+  <div class="section-title">🔐 Выводы аудита безопасности + QA-ревью</div>
+
+  <div class="priority-list">
+    <h2>Что нужно исправить (по приоритету)</h2>
+
+    <div class="priority-item">
+      <div class="priority-num num-red">1</div>
+      <div>
+        <p><strong>УДАЛИТЬ api/run-migration.js</strong></p>
+        <small>Публичный POST-эндпоинт без аутентификации, запускающий произвольный DDL от имени суперпользователя на продакшн базе. Remote code execution эквивалент для БД.</small>
+      </div>
+    </div>
+
+    <div class="priority-item">
+      <div class="priority-num num-red">2</div>
+      <div>
+        <p><strong>СОЗДАТЬ таблицу owner_subscriptions (миграция 005)</strong></p>
+        <small>Таблица используется в 5 API-файлах, но не существует ни в одной миграции. 100% runtime crash при любом действии владельца ресторана.</small>
+      </div>
+    </div>
+
+    <div class="priority-item">
+      <div class="priority-num num-red">3</div>
+      <div>
+        <p><strong>restaurant-dashboard.js: globalGuests — скоупить к своим гостям</strong></p>
+        <small>Строки 160–166 возвращают TOP 200 гостей ВСЕЙ системы любому авторизованному владельцу. Нарушение 152-ФЗ. Любой владелец может писать гостям конкурентов.</small>
+      </div>
+    </div>
+
+    <div class="priority-item">
+      <div class="priority-num num-red">4</div>
+      <div>
+        <p><strong>guest-preview.js: добавить аутентификацию</strong></p>
+        <small>Любой человек с токеном QR получает first_name, last_name, username, visit_count гостя без каких-либо прав. Токены утекают через api.qrserver.com referrer logs.</small>
+      </div>
+    </div>
+
+    <div class="priority-item">
+      <div class="priority-num num-red">5</div>
+      <div>
+        <p><strong>webapp-init.js: добавить проверку auth_date (3600 секунд)</strong></p>
+        <small>Единственный endpoint без проверки auth_date. Бесконечное окно replay-атаки — старый initData работает вечно.</small>
+      </div>
+    </div>
+
+    <div class="priority-item">
+      <div class="priority-num num-orange">6</div>
+      <div>
+        <p><strong>owner_subscriptions: добавить RLS политики</strong></p>
+        <small>Единственная таблица без RLS-миграции. После создания таблицы (пункт 2) нужно немедленно добавить политику service_role_all.</small>
+      </div>
+    </div>
+
+    <div class="priority-item">
+      <div class="priority-num num-orange">7</div>
+      <div>
+        <p><strong>create-qr.js: добавить rate limiting</strong></p>
+        <small>Нет ограничений на генерацию QR. Каждый QR — запись в pending_visits. DoS через миллионы QR за час возможен без ограничений.</small>
+      </div>
+    </div>
+
+    <div class="priority-item">
+      <div class="priority-num num-blue">8</div>
+      <div>
+        <p><strong>Починить GitHub → Vercel auto-deploy</strong></p>
+        <small>Сейчас требует ручного npx vercel --prod. Без этого каждый деплой = риск. Настройка: Vercel GitHub integration + Secrets за 1–2 часа.</small>
+      </div>
+    </div>
+
+    <div class="priority-item">
+      <div class="priority-num num-blue">9</div>
+      <div>
+        <p><strong>send-offer.js: проверить принадлежность гостя владельцу</strong></p>
+        <small>Владелец может рассылать офферы гостям чужих заведений (через globalGuests утечку). После фикса пункта 3 — закрывается частично.</small>
+      </div>
+    </div>
+
+    <div class="priority-item">
+      <div class="priority-num num-blue">10</div>
+      <div>
+        <p><strong>confirm-visit.js: перейти на атомарный INCREMENT через RPC</strong></p>
+        <small>visit_count обновляется через SELECT+UPDATE. Атомарный claim pending_visits (строки 21-27) защищён, но счётчик гостя нет. Фикс: supabase.rpc('increment_visits', ...).</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advisor responses (collapsible) -->
+  <div class="section-title">Ответы советников</div>
+
+  <details>
+    <summary><span class="advisor-tag tag-contrarian">Contrarian</span> «Вопрос неправильный — но ответ очевиден: C»</summary>
+    <div class="advisor-content">
+      Все четыре варианта неправильные, потому что вопрос поставлен неправильно. Три-пять клиентов не дадут достаточно сигнала, чтобы знать, что именно автоматизировать. Но если принять условия вопроса — ответ очевиден: C, безопасность.<br><br>
+      A (ЮKасса) — бессмысленно без клиентов. B (Онбординг) — до него не дойдут, если данные утекут. D (auto-deploy) — это не блокирует продажи. C — не опция, это обязательное условие существования.<br><br>
+      Открытый RLS означает, что любой школьник с Postman может записать что угодно в базу. В HoReCa сарафанное радио работает в обе стороны. Реальный вопрос: есть ли у Сергея технический партнёр, который закроет C за неделю?
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="advisor-tag tag-first">First Principles</span> «C — фундамент, не автоматизация»</summary>
+    <div class="advisor-content">
+      Сергей задаёт неправильный вопрос. Любые инвестиции в автоматизацию — это автоматизация гипотезы, а не бизнеса. Но вопрос о безопасности — другое. Это не автоматизация. Это фундамент.<br><br>
+      Открытый RLS означает, что данные одного ресторана видны другому. Если первый клиент подключится к системе с этими дырами — это готовая катастрофа. Ресторатор покажет систему конкуренту. Один такой случай = потеря клиента + репутации в узком HoReCa-сообществе, где все знают всех.<br><br>
+      Настоящий ответ: C, и только C. Не потому что безопасность важнее роста. А потому что без C нельзя безопасно подключать первых клиентов.
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="advisor-tag tag-expansionist">Expansionist</span> «A первым — база данных гостей это настоящий бизнес»</summary>
+    <div class="advisor-content">
+      База гостей — это и есть настоящий бизнес. Никто не говорит вслух: Great Guest сидит на данных о поведении гостей тысяч ресторанов. Но сначала — A, платёжная интеграция.<br><br>
+      Платёж = момент истины для unit economics. Когда ресторан платит без Сергея — у него появляется реальная LTV, реальный CAC, реальный churn. Без этого он продаёт «намерения», а не бизнес.<br><br>
+      Скрытый апсайд: ЮKassa даёт не только транзакции — она даёт доверие юридического лица. Ресторан, который заплатил, становится контрактным партнёром. Self-service онбординг нужен через 30 дней — личный онбординг сейчас = конкурентное преимущество, не слабость. Плати → данные → платформа.
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="advisor-tag tag-outsider">Outsider</span> «D важнее всего — без него всё остальное рискованно»</summary>
+    <div class="advisor-content">
+      Вопрос поставлен неправильно. «Система работает без его участия» — это не про платежи и не про онбординг. Это про то, что система вообще работает.<br><br>
+      Пункт D стоит последним, но это единственное, что реально ломает всё остальное. Если auto-deploy сломан, то когда Сергей починит баг безопасности или добавит онбординг — изменения не попадут в прод. Первый клиент придёт, система упадёт, Сергей выкатит фикс в 23:00, что-то сломает.<br><br>
+      Ответ: сначала D, потом C, потом B, потом A. Платежи — последними. Первые 3–5 клиентов закрываются вручную.
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="advisor-tag tag-executor">Executor</span> «C → D → B. Конкретный план с часами»</summary>
+    <div class="advisor-content">
+      C → D → B. В этом порядке.<br><br>
+      <strong>Понедельник утром, первые 6 часов:</strong> чинишь баги безопасности. auth_date validation — 1 час. Atomic counter — 1.5 часа. RLS политики — 2 часа. Тест — 1 час.<br><br>
+      <strong>Вторник утром — D auto-deploy:</strong> 1–2 часа, GitHub Secrets в Vercel.<br><br>
+      <strong>Среда-четверг — B онбординг.</strong><br><br>
+      A ЮKасса — после первых 3 клиентов. Сначала закрой их вручную, выставь счёт. Автоматизировать оплату до продаж — строить кассу в пустом магазине. Открой GitHub прямо сейчас и начни с RLS.
+    </div>
+  </details>
+
+  <!-- Peer reviews (collapsible) -->
+  <div class="section-title">Взаимное рецензирование</div>
+
+  <details>
+    <summary>Рецензент 1 — Сильнейший: E (First Principles), Слепое пятно: A (Expansionist)</summary>
+    <div class="advisor-content">
+      <strong>Сильнейший — E.</strong> Самый чистый аргумент: C — не опция автоматизации, а условие безопасного подключения первых клиентов. Конкретный механизм провала (ресторатор показывает систему конкуренту → RLS → данные видны) точно попадает в HoReCa-контекст, где репутация разрушается за один разговор.<br><br>
+      <strong>Наибольший слепой угол — A.</strong> A убеждает, что платёж = unit economics и доверие. Но пропускает очевидное: ЮKасса в РФ = 2–4 недели только на регистрацию. Сергей соло, не технарь. Это не «построить первым» — это строить последним среди зависимостей.<br><br>
+      <strong>Что пропустили все:</strong> нужна диагностика реального состояния кода, не абстрактное ранжирование. Совет должен был начать с диагностики.
+    </div>
+  </details>
+
+  <details>
+    <summary>Рецензент 2 — Сильнейший: D (Executor), Слепое пятно: A (Expansionist)</summary>
+    <div class="advisor-content">
+      <strong>Сильнейший — D.</strong> Единственный, кто дал конкретные временные оценки и чёткую последовательность. Actionable для нетехнаря, нанимающего разработчика на конкретные задачи.<br><br>
+      <strong>Самый слепой — A.</strong> Строить ЮKасса поверх дырявой базы = юридическая ответственность при утечке платёжных данных.<br><br>
+      <strong>Что пропустили все:</strong> Сергей соло, не технарь — реальный первый шаг — нанять/найти технического партнёра на 8–10 часов. Без этого ни один из вариантов A–D он не реализует сам.
+    </div>
+  </details>
+
+  <details>
+    <summary>Рецензент 3 — Сильнейший: D (Executor), Слепое пятно: C (Outsider)</summary>
+    <div class="advisor-content">
+      <strong>Сильнейший — D.</strong> Конкретные шаги с временными оценками. Практически применимо.<br><br>
+      <strong>Главный слепой угол — C (Outsider).</strong> «D важнее безопасности» — логика перфекционизма, не стартапа. Ручной деплой неудобен, но не блокирует продажи. Открытый RLS с клиентами — юридический и репутационный риск.<br><br>
+      <strong>Что пропустили все:</strong> что конкретно мешает следующей продаже прямо сейчас? Может онбординг — это 10-минутный Telegram-разговор, который нужно задокументировать, не автоматизировать?
+    </div>
+  </details>
+
+  <details>
+    <summary>Рецензент 4 — Сильнейший: D (Executor), Слепое пятно: A (Expansionist)</summary>
+    <div class="advisor-content">
+      <strong>Сильнейший — D.</strong> Единственный с приоритизацией C→D→B→A и временными оценками. Не просто мнение — рабочий план.<br><br>
+      <strong>Наибольший слепой угол — A.</strong> Не ответил на вопрос. Уклонение. Говорит о «базе гостей», но вопрос про одно первое действие для автономной работы.<br><br>
+      <strong>Что пропустили все:</strong> есть ли уже живые клиенты? Если нет — при нулевых клиентах правильный ответ B (онбординг), потому что именно он убирает Сергея из петли продаж.
+    </div>
+  </details>
+
+  <details>
+    <summary>Рецензент 5 — Сильнейший: B (Contrarian), Слепое пятно: A (Expansionist)</summary>
+    <div class="advisor-content">
+      <strong>Сильнейший — B.</strong> Единственный, кто чётко обосновал приоритет: без закрытого RLS продукт нельзя подключить ни к одному клиенту. В HoReCa это мгновенная репутационная смерть.<br><br>
+      <strong>Главный слепой — A.</strong> Нельзя брать деньги через продукт с дырами безопасности — это не только репутационный, но и юридический риск. «Первый рубль» поверх открытого RLS = первый иск.<br><br>
+      <strong>Что пропустили все:</strong> работает ли бот прямо сейчас у первых клиентов? Что именно останавливает первую продажу завтра утром?
+    </div>
+  </details>
+
+  <div class="footer">
+    Методология: Andrej Karpathy LLM Council · 5 советников + 5 рецензентов + Синтез председателя<br>
+    Дополнительно: Аудит безопасности (12 находок) + QA-ревью (14 находок)<br>
+    Great Guest · 21 июня 2026
+  </div>
+
+</div>
+</body>
+</html>
