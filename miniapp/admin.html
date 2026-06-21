@@ -521,7 +521,14 @@ async function apiFetch(url, body) {
 
 // ─ Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-  if (tg) tg.ready();
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    if (tg.BackButton) {
+      tg.BackButton.show();
+      tg.BackButton.onClick(function() { window.location.href = 'app.html'; });
+    }
+  }
   if (!initData) { showErr('Откройте через @great_guest_bot → /restaurant'); return; }
 
   const data = await apiFetch('/api/restaurant-dashboard', { initData });
@@ -577,6 +584,9 @@ function renderNetwork() {
 
   let content = `
     <div class="net-header">
+      <button onclick="window.location.href='app.html'" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:rgba(240,235,224,0.45);font-family:inherit;font-size:13px;font-weight:500;padding:0 0 14px 0;-webkit-tap-highlight-color:transparent">
+        <span style="font-size:20px;line-height:1">‹</span> Карта лояльности
+      </button>
       <div class="net-title">
         <h1><span style="color:var(--gold)">Great</span>Guest · Моя сеть</h1>
         <span class="net-badge ${badgeClass}">${badgeText}</span>
