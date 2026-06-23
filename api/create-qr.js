@@ -4,30 +4,29 @@ const { v4: uuidv4 } = require('uuid');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-// Rate limit: max 5 QR codes per guest per minute
-const QR_RATE_LIMIT = new Map();
-function checkQRRateLimit(telegramId) {
+const QR_RL = new Map();
+function checkQRLimit(telegramId) {
   const now = Date.now();
-  const entry = QR_RATE_LIMIT.get(telegramId) || { count: 0, start: now };
-  if (now - entry.start > 60_000) { entry.count = 0; entry.start = now; }
-  entry.count++;
-  QR_RATE_LIMIT.set(telegramId, entry);
-  return entry.count <= 5;
+  const e = QR_RL.get(telegramId) || { count: 0, start: now };
+  if (now - e.start > 60_000) { e.count = 0; e.start = now; }
+  e.count++;
+  QR_RL.set(telegramId, e);
+  return e.count <= 5;
 }
 
 function validateInitData(initData, botToken) {
   try {
     const params = new URLSearchParams(initData);
-    const receivedHash = params.get('user') !== undefined ? params.get('hash') : null;
-    if (!receivedHash) return null;
+    const hash = params.get('hash');
+    if (!hash) return null;
     const authDate = parseInt(params.get('auth_date') || '0', 10);
     if (!authDate || Date.now() / 1000 - authDate > 3600) return null;
     params.delete('hash');
-    const checkString = Array.from(params.entries()).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>`${k}=${v}`).join('\n');
-    const secretKey = crypto.createHmac('sha256','WebAppData').update(botToken).digest();
-    const computedHash = crypto.createHmac('sha256',secretKey).update(checkString).digest('hex');
-    if (!crypto.timingSafeEqual(Buffer.from(computedHash,'hex'),Buffer.from(receivedHash,'hex'))) return null;
-    const user = JSON.parse(params.get('user')||'{}');
+    const str = Array.from(params.entries()).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${k}=${v}`).join('\n');
+    const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
+    const computed = crypto.createHmac('sha256', secret).update(str).digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(computed, 'hex'), Buffer.from(hash, 'hex'))) return null;
+    const user = JSON.parse(params.get('user') || '{}');
     return user.id ? user : null;
   } catch { return null; }
 }
@@ -37,11 +36,35 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  const { initData } = req.body || {};
-  const tgUser = validateInitData(initData, process.env.BOT_TOKEN);
+  const body = req.body || {};
+  const tgUser = validateInitData(body.initData, process.env.BOT_TOKEN);
   if (!tgUser) return res.status(401).json({ error: 'Invalid Telegram signature' });
 
-  if (!checkQRRateLimit(String(tgUser.id)))
+  const telegramId = String(tgUser.id);
+
+  // ── action: init — guest app initialisation (replaces webapp-init.js) ────────
+  if (body.action === 'init') {
+    const { data: existing } = await supabase
+      .from('guests')
+      .select('telegram_id, first_name, last_name, username, visit_count, consent_at')
+      .eq('telegram_id', telegramId)
+      .maybeSingle();
+
+    if (!existing) return res.status(403).json({ error: 'consent_required' });
+
+    const { data: guest, error } = await supabase
+      .from('guests')
+      .update({ first_name: tgUser.first_name || '', last_name: tgUser.last_name || '', username: tgUser.username || '' })
+      .eq('telegram_id', telegramId)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: 'DB error' });
+    return res.status(200).json({ guest });
+  }
+
+  // ── Default: create QR token ──────────────────────────────────────────────────
+  if (!checkQRLimit(telegramId))
     return res.status(429).json({ error: 'too_many_requests', message: 'Подождите минуту перед созданием нового QR' });
 
   const token = uuidv4();
@@ -49,7 +72,7 @@ module.exports = async (req, res) => {
 
   const { error } = await supabase
     .from('pending_visits')
-    .insert({ token, telegram_id: String(tgUser.id), expires_at: expiresAt });
+    .insert({ token, telegram_id: telegramId, expires_at: expiresAt });
 
   if (error) return res.status(500).json({ error: 'DB error' });
 

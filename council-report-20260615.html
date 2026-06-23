@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Council — Great Guest · 15 июня 2026</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #f5f5f7; color: #1d1d1f; line-height: 1.6; }
+
+  .header { background: #1d1d1f; color: #fff; padding: 40px 48px; }
+  .header-badge { display: inline-block; background: #0071e3; color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; margin-bottom: 16px; }
+  .header h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+  .header .meta { font-size: 14px; color: #a1a1a6; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Verdict card */
+  .verdict-card { background: #fff; border-radius: 16px; padding: 40px; margin-bottom: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .verdict-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  .verdict-card h2 .icon { font-size: 24px; }
+  .verdict-section { margin-bottom: 28px; }
+  .verdict-section:last-child { margin-bottom: 0; }
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #6e6e73; margin-bottom: 10px; }
+  .verdict-section p, .verdict-section li { font-size: 15px; color: #3a3a3c; margin-bottom: 8px; }
+  .verdict-section ul { padding-left: 20px; }
+  .verdict-section li { margin-bottom: 6px; }
+
+  /* One thing CTA */
+  .one-thing { background: linear-gradient(135deg, #0071e3 0%, #0055b3 100%); color: #fff; border-radius: 16px; padding: 32px 40px; margin-bottom: 32px; }
+  .one-thing .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.65); margin-bottom: 8px; }
+  .one-thing h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+  .one-thing p { font-size: 15px; color: rgba(255,255,255,0.88); }
+
+  /* Agreement visual */
+  .agreement-grid { background: #fff; border-radius: 16px; padding: 32px 40px; margin-bottom: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .agreement-grid h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .advisor-row { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; padding: 14px; border-radius: 10px; border: 1px solid #e5e5ea; }
+  .advisor-badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .badge-contrarian   { background: #ffe5e5; color: #c0392b; }
+  .badge-principles   { background: #e8f4fd; color: #1a6fa8; }
+  .badge-expansionist { background: #e8fdf0; color: #1a7a4a; }
+  .badge-outsider     { background: #fdf3e8; color: #a86d1a; }
+  .badge-executor     { background: #ede8fd; color: #5a1aa8; }
+  .advisor-verdict { flex: 1; }
+  .advisor-verdict strong { font-size: 13px; font-weight: 600; display: block; margin-bottom: 3px; }
+  .advisor-verdict span { font-size: 13px; color: #6e6e73; }
+  .peer-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-left: 6px; }
+  .peer-strongest { background: #e8fdf0; color: #1a7a4a; }
+  .peer-blindspot { background: #ffe5e5; color: #c0392b; }
+
+  /* Collapsible advisors */
+  .collapsibles { margin-bottom: 32px; }
+  .collapsibles h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  details { background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); overflow: hidden; }
+  summary { cursor: pointer; padding: 16px 20px; font-size: 14px; font-weight: 600; list-style: none; display: flex; align-items: center; justify-content: space-between; user-select: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '›'; font-size: 20px; color: #8e8e93; transition: transform 0.2s; transform: rotate(90deg); }
+  details[open] summary::after { transform: rotate(270deg); }
+  .advisor-content { padding: 0 20px 20px; font-size: 14px; color: #3a3a3c; line-height: 1.7; border-top: 1px solid #f0f0f5; padding-top: 16px; }
+  .advisor-content p { margin-bottom: 10px; }
+
+  /* Peer review */
+  .peer-section { background: #fff; border-radius: 16px; padding: 32px 40px; margin-bottom: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .peer-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .peer-item { border-left: 3px solid #e5e5ea; padding: 12px 16px; margin-bottom: 12px; }
+  .peer-item strong { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+  .peer-item p { font-size: 13px; color: #6e6e73; }
+  .consensus-box { background: #f5f5f7; border-radius: 10px; padding: 16px 20px; margin-top: 16px; }
+  .consensus-box strong { font-size: 13px; font-weight: 700; }
+  .consensus-box ul { padding-left: 18px; margin-top: 8px; }
+  .consensus-box li { font-size: 13px; color: #3a3a3c; margin-bottom: 4px; }
+
+  .footer { text-align: center; padding: 32px 24px; font-size: 12px; color: #a1a1a6; }
+  .footer strong { color: #6e6e73; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">LLM Council</div>
+  <h1>Great Guest — Продуктовый аудит</h1>
+  <div class="meta">5 советников · 5 рецензентов · 1 вердикт &nbsp;·&nbsp; 15 июня 2026</div>
+</div>
+
+<div class="container">
+
+  <!-- ONE THING -->
+  <div class="one-thing">
+    <div class="label">Одно действие на этой неделе</div>
+    <h3>Сделай CSV-импорт гостей</h3>
+    <p>Не ИИ. Не дизайн. Не очки. Каждый ресторан, который Сергей подключит, уже имеет Excel с именами постоянных гостей. Без импорта они начинают с нуля. С импортом — sales-разговор меняется с «попробуйте» на «я уже загрузил ваших 300 гостей». Это неделя 1. Всё остальное — после.</p>
+  </div>
+
+  <!-- CHAIRMAN VERDICT -->
+  <div class="verdict-card">
+    <h2><span class="icon">⚖️</span> Вердикт Председателя</h2>
+
+    <div class="verdict-section">
+      <div class="section-label">Где совет согласен — сигналы высокой уверенности</div>
+      <ul>
+        <li><strong>Персонал — потолок, не приложение.</strong> Contrarian, First Principles и Executor сошлись независимо: если официанты не предлагают гостям сканировать, система невидима. Никакой UI и ИИ это не починят. Потолок принятия — человеческий.</li>
+        <li><strong>Существующие клиенты не могут мигрировать.</strong> The Outsider и Executor оба подняли это: у Сергея ~300 ресторанных клиентов с собственными базами гостей. Без CSV-импорта каждое новое заведение начинает с нуля — это жёсткий аргумент против продаж.</li>
+        <li><strong>Метрика «визиты» — прокси, не ценность.</strong> Contrarian и First Principles сошлись: владельцев волнует выручка, не посещаемость. Гость с 15 визитами на кофе — Gold. Гость с 1 визитом на ₽50 000 — Bronze. Этот разрыв делает ROI-кейс хрупким.</li>
+        <li><strong>Тактический план Executor'а — правильный порядок приоритетов.</strong> Все 5 рецензентов единогласно назвали Executor'а сильнейшим. Остальные решали интересные проблемы — только Executor решал нужную в нужное время.</li>
+      </ul>
+    </div>
+
+    <div class="verdict-section">
+      <div class="section-label">Где совет расходится — честные разногласия</div>
+      <ul>
+        <li><strong>Масштаб экспансии.</strong> Expansionist видит Great Guest как граф поведенческих данных, за который будут платить CPG-бренды (Pernod Ricard, алкогольные компании). Contrarian считает это преждевременным и опасным: 152-ФЗ, ноль данных сегодня, требует несуществующих 500К профилей. <em>Разрешение: Expansionist прав о долгосрочном потолке, Contrarian прав о сроках. Тезис «граф данных» — это ставка на 2028, не на 2026.</em></li>
+        <li><strong>ИИ-фича «сейчас vs позже».</strong> Executor: пропустить до Месяца 4. First Principles и Expansionist: это дифференциатор, оправдывающий подписку. <em>Разрешение: ИИ уже построен (в этой сессии). Вопрос не «строить или нет» — вопрос в том, как громко его продавать. Оставить, не перестраивать, но не позволять ему отвлекать от CSV-импорта и планшетного киоска.</em></li>
+      </ul>
+    </div>
+
+    <div class="verdict-section">
+      <div class="section-label">Слепые пятна, которые поймал совет (рецензенты, не советники)</div>
+      <ul>
+        <li><strong>Проблема стимулирования персонала.</strong> Все 5 рецензентов поймали, все 5 советников пропустили. Нет механизма, который заставил бы официантов использовать систему. Владелец ставит Great Guest, платит подписку, но его официанты никогда не просят гостей сканировать. Так умирают программы лояльности. Нужен персонал-ориентированный компонент: ежедневный брифинг («эти столики — VIP сегодня»), геймификация для персонала или хотя бы обучающий скрипт при онбординге.</li>
+        <li><strong>Telegram-нативные механики.</strong> Telegram Mini Apps поддерживают платежи нативно (Telegram Stars, карточные платежи в России). Great Guest может стать слоем оплаты/разделения чека, а не только трекером лояльности. Это фича 2027 года, но её нужно учесть в архитектуре сейчас, чтобы схема не закрывала эту дверь.</li>
+        <li><strong>Триггер продления подписки.</strong> Что заставляет владельца ресторана платить на второй месяц? Если дашборд не показывает четкое ROI-число («Ваши гости Great Guest потратили ₽320 000 в прошлом месяце против ₽180 000 в среднем»), отток будет высоким. История продления должна быть вшита в продукт, а не только в sales-deck.</li>
+        <li><strong>Discovery гостей на стороне владельца.</strong> Как ресторан находит гостей в сети, которые у него ещё не были? Текущий продукт показывает существующих посетителей. Разблокировка — проактивный таргетинг: «847 Gold-гостей в вашем городе, которые ещё не были у вас». Это фича, которая лучше всего обосновывает стоимость подписки — и её ещё нет.</li>
+      </ul>
+    </div>
+
+    <div class="verdict-section">
+      <div class="section-label">Рекомендация</div>
+      <p><strong>Не добавляй фичи. Почини миграцию и докажи ROI.</strong></p>
+      <p>Great Guest в опасном среднем состоянии: достаточно сложен, чтобы впечатлить на демо, недостаточно завершён, чтобы удержать клиентов. Разрыв — не в дизайне, ИИ или интернационализации. Рестораны не могут привести с собой существующую клиентскую базу и не видят финансовой отдачи от того, за что платят.</p>
+      <p>Продукт выживает или умирает по двум вещам в следующие 60 дней: (1) CSV-импорт — чтобы владельцы принесли своих 300 постоянных гостей без старта с нуля. (2) ROI-дашборд — одно число, которое владелец может заскриншотить: «Гости Great Guest потратили X% больше в этом месяце».</p>
+      <p>Проблему Bronze-при-нуле, поднятую Outsider'ом, реально и легко починить за 2 часа: переименовать Bronze в «Участник программы» для 0 визитов, или начать счёт с первого визита, а не с регистрации. Сделать немедленно.</p>
+    </div>
+  </div>
+
+  <!-- ADVISOR AGREEMENT VISUAL -->
+  <div class="agreement-grid">
+    <h2>Позиции советников и оценки рецензентов</h2>
+
+    <div class="advisor-row">
+      <span class="advisor-badge badge-executor">Executor</span>
+      <div class="advisor-verdict">
+        <strong>CSV-импорт → Планшет-киоск → Бонус-визит → ROI-дашборд. Пропусти ИИ и дизайн.</strong>
+        <span>Единогласно признан сильнейшим всеми 5 рецензентами <span class="peer-badge peer-strongest">★ Сильнейший 5/5</span></span>
+      </div>
+    </div>
+
+    <div class="advisor-row">
+      <span class="advisor-badge badge-contrarian">Contrarian</span>
+      <div class="advisor-verdict">
+        <strong>Визит-счётчик = трекинг посещаемости. ИИ-офферы = потенциальная ответственность. Онбординг = где происходит отток.</strong>
+        <span>Высокая концентрация рисков: соло + нетехнарь + ИИ-зависимость + российское регулирование.</span>
+      </div>
+    </div>
+
+    <div class="advisor-row">
+      <span class="advisor-badge badge-principles">First Principles</span>
+      <div class="advisor-verdict">
+        <strong>Рестораны хотят вернуть выручку, а не механики лояльности. Персонал = потолок принятия.</strong>
+        <span>Нужен ROI-дашборд, доказывающий «Гости Great Guest тратят на X% больше проходящих».</span>
+      </div>
+    </div>
+
+    <div class="advisor-row">
+      <span class="advisor-badge badge-outsider">Outsider</span>
+      <div class="advisor-verdict">
+        <strong>Bronze при 0 = демотивирует. 4-шаговое трение для гостя. 300 клиентов не могут мигрировать. Разрыв трат очевиден владельцам.</strong>
+        <span>Взгляд свежих глаз: то, что кажется логичным внутри, снаружи ломается.</span>
+      </div>
+    </div>
+
+    <div class="advisor-row">
+      <span class="advisor-badge badge-expansionist">Expansionist</span>
+      <div class="advisor-verdict">
+        <strong>Граф поведенческих данных → B2B2B с Pernod Ricard/CPG → 500К профилей > выручка от подписок.</strong>
+        <span>Признан слабейшим по слепым пятнам всеми 5 рецензентами <span class="peer-badge peer-blindspot">⚠ Слепое пятно 5/5</span> — преждевременно, риски 152-ФЗ, нет данных.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADVISOR FULL RESPONSES -->
+  <div class="collapsibles">
+    <h2>Полные ответы советников</h2>
+
+    <details>
+      <summary><span class="advisor-badge badge-executor" style="margin-right:10px">Executor</span> «Единственный вопрос: что делать в понедельник утром?»</summary>
+      <div class="advisor-content">
+        <p><strong>Неделя 1: CSV-импорт.</strong> Каждый ресторан у Сергея имеет Excel с постоянными гостями. Без импорта они начинают с нуля. Со Star Wars схемой импорта — sales-разговор сразу меняется. Схема: таблица <code>imported_guests</code> (phone, name, restaurant_id, invite_status, telegram_id = null). Когда гость вступает по ссылке ресторана — матч по телефону, история предзаполняется.</p>
+        <p><strong>Неделя 2: Планшетный киоск.</strong> Убери зависимость от QR-отображения гостя. Планшет на стойке показывает камеру, сканирует QR, сотрудник видит имя + статус, нажимает «Подтвердить». Это снимает трение и убирает «официант забыл напомнить» как причину провала.</p>
+        <p><strong>Неделя 3: Кнопка «Бонус-визит».</strong> Бариста начисляет +1 к счётчику визитов за чек выше ₽2000. Это решает проблему «визиты vs. трата» без переписывания схемы. Владелец контролирует пороги.</p>
+        <p><strong>Неделя 4: ROI-дашборд.</strong> Одна метрика: средний чек гостей GG vs. средний чек без программы. Если эту цифру не показывать — владелец уйдёт на второй месяц.</p>
+        <p>Пропусти ИИ-тюнинг, ребрендинг, глобальную экспансию, очки-вместо-визитов. Это для месяца 4+.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="advisor-badge badge-contrarian" style="margin-right:10px">Contrarian</span> «Где это сломается?»</summary>
+      <div class="advisor-content">
+        <p><strong>Визит-счётчик измеряет посещаемость, а не ценность.</strong> Самый ценный гость ресторана может иметь 2 визита (корпоратив на 40К), а регулярный посетитель кофе — 30 визитов (120К в год). Программа ставит их в разные лиги. Когда владелец это увидит, он уйдёт.</p>
+        <p><strong>ИИ-офферы — это потенциальная ответственность.</strong> «Персональное предложение» которое генерирует GPT и отправляет без проверки — это путь к репутационным ошибкам. Ресторан увидит «Уважаемый Алексей, как Platinum-гость вы заслуживаете лучшего» отправленным человеку с 0 реальными визитами (импортированный). Проверки не хватает.</p>
+        <p><strong>Онбординг — это где происходит реальный отток.</strong> Шаги для гостя: найти бот → /start → сгенерировать QR → показать QR → официант сканирует → получить уведомление. Это 4+ шага при первом касании. При регистрации через ссылку ресторана — ещё сложнее. Каждый шаг — потенциальная потеря.</p>
+        <p><strong>Концентрация рисков опасная.</strong> Один соло-основатель, нетехнарь, продукт зависит от Anthropic API (может подорожать в 10x), российское регулирование ИИ и персональных данных может закрыть ключевые функции в 24 часа. Нет ни одного буфера ни в одном измерении.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="advisor-badge badge-principles" style="margin-right:10px">First Principles</span> «Что мы на самом деле пытаемся решить?»</summary>
+      <div class="advisor-content">
+        <p><strong>Что на самом деле нужно ресторану?</strong> Не «программа лояльности». Им нужно: (1) чтобы конкретные люди приходили чаще и тратили больше, (2) знать, кто их лучшие клиенты, (3) доказательство что маркетинг работает. Механика Bronze/Silver/Gold — решение дизайнера, а не ответ на реальную проблему.</p>
+        <p><strong>Персонал — реальный потолок принятия.</strong> Каждая программа лояльности умирает на одном и том же: сотрудники не делают её частью взаимодействия с гостем. Нет механизма для «официант напомнил» в Great Guest. Без этого любой красивый UI — витрина без покупателей.</p>
+        <p><strong>ROI-история должна быть в продукте, а не в pitch-deck.</strong> «Средний чек участников программы: 2 847₽. Средний чек без программы: 1 923₽. Дельта: +48%.» Если эта цифра живёт на главном экране дашборда, владелец продаёт программу сам себе каждый раз когда открывает приложение. Сейчас эта цифра нигде не существует.</p>
+        <p><strong>Вопрос для переосмысления системы уровней:</strong> Почему Bronze начинается с 0? Зачем кто-то с 0 визитами в «программе лояльности»? Первый уровень должна получать за первый визит, а регистрация — просто открытие двери.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="advisor-badge badge-outsider" style="margin-right:10px">Outsider</span> «Что видит человек с улицы»</summary>
+      <div class="advisor-content">
+        <p><strong>Bronze при 0 визитах демотивирует немедленно.</strong> Я вижу «🥉 Bronze — 0 визитов» сразу после регистрации. Это говорит мне что я внизу лестницы. Программы лояльности работают когда ты уже чувствуешь прогресс, не когда видишь насколько далеко до него. Исправление простое: «Добро пожаловать в программу!» без уровня до первого визита.</p>
+        <p><strong>Трение для гостя — реальное.</strong> Чтобы получить скидку: найти Great Guest в Telegram → написать боту → попросить QR → показать QR сотруднику → подождать пока сотрудник сканирует → получить уведомление. Четыре активных шага при первом использовании. Большинство людей бросают на шаге 2.</p>
+        <p><strong>Существующие 300 клиентов Сергея — главный вопрос.</strong> У каждого ресторана есть база постоянных гостей. Great Guest просит их начать с нуля. Это не просто неудобство — это потенциальный оскорбительный опыт для гостя который ходил сюда 5 лет. Импорт истории — не фича, это базовое уважение к лояльности которая уже существует.</p>
+        <p><strong>Разрыв между визитами и тратами очевиден любому владельцу ресторана.</strong> Первый вопрос который они зададут: «А если гость пришёл на бизнес-ланч за 500₽ и на корпоратив за 50 000₽ — это всё равно один визит?» Да. И это очевидная проблема.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="advisor-badge badge-expansionist" style="margin-right:10px">Expansionist</span> «Что если это работает лучше чем ожидалось?»</summary>
+      <div class="advisor-content">
+        <p><strong>Great Guest — это не программа лояльности. Это граф поведенческих данных.</strong> Каждый визит в любой ресторан сети создаёт сигнал. 500 000 профилей × 20 визитов в год = данные которые алкогольные бренды, CPG-компании и ивент-агентства будут платить за доступ. Pernod Ricard уже знает Сергея — это партнёрство которое можно подписать за ужином.</p>
+        <p><strong>B2B2B — настоящий потолок дохода.</strong> Сейчас модель: ресторан платит подписку. Следующий уровень: бренд платит за таргетированную коммуникацию к Gold-гостям в конкретных городах. «5 000 Platinum-гостей в Москве, интересуются виски» — это не реклама, это прецизионный маркетинг. CPM здесь — другой порядок.</p>
+        <p><strong>Скорость сети критична.</strong> Ценность программы растёт нелинейно с количеством заведений. Первые 10 заведений — это тест. Первые 100 — это продукт. Первые 1000 — это платформа. Нужно всё что ускоряет ресторанный онбординг: API-интеграции с R-Keeper/iiko, партнёрство с дистрибьюторами алкоголя как каналом продаж.</p>
+        <p><em>(Примечание Председателя: тезис стратегически верный, тактически преждевременный. 152-ФЗ создаёт реальные барьеры для монетизации данных в России. Требует 500К профилей которых нет. Правильная ставка на 2028, не на 2026.)</em></p>
+      </div>
+    </details>
+  </div>
+
+  <!-- PEER REVIEWS -->
+  <div class="peer-section">
+    <h2>Рецензии советников (анонимный перекрёстный просмотр)</h2>
+
+    <div class="peer-item">
+      <strong>★ Сильнейший ответ — единогласно: D (Executor)</strong>
+      <p>Все 5 рецензентов назвали Executor'а сильнейшим. Причина: единственный, кто решал правильную проблему в правильное время с конкретными шагами вместо стратегии.</p>
+    </div>
+
+    <div class="peer-item">
+      <strong>⚠ Наибольшее слепое пятно — единогласно: E (Expansionist)</strong>
+      <p>Все 5 рецензентов. Строит стратегию для 500К профилей при 0 сегодня. Игнорирует 152-ФЗ. Требует инфраструктуры которой нет. Вдохновляющий, но преждевременный на 2-3 года.</p>
+    </div>
+
+    <div class="consensus-box">
+      <strong>Что пропустили ВСЕ пять советников (поймали рецензенты):</strong>
+      <ul>
+        <li>Нет механизма стимулирования персонала — официанты не будут использовать систему без причины</li>
+        <li>Telegram-нативные платежи как следующий слой поверх лояльности (Telegram Stars, TON)</li>
+        <li>Триггер продления подписки: что делает владелец счастливым в Месяц 2?</li>
+        <li>Проактивный Discovery гостей: «847 Gold-гостей в вашем городе, которые ещё не были у вас»</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- QUICK WINS -->
+  <div class="verdict-card">
+    <h2><span class="icon">⚡</span> Быстрые победы (до 2 часов каждая)</h2>
+    <div class="verdict-section">
+      <ul>
+        <li><strong>Переименовать Bronze при 0 визитах</strong> → «Участник программы» или убрать уровень до первого визита. 30 минут кода.</li>
+        <li><strong>Добавить ROI-строку в дашборд</strong> → «Средний чек участников: ₽X vs. ₽Y без программы». Если данных нет — показывать плейсхолдер «собираем данные».</li>
+        <li><strong>Упростить онбординг-сообщение бота</strong> → одна кнопка «Получить QR» крупно, остальное — убрать из первого экрана.</li>
+        <li><strong>Добавить кнопку «Поделиться программой» в guest app</strong> → реферальный механизм через Telegram share. Нативный и бесплатный.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>LLM Council — Great Guest</strong> · 15 июня 2026<br>
+  5 советников · Contrarian, First Principles, Expansionist, Outsider, Executor<br>
+  Методология: Andrej Karpathy · Адаптация для Claude Code
+</div>
+
+</body>
+</html>

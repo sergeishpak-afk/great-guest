@@ -14,8 +14,7 @@
     "express": "^4.21.2",
     "qrcode": "^1.5.4",
     "telegraf": "^4.16.3",
-    "uuid": "^11.1.0",
-    "pg": "^8.13.0"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -24,6 +23,7 @@
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",
     "nodemon": "^3.1.9",
+    "pg": "^8.22.0",
     "tailwind-merge": "^3.6.0"
   }
 }

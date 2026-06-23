@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>Приглашение — Great Guest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --gold:#C9A96E;--gold2:#E8C97E;
+      --bg:#0D0C12;--card:#161520;--card2:#1E1D2A;
+      --border:rgba(255,255,255,0.08);
+      --text:#F0EBE0;--muted:rgba(240,235,224,0.5);
+      --green:#4ADE80;
+    }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);
+      font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif}
+    body{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+      padding:0;min-height:100vh}
+
+    /* Loading */
+    #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:100vh;gap:14px}
+    .spinner{width:32px;height:32px;border:2px solid rgba(255,255,255,0.08);
+      border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Error */
+    #error-view{display:none;flex-direction:column;align-items:center;justify-content:center;
+      min-height:100vh;gap:16px;padding:32px;text-align:center}
+    #error-view .err-icon{font-size:48px}
+    #error-view p{color:var(--muted);font-size:14px;line-height:1.6}
+
+    /* Main card */
+    #main{display:none;width:100%;max-width:480px;margin:0 auto;padding:24px 20px 48px}
+
+    /* Top brand */
+    .brand{display:flex;align-items:center;justify-content:center;
+      gap:8px;margin-bottom:28px;padding-top:8px}
+    .brand-logo{font-size:15px;font-weight:800;letter-spacing:-0.3px}
+    .brand-logo span{color:var(--gold)}
+    .brand-dot{width:4px;height:4px;border-radius:50%;background:var(--border)}
+    .brand-label{font-size:12px;color:var(--muted);font-weight:500}
+
+    /* Glow blob */
+    .glow{position:fixed;top:-120px;left:50%;transform:translateX(-50%);
+      width:400px;height:300px;background:radial-gradient(ellipse,rgba(201,169,110,0.12) 0%,transparent 70%);
+      pointer-events:none;z-index:0}
+
+    /* Event card */
+    .event-card{position:relative;z-index:1;background:var(--card);
+      border:1px solid rgba(201,169,110,0.2);border-radius:24px;
+      padding:28px 24px;margin-bottom:20px;
+      box-shadow:0 8px 40px rgba(0,0,0,0.4),0 0 0 1px rgba(201,169,110,0.08)}
+    .event-cover-hero{height:180px;margin:-28px -24px 20px;border-radius:20px 20px 0 0;
+      background-size:cover;background-position:center;display:none}
+    .event-icon{font-size:48px;text-align:center;margin-bottom:16px;
+      filter:drop-shadow(0 4px 12px rgba(201,169,110,0.3))}
+    .event-type-badge{display:inline-flex;align-items:center;justify-content:center;
+      background:rgba(201,169,110,0.12);border:1px solid rgba(201,169,110,0.25);
+      border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--gold);
+      margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}
+    .event-name{font-size:26px;font-weight:800;text-align:center;
+      letter-spacing:-0.5px;line-height:1.2;margin-bottom:20px}
+
+    /* Meta row */
+    .meta-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+    .meta-item{display:flex;align-items:flex-start;gap:10px;
+      background:var(--card2);border-radius:12px;padding:10px 14px}
+    .meta-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+    .meta-text{font-size:13px;color:var(--text);line-height:1.4}
+    .meta-label{font-size:11px;color:var(--muted);display:block;margin-bottom:2px}
+
+    /* Custom message */
+    .invite-msg{background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.15);
+      border-radius:16px;padding:16px 18px;margin-bottom:24px;font-size:14px;
+      color:var(--text);line-height:1.65;white-space:pre-wrap;font-style:italic}
+    .invite-msg-from{font-size:11px;color:var(--muted);margin-bottom:8px;
+      font-style:normal;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+
+    /* CTA button */
+    .cta-btn{display:flex;align-items:center;justify-content:center;gap:10px;
+      width:100%;padding:18px;border-radius:16px;font-size:17px;font-weight:700;
+      border:none;cursor:pointer;text-decoration:none;
+      background:linear-gradient(135deg,var(--gold),var(--gold2));
+      color:#0D0C12;box-shadow:0 4px 20px rgba(201,169,110,0.35);
+      transition:transform .15s,box-shadow .15s;letter-spacing:-0.2px}
+    .cta-btn:active{transform:scale(.97);box-shadow:0 2px 10px rgba(201,169,110,0.2)}
+    .cta-icon{font-size:20px}
+
+    /* Already confirmed */
+    .confirmed-note{display:none;text-align:center;padding:16px;
+      background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);
+      border-radius:14px;margin-top:16px;font-size:14px;color:var(--green);font-weight:500}
+
+    /* Footer note */
+    .footer-note{text-align:center;font-size:11px;color:var(--muted);
+      line-height:1.6;margin-top:16px;padding:0 8px}
+    .footer-brand{text-align:center;margin-top:28px;font-size:12px;color:rgba(240,235,224,0.25)}
+    .footer-brand strong{color:var(--gold)}
+  </style>
+</head>
+<body>
+
+<div class="glow"></div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--muted)">Загружаем приглашение…</div>
+</div>
+
+<div id="error-view">
+  <div class="err-icon">🔗</div>
+  <div style="font-size:20px;font-weight:700">Ссылка недействительна</div>
+  <p>Мероприятие не найдено или ссылка устарела.<br>Обратитесь к организатору за новой ссылкой.</p>
+</div>
+
+<div id="main">
+  <div class="brand">
+    <div class="brand-logo">Great<span>Guest</span></div>
+    <div class="brand-dot"></div>
+    <div class="brand-label">Приглашение</div>
+  </div>
+
+  <div class="event-card">
+    <div class="event-cover-hero" id="ev-cover"></div>
+    <div class="event-icon" id="ev-icon">🎉</div>
+    <div style="text-align:center">
+      <div class="event-type-badge" id="ev-type-badge">Мероприятие</div>
+    </div>
+    <div class="event-name" id="ev-name">Загрузка…</div>
+
+    <div class="meta-list" id="ev-meta"></div>
+
+    <div class="invite-msg" id="ev-msg" style="display:none">
+      <div class="invite-msg-from">Сообщение от организатора</div>
+      <div id="ev-msg-text"></div>
+    </div>
+  </div>
+
+  <a id="cta-rsvp" class="cta-btn" href="#">
+    <span class="cta-icon">✅</span>
+    <span>Подтвердить участие</span>
+  </a>
+
+  <div style="display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--muted);font-size:12px">
+    <div style="flex:1;height:1px;background:var(--border)"></div>
+    или
+    <div style="flex:1;height:1px;background:var(--border)"></div>
+  </div>
+
+  <a id="cta-qr" class="cta-btn" href="#"
+    style="background:rgba(255,255,255,0.05);color:var(--text);border:1px solid var(--border);box-shadow:none;margin-bottom:0">
+    <span class="cta-icon">📱</span>
+    <span>Получить QR-код для входа</span>
+  </a>
+
+  <div class="footer-note">
+    <strong style="color:var(--text)">Подтвердить участие</strong> — зарегистрируйтесь на событие в боте (RSVP).<br><br>
+    <strong style="color:var(--text)">QR-код для входа</strong> — бот пришлёт код, который организатор отсканирует на входе.
+  </div>
+
+  <div class="footer-brand">Powered by <strong>Great Guest</strong></div>
+</div>
+
+<script>
+const EVENT_ICONS = {
+  'Вечеринка':   '🎉',
+  'Корпоратив':  '💼',
+  'Конференция': '🎓',
+  'Спорт':       '🏅',
+  'Гала-ужин':   '🍷',
+  'Концерт':     '🎵',
+  'Другое':      '✨',
+};
+
+function fmtDate(d) {
+  if (!d) return null;
+  return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', {
+    day: 'numeric', month: 'long', year: 'numeric', weekday: 'long',
+  });
+}
+
+const params = new URLSearchParams(location.search);
+const venueId = params.get('v');
+
+async function load() {
+  if (!venueId) return showError();
+
+  try {
+    const r = await fetch(`/api/invite?v=${encodeURIComponent(venueId)}`);
+    if (!r.ok) return showError();
+    const d = await r.json();
+    render(d);
+  } catch {
+    showError();
+  }
+}
+
+function showError() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error-view').style.display = 'flex';
+}
+
+function render(d) {
+  const isEvent = d.venue_type === 'event';
+  const icon = isEvent ? (EVENT_ICONS[d.event_type] || '🎉') : '🍽';
+  const typeLabel = isEvent ? (d.event_type || 'Мероприятие') : 'Ресторан';
+
+  if (d.cover_image_url) {
+    const coverEl = document.getElementById('ev-cover');
+    coverEl.style.backgroundImage = `url('${d.cover_image_url}')`;
+    coverEl.style.display = 'block';
+    document.getElementById('ev-icon').style.display = 'none';
+  }
+  document.getElementById('ev-icon').textContent = icon;
+  document.getElementById('ev-type-badge').textContent = typeLabel;
+  document.getElementById('ev-name').textContent = d.name;
+
+  // Meta rows
+  const meta = [];
+  if (d.event_date) {
+    meta.push({ icon: '📅', label: 'Дата', text: fmtDate(d.event_date) });
+  }
+  if (d.address) {
+    meta.push({ icon: '📍', label: 'Место', text: d.address + (d.city ? ', ' + d.city : '') });
+  } else if (d.city) {
+    meta.push({ icon: '📍', label: 'Город', text: d.city });
+  }
+
+  const metaEl = document.getElementById('ev-meta');
+  metaEl.innerHTML = meta.map(m => `
+    <div class="meta-item">
+      <div class="meta-icon">${m.icon}</div>
+      <div class="meta-text">
+        <span class="meta-label">${m.label}</span>
+        ${m.text}
+      </div>
+    </div>
+  `).join('');
+
+  // Custom message
+  if (d.invite_message) {
+    document.getElementById('ev-msg-text').textContent = d.invite_message;
+    document.getElementById('ev-msg').style.display = 'block';
+  }
+
+  // CTA buttons → Telegram deep links
+  document.getElementById('cta-rsvp').href = `https://t.me/great_guest_bot?start=rsvp_${d.id}`;
+  document.getElementById('cta-qr').href   = `https://t.me/great_guest_bot?start=qr_${d.id}`;
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('main').style.display = 'block';
+}
+
+load();
+</script>
+</body>
+</html>

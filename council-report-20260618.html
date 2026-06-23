@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Council — Great Guest Go-to-Market · 18 июня 2026</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f7f5; color: #1a1a1a; line-height: 1.6; }
+
+  .page { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Header */
+  .header { border-bottom: 2px solid #1a1a1a; padding-bottom: 24px; margin-bottom: 40px; }
+  .header-meta { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #666; margin-bottom: 8px; }
+  .header h1 { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 12px; }
+  .header .question-box { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px 20px; font-size: 15px; color: #333; }
+  .header .question-box strong { color: #1a1a1a; }
+
+  /* Verdict — main card */
+  .verdict { background: #1a1a1a; color: #fff; border-radius: 12px; padding: 32px; margin-bottom: 32px; }
+  .verdict-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-bottom: 16px; }
+  .verdict h2 { font-size: 22px; font-weight: 700; margin-bottom: 24px; color: #fff; }
+
+  .verdict-section { margin-bottom: 28px; }
+  .verdict-section:last-child { margin-bottom: 0; }
+  .verdict-section h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #c9a96e; margin-bottom: 10px; font-weight: 600; }
+  .verdict-section p, .verdict-section li { font-size: 15px; color: #e8e8e8; line-height: 1.7; }
+  .verdict-section ul { padding-left: 20px; }
+  .verdict-section ul li { margin-bottom: 8px; }
+
+  .one-action { background: #c9a96e; border-radius: 10px; padding: 20px 24px; margin-top: 28px; }
+  .one-action .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(0,0,0,0.6); margin-bottom: 8px; font-weight: 600; }
+  .one-action p { font-size: 16px; font-weight: 600; color: #0d0c12; line-height: 1.5; }
+
+  /* Agreement visual */
+  .agreement-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+  @media (max-width: 580px) { .agreement-grid { grid-template-columns: 1fr; } }
+  .agreement-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 16px 18px; }
+  .agreement-card .advisor-name { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .agreement-card .advisor-role { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #888; margin-bottom: 10px; }
+  .agreement-card .stance { font-size: 13px; color: #333; line-height: 1.5; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-top: 8px; font-weight: 600; }
+  .tag-danger { background: #fee2e2; color: #991b1b; }
+  .tag-warning { background: #fef3c7; color: #92400e; }
+  .tag-strong { background: #d1fae5; color: #065f46; }
+  .tag-neutral { background: #ede9fe; color: #5b21b6; }
+
+  /* Peer review table */
+  .peer-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 32px; }
+  .peer-table th { background: #f0efed; text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #555; border-bottom: 2px solid #ddd; }
+  .peer-table td { padding: 12px 14px; border-bottom: 1px solid #eee; vertical-align: top; line-height: 1.5; }
+  .peer-table tr:last-child td { border-bottom: none; }
+  .peer-table tr:hover td { background: #fafaf9; }
+  .strongest { font-weight: 600; color: #065f46; }
+  .blindspot { color: #991b1b; }
+
+  /* Collapsible advisor cards */
+  details { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+  summary { padding: 16px 20px; cursor: pointer; font-weight: 600; font-size: 15px; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '↓'; font-size: 14px; color: #999; transition: transform 0.2s; }
+  details[open] summary::after { transform: rotate(180deg); }
+  summary:hover { background: #fafaf9; }
+  .advisor-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; }
+  .details-content { padding: 0 20px 20px; font-size: 14px; color: #333; line-height: 1.7; border-top: 1px solid #f0f0f0; margin-top: 0; padding-top: 16px; }
+
+  /* Section headers */
+  .section-header { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #888; font-weight: 600; margin: 40px 0 16px; display: flex; align-items: center; gap: 8px; }
+  .section-header::after { content: ''; flex: 1; height: 1px; background: #e0e0e0; }
+
+  /* Blind spots */
+  .blindspot-grid { display: grid; gap: 12px; margin-bottom: 32px; }
+  .blindspot-item { background: #fff; border: 1px solid #e0e0e0; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 14px 18px; }
+  .blindspot-item .bs-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .blindspot-item .bs-text { font-size: 13px; color: #444; line-height: 1.6; }
+
+  /* Footer */
+  .footer { border-top: 1px solid #ddd; padding-top: 24px; margin-top: 48px; font-size: 12px; color: #888; text-align: center; }
+  .footer strong { color: #555; }
+
+  /* Phases */
+  .phases { display: grid; gap: 16px; margin-top: 16px; }
+  .phase { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 16px 18px; border-left: 3px solid #c9a96e; }
+  .phase-num { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 6px; font-weight: 600; }
+  .phase p { font-size: 14px; color: #ddd; }
+  .phase strong { color: #fff; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-meta">LLM Council · Great Guest · 18 июня 2026</div>
+    <h1>Как выкатить Great Guest на рынок без участия основателя</h1>
+    <div class="question-box">
+      <strong>Вопрос:</strong> Как построить полностью автономную воронку — ресторатор увидел Reel → перешёл на лендинг → понял за 10 секунд → самостоятельно подключил ресторан → начал платить — без какого-либо участия Сергея? Что должен показывать Reel? Что говорить лендинг? Как выглядит онбординг? Как конвертировать Старт → Базовый?
+    </div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="verdict">
+    <div class="verdict-label">Вердикт председателя</div>
+    <h2>Вопрос поставлен преждевременно</h2>
+
+    <div class="verdict-section">
+      <h3>Где совет согласен</h3>
+      <ul>
+        <li><strong>Онбординг не протестирован = блокер.</strong> Запускать воронку на сломанном онбординге — платить за генерацию оттока.</li>
+        <li><strong>Нет кейсов — нет воронки.</strong> Рилс без реального ресторана с реальными цифрами продаёт воздух. Ресторатор верит коллеге, не обещанию.</li>
+        <li><strong>Правильная последовательность:</strong> живой клиент → контент → автономная воронка. Вопрос о воронке преждевременен.</li>
+      </ul>
+    </div>
+
+    <div class="verdict-section">
+      <h3>Рекомендация — 3 фазы</h3>
+      <div class="phases">
+        <div class="phase">
+          <div class="phase-num">Фаза 1 · Сейчас (2–3 недели)</div>
+          <p><strong>Доказательство.</strong> Закрой 1–2 ресторана вручную через нетворк Pernod Ricard. Поставь QR лично. Объясни официантам лично. Зафикси каждый момент где спотыкается ресторатор. Через 30 дней — живые цифры: сколько гостей вернулось, насколько вырос средний чек.</p>
+        </div>
+        <div class="phase">
+          <div class="phase-num">Фаза 2 · После первого кейса (1 неделя)</div>
+          <p><strong>Контент.</strong> Снимай рилс в том же ресторане. Первые 3 сек: страх («Вы знаете своих постоянных гостей? Или они уходят незамеченными?»). Следующие 20 сек: QR на столе, профиль гостя, ресторатор видит кто пришёл. Последние 5 сек: реальная цифра + ссылка. Лендинг — язык Outsider: «Узнавай постоянных гостей по имени».</p>
+        </div>
+        <div class="phase">
+          <div class="phase-num">Фаза 3 · После 3–5 кейсов</div>
+          <p><strong>Автономная воронка.</strong> Только тогда оптимизируй онбординг, запускай апгрейд-триггеры, retention-механику. К этому моменту ты будешь знать где ресторатор спотыкается — не гадать.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="one-action">
+      <div class="label">Одно действие на завтра утром</div>
+      <p>Открой телефон. Выбери одного человека из нетворка Pernod Ricard — владельца или управляющего ресторана. Напиши ему сегодня вечером: «Хочу показать что строю, нужен твой честный фидбэк. 20 минут, в твоём ресторане. Когда удобно на этой неделе?» Не питч. Не продажа. Фидбэк.</p>
+    </div>
+  </div>
+
+  <!-- Agreement visual -->
+  <div class="section-header">Позиции советников</div>
+  <div class="agreement-grid">
+    <div class="agreement-card">
+      <div class="advisor-name"><span class="advisor-dot" style="background:#ef4444"></span>Contrarian (D)</div>
+      <div class="advisor-role">Адвокат дьявола</div>
+      <div class="stance">Онбординг не протестирован = сломан. Без 3–5 кейсов с цифрами воронка — мусоропровод. Реальный конкурент — Excel и WhatsApp, не «рынок».</div>
+      <span class="tag tag-strong">✓ Правильный диагноз</span>
+    </div>
+    <div class="agreement-card">
+      <div class="advisor-name"><span class="advisor-dot" style="background:#6366f1"></span>First Principles (B)</div>
+      <div class="advisor-role">Первые принципы</div>
+      <div class="stance">Неправильная последовательность — главная ошибка. Доказательство → контент → масштаб. Pernod Ricard нетворк — реальный актив, использовать через конкретные имена и звонки.</div>
+      <span class="tag tag-strong">✓ Правильная стратегия</span>
+    </div>
+    <div class="agreement-card">
+      <div class="advisor-name"><span class="advisor-dot" style="background:#f59e0b"></span>Executor (C)</div>
+      <div class="advisor-role">Исполнитель</div>
+      <div class="stance">Конкретный план по неделям: неделя 1 — 1 клиент вручную, неделя 2 — рилс, неделя 3 — автономный онбординг. Темп: 1 клиент/неделя первые 4 недели = 4 кейса.</div>
+      <span class="tag tag-neutral">▲ Правильные шаги, преждевременный старт</span>
+    </div>
+    <div class="agreement-card">
+      <div class="advisor-name"><span class="advisor-dot" style="background:#10b981"></span>Outsider (E)</div>
+      <div class="advisor-role">Взгляд снаружи</div>
+      <div class="stance">Ресторатор боится терять постоянных гостей, не «не иметь системы лояльности». Говори на его языке: «Узнавай постоянных гостей по имени». Первый результат за 15 минут.</div>
+      <span class="tag tag-strong">✓ Лучший язык продукта</span>
+    </div>
+    <div class="agreement-card" style="grid-column: span 2">
+      <div class="advisor-name"><span class="advisor-dot" style="background:#8b5cf6"></span>Expansionist (A)</div>
+      <div class="advisor-role">Экспансионист</div>
+      <div class="stance">Захват категории «Telegram-лояльность для ресторанов». Вирусная B2B механика, партнёрства с 2ГИС / Яндекс.Рестораны. Фримиум — правильная механика. Агрессивный рост сейчас.</div>
+      <span class="tag tag-danger">✗ Опасный совет — строит архитектуру на пустом месте</span>
+    </div>
+  </div>
+
+  <!-- Blind spots -->
+  <div class="section-header">Слепые пятна — что все пропустили</div>
+  <div class="blindspot-grid">
+    <div class="blindspot-item">
+      <div class="bs-title">Операционный разрыв</div>
+      <div class="bs-text">Кто физически распечатывает QR-код? Кто объясняет официантам? Кто следит чтобы QR стоял на столе, а не лежал в ящике на третий день? Между «ресторан подключился в боте» и «система реально работает в зале» — пропасть. Без ответа на это провалится первый клиент.</div>
+    </div>
+    <div class="blindspot-item">
+      <div class="bs-title">Момент апгрейда Старт → Базовый</div>
+      <div class="bs-text">Никто не описал конкретный триггер. Какое событие в продукте заставляет платить? Количество гостей? Push-уведомление: «За 30 дней у вас 47 постоянных гостей — вы не знаете их имён»? Без триггера конверсии не будет.</div>
+    </div>
+    <div class="blindspot-item">
+      <div class="bs-title">Retention после подключения</div>
+      <div class="bs-text">Что происходит на день 7, 14, 30? Без win-нотификаций («сегодня вернулся гость, который не был у вас 21 день»), еженедельных отчётов, напоминаний — ресторатор тихо забывает про систему. В B2B SaaS настоящая проблема — активное использование, которое делает отмену болезненной.</div>
+    </div>
+    <div class="blindspot-item">
+      <div class="bs-title">Экономика B2B через B2C канал</div>
+      <div class="bs-text">Рилсы — инструмент потребительских брендов. Ресторатор принимает решение о платформе лояльности не после 30-секундного видео. Какой CAC через рилс? Какой LTV оправдывает этот CAC при тарифе 2990₽/мес? Без этого «воронка» — метафора, не инструмент.</div>
+    </div>
+  </div>
+
+  <!-- Peer review table -->
+  <div class="section-header">Взаимное рецензирование</div>
+  <table class="peer-table">
+    <thead>
+      <tr>
+        <th>Рецензент</th>
+        <th>Сильнейший ответ</th>
+        <th>Главное слепое пятно</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Рецензент 1</td>
+        <td class="strongest">E — говорит на языке покупателя</td>
+        <td class="blindspot">A — социальное доказательство без кейсов = фейк</td>
+      </tr>
+      <tr>
+        <td>Рецензент 2</td>
+        <td class="strongest">E — лучшая психология покупателя</td>
+        <td class="blindspot">A — масштаб без валидации</td>
+      </tr>
+      <tr>
+        <td>Рецензент 3</td>
+        <td class="strongest">C — единственный конкретный план</td>
+        <td class="blindspot">B — Pernod Ricard псевдо-конкретность</td>
+      </tr>
+      <tr>
+        <td>Рецензент 4</td>
+        <td class="strongest">D — онбординг = блокер, это диагноз</td>
+        <td class="blindspot">A — вирусная архитектура на пустом месте</td>
+      </tr>
+      <tr>
+        <td>Рецензент 5</td>
+        <td class="strongest">B — правильная последовательность: доказательство → контент → масштаб</td>
+        <td class="blindspot">C — операционный план без стратегической базы</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Advisor details (collapsible) -->
+  <div class="section-header">Полные ответы советников</div>
+
+  <details>
+    <summary><span class="advisor-dot" style="background:#ef4444"></span>Contrarian — «Стоп, вы строите на песке»</summary>
+    <div class="details-content">
+      <p>Ключевой тезис: Онбординг не протестирован = сломан. Запускать воронку на сломанном онбординге — деньги в мусоропровод. Реальный конкурент — не абстрактный «рынок лояльности», а Excel-таблица и WhatsApp-чат с постоянными гостями, которые работают прямо сейчас.</p>
+      <br>
+      <p>Без 3–5 реальных клиентов с реальными цифрами (сколько гостей вернулось, на сколько вырос средний чек) — рилс продаёт воздух. Ресторатор не верит обещаниям, он верит таблицам с цифрами коллег.</p>
+      <br>
+      <p><strong>Необходимые шаги:</strong> сначала закрыть первых 3–5 клиентов вручную (звонки, личная встреча), получить цифры, зафиксировать кейс — и только потом строить автономную воронку.</p>
+      <br>
+      <p><em>Рецензенты: 2/5 назвали E сильнейшим, 4/5 назвали A самым опасным слепым пятном — Contrarian оказался прав в своём диагнозе.</em></p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="advisor-dot" style="background:#6366f1"></span>First Principles — «Вы задаёте неправильный вопрос»</summary>
+    <div class="details-content">
+      <p>Ключевой тезис: Неправильная последовательность — главная ошибка. Нельзя строить автономную воронку до того, как доказана ценность продукта.</p>
+      <br>
+      <p><strong>Правильная последовательность:</strong> Доказательство (живой кейс с цифрами) → Контент (рилс, лендинг, онбординг) → Масштаб (автономная воронка). Попытка построить масштаб без доказательства — строить дом без фундамента.</p>
+      <br>
+      <p>Pernod Ricard нетворк — конкретный, реальный актив основателя. Не абстрактно «связи», а конкретные имена которым звонишь завтра. Вопрос не «как построить рилс», а «что мы продаём и кому, и есть ли доказательства что это работает».</p>
+      <br>
+      <p><em>Рецензент 5 назвал B сильнейшим за единственно правильное понимание последовательности.</em></p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="advisor-dot" style="background:#f59e0b"></span>Executor — «Вот план по дням»</summary>
+    <div class="details-content">
+      <p>Ключевой тезис: Конкретный план по неделям для соло-основателя без бюджета.</p>
+      <br>
+      <p><strong>Неделя 1:</strong> Вручную закрыть 1 ресторан через звонки/личная встреча. Поставить QR лично. Провести через онбординг лично. Зафиксировать первые метрики.</p>
+      <p><strong>Неделя 2:</strong> Снять рилс в этом ресторане с живым результатом.</p>
+      <p><strong>Неделя 3:</strong> Запустить лендинг с кейсом, запустить рилс, включить автономный онбординг в боте.</p>
+      <p><strong>Далее:</strong> Каждый новый клиент → новый кейс → новый рилс → ускорение.</p>
+      <br>
+      <p><strong>Реалистичный темп:</strong> 1 клиент/неделя первые 4 недели = 4 кейса = контент на 4 рилса.</p>
+      <br>
+      <p><em>Рецензент 3 назвал C сильнейшим. Рецензент 5 указал: план хорош, но операционная конкретность без стратегической базы — движение в туман с картой другого города.</em></p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="advisor-dot" style="background:#10b981"></span>Outsider — «Говорите не на том языке»</summary>
+    <div class="details-content">
+      <p>Ключевой тезис: Ресторатор — конкретный человек с конкретными страхами. Его главный страх — «я теряю постоянных гостей и не знаю почему», а не «у меня нет системы лояльности».</p>
+      <br>
+      <p><strong>Рилс:</strong> первые 3 секунды — узнаваемая сцена потери гостя, не функции продукта.</p>
+      <br>
+      <p><strong>Лендинг:</strong> «QR-лояльность через Telegram» — ресторатор не знает что это. Нужно: «Узнавай своих постоянных гостей по имени». Говори о результате, не о механике.</p>
+      <br>
+      <p><strong>Онбординг:</strong> первый результат за 15 минут — один раз поставить QR-код, один раз зарегистрироваться, увидеть первого гостя в системе. Всё остальное — детали.</p>
+      <br>
+      <p><em>3 из 5 рецензентов назвали E сильнейшим — за лучшее понимание психологии покупателя.</em></p>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="advisor-dot" style="background:#8b5cf6"></span>Expansionist — «Захватывайте категорию сейчас» ⚠️</summary>
+    <div class="details-content">
+      <p>Ключевой тезис: Первый, кто займёт категорию «Telegram-лояльность для ресторанов», захватит рынок. Рилс — только входная точка, нужна B2B вирусная механика.</p>
+      <br>
+      <p><strong>Предложенная механика:</strong> ресторан подключается → его гости видят «Powered by Great Guest» → владельцы других заведений спрашивают «что это?» → органический B2B рост.</p>
+      <br>
+      <p>Партнёрства с ресторанными ассоциациями, агрегаторами (2ГИС, Яндекс.Рестораны). Фримиум Старт — правильная механика, ресторан начинает бесплатно и платит когда видит ценность.</p>
+      <br>
+      <p><em>⚠️ Оценка рецензентов: 4 из 5 назвали A самым опасным слепым пятном. Архитектура убедительна по форме, но пуста по содержанию без единого реального клиента.</em></p>
+    </div>
+  </details>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p><strong>LLM Council</strong> · Методология Andrej Karpathy · 5 советников · 5 рецензентов · Синтез председателя</p>
+    <p style="margin-top:6px">Создано 18 июня 2026 · Проект Great Guest · council-report-20260618.html</p>
+  </div>
+
+</div>
+</body>
+</html>

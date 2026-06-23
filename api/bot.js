@@ -169,7 +169,12 @@ async function checkAndSendRenewalAlert(telegramId, ownerSub) {
       await bot.telegram.sendMessage(
         telegramId,
         `⚠️ *Подписка заканчивается через ${daysLeft} дн.*\n\n${plan.emoji} Тариф: ${plan.label}\nДата истечения: ${fmtDate(ownerSub.subscription_expires_at)}\n\nПродлите подписку, чтобы не потерять доступ к панели управления и базе гостей.`,
-        { parse_mode: 'Markdown' }
+        {
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: [[
+            { text: '💳 Продлить подписку', web_app: { url: `${APP_URL}/payment.html` } },
+          ]]},
+        }
       );
     } catch { /* non-critical — user may have blocked the bot */ }
   }
@@ -421,13 +426,28 @@ bot.start(async (ctx) => {
 
     await checkAndSendRenewalAlert(String(u.id), ownerSub);
 
+    const expires  = ownerSub.subscription_expires_at ? new Date(ownerSub.subscription_expires_at) : null;
+    const daysLeft = expires ? Math.max(0, Math.ceil((expires - Date.now()) / 86400000)) : 0;
+    const isActive = (ownerSub.subscription_status === 'trial' || ownerSub.subscription_status === 'active') && daysLeft > 0;
+
     await ctx.replyWithMarkdown(
       `👋 Привет, *${esc(u.first_name)}*!\n\n*Great Guest* — ваши события и гости под рукой.`,
     );
-    await ctx.replyWithMarkdown(
-      `🗂 *Панель организатора*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nСобытий: ${venueCount} из ${ownerSub.max_venues}`,
-      adminBtn
-    );
+
+    if (isActive) {
+      await ctx.replyWithMarkdown(
+        `🗂 *Панель организатора*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nСобытий: ${venueCount} из ${ownerSub.max_venues}`,
+        adminBtn
+      );
+    } else {
+      await ctx.replyWithMarkdown(
+        `🗂 *Панель организатора*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nСобытий: ${venueCount} из ${ownerSub.max_venues}\n\n⛔ *Доступ заблокирован.* Оформите подписку для продолжения работы.`,
+        { reply_markup: { inline_keyboard: [
+          [{ text: '💳 Оформить подписку', web_app: { url: `${APP_URL}/payment.html` } }],
+          [{ text: '⚙️ Открыть панель', web_app: { url: ADMIN_APP } }],
+        ]}}
+      );
+    }
   }
 });
 
@@ -474,11 +494,24 @@ bot.action('accept_consent', async (ctx) => {
     const venueCount = await getVenueCount(String(u.id));
     const statusLine = ownerStatusLine(ownerSub);
     const plan       = PLANS[ownerSub.plan] || PLANS.trial;
+    const expires    = ownerSub.subscription_expires_at ? new Date(ownerSub.subscription_expires_at) : null;
+    const daysLeft   = expires ? Math.max(0, Math.ceil((expires - Date.now()) / 86400000)) : 0;
+    const isActive   = (ownerSub.subscription_status === 'trial' || ownerSub.subscription_status === 'active') && daysLeft > 0;
 
-    await ctx.replyWithMarkdown(
-      `🗂 *Ваша панель Great Guest*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nСобытий: ${venueCount} из ${ownerSub.max_venues}`,
-      adminBtn
-    );
+    if (isActive) {
+      await ctx.replyWithMarkdown(
+        `🗂 *Ваша панель Great Guest*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nСобытий: ${venueCount} из ${ownerSub.max_venues}`,
+        adminBtn
+      );
+    } else {
+      await ctx.replyWithMarkdown(
+        `🗂 *Ваша панель Great Guest*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nСобытий: ${venueCount} из ${ownerSub.max_venues}\n\n⛔ *Доступ заблокирован.* Оформите подписку для продолжения работы.`,
+        { reply_markup: { inline_keyboard: [
+          [{ text: '💳 Оформить подписку', web_app: { url: `${APP_URL}/payment.html` } }],
+          [{ text: '⚙️ Открыть панель', web_app: { url: ADMIN_APP } }],
+        ]}}
+      );
+    }
   }
 });
 

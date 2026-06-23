@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Подписка — Great Guest</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0D0C12;
+    --card:    #1A1825;
+    --border:  #2E2B3D;
+    --accent:  #7C6AF7;
+    --gold:    #F5A623;
+    --text:    #E8E6F0;
+    --muted:   #8B8AA0;
+    --green:   #34C759;
+    --red:     #FF453A;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, system-ui, sans-serif;
+    min-height: 100dvh;
+    padding: 0 16px 32px;
+  }
+
+  .header {
+    padding: 24px 0 8px;
+    text-align: center;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; }
+  .header p  { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+  /* Success screen */
+  #success-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80dvh;
+    text-align: center;
+    gap: 16px;
+  }
+  .success-icon { font-size: 72px; }
+  .success-title { font-size: 24px; font-weight: 700; }
+  .success-sub   { color: var(--muted); font-size: 14px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin: 20px 0 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* Duration selector */
+  .duration-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .dur-btn {
+    padding: 10px 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s;
+    line-height: 1.4;
+  }
+  .dur-btn .months { font-weight: 700; font-size: 15px; }
+  .dur-btn .badge  { font-size: 10px; color: var(--green); margin-top: 2px; }
+  .dur-btn.active  {
+    border-color: var(--accent);
+    background: rgba(124,106,247,.18);
+    color: var(--accent);
+  }
+
+  /* Plan cards */
+  .plan-card {
+    border-radius: 16px;
+    border: 2px solid var(--border);
+    padding: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all .15s;
+    position: relative;
+  }
+  .plan-card.active { border-color: var(--accent); background: rgba(124,106,247,.1); }
+  .plan-card .plan-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .plan-card .plan-name { font-size: 18px; font-weight: 700; }
+  .plan-card .plan-check {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .plan-card.active .plan-check { background: var(--accent); border-color: var(--accent); }
+  .plan-card .plan-price {
+    margin-top: 10px;
+    font-size: 28px;
+    font-weight: 800;
+  }
+  .plan-card .plan-price span { font-size: 16px; font-weight: 400; color: var(--muted); }
+  .plan-card .plan-old-price {
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: line-through;
+    margin-top: 2px;
+    min-height: 20px;
+  }
+  .plan-card .plan-features {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .plan-card .feature {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .feature-dot { color: var(--accent); font-size: 16px; }
+
+  .popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 20px;
+  }
+
+  /* Pay button */
+  .pay-section {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to top, var(--bg) 70%, transparent);
+    padding: 16px 0 8px;
+    margin-top: 8px;
+  }
+  .pay-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .pay-btn:disabled { opacity: .5; cursor: default; }
+  .pay-btn:not(:disabled):active { opacity: .8; }
+
+  .total-line {
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .total-line strong { color: var(--text); }
+
+  .err { color: var(--red); font-size: 13px; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="main-screen">
+  <div class="header">
+    <h1>Выберите тариф</h1>
+    <p>Оплата через ЮKassa · Безопасно</p>
+  </div>
+
+  <div class="tabs" id="dur-tabs"></div>
+
+  <div id="plan-list"></div>
+
+  <div class="pay-section">
+    <button class="pay-btn" id="pay-btn" onclick="pay()">Оплатить</button>
+    <div class="total-line" id="total-line"></div>
+    <div class="err" id="err-msg"></div>
+  </div>
+</div>
+
+<div id="success-screen" style="display:none">
+  <div class="success-icon">✅</div>
+  <div class="success-title">Оплата прошла!</div>
+  <div class="success-sub">Подписка активирована.<br>Можете закрыть это окно.</div>
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+const PLANS = {
+  basic:   { label: 'Базовый',  emoji: '🔑', price: 2990, max_venues: 1,   features: ['1 заведение', 'До 1 000 гостей', 'Сканер QR', 'База гостей'] },
+  network: { label: 'Сеть',     emoji: '🏢', price: 7990, max_venues: 5,   features: ['До 5 заведений', 'Неограниченно гостей', 'Рассылки', 'RSVP-листы'], popular: true },
+  empire:  { label: 'Империя',  emoji: '👑', price:19990, max_venues: 999, features: ['Неограниченно заведений', 'Белый лейбл', 'Приоритет поддержки', 'Всё из Сети'] },
+};
+const DURATIONS = [
+  { months: 1,  label: '1 мес',  discount: 0    },
+  { months: 3,  label: '3 мес',  discount: 0.10 },
+  { months: 6,  label: '6 мес',  discount: 0.15 },
+  { months: 12, label: '12 мес', discount: 0.20 },
+];
+
+let selectedPlan    = 'network';
+let selectedMonths  = 1;
+
+function buildDurTabs() {
+  const c = document.getElementById('dur-tabs');
+  c.innerHTML = '';
+  DURATIONS.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (d.months === selectedMonths ? ' active' : '');
+    btn.innerHTML = d.label + (d.discount ? `<br><small style="font-size:10px;color:#34C759">−${d.discount*100|0}%</small>` : '');
+    btn.onclick = () => { selectedMonths = d.months; build(); };
+    c.appendChild(btn);
+  });
+}
+
+function calcPrice(basePrice, months, discount) {
+  return Math.round(basePrice * months * (1 - discount));
+}
+
+function buildPlanList() {
+  const dur = DURATIONS.find(d => d.months === selectedMonths) || DURATIONS[0];
+  const c   = document.getElementById('plan-list');
+  c.innerHTML = '';
+  Object.entries(PLANS).forEach(([key, p]) => {
+    const fullPrice    = p.price * selectedMonths;
+    const finalPrice   = calcPrice(p.price, selectedMonths, dur.discount);
+    const monthlyPrice = Math.round(finalPrice / selectedMonths);
+    const isActive     = key === selectedPlan;
+
+    const card = document.createElement('div');
+    card.className = 'plan-card' + (isActive ? ' active' : '');
+    card.onclick   = () => { selectedPlan = key; build(); };
+    card.innerHTML = `
+      ${p.popular ? '<div class="popular-badge">Популярный</div>' : ''}
+      <div class="plan-header">
+        <div class="plan-name">${p.emoji} ${p.label}</div>
+        <div class="plan-check">${isActive ? '✓' : ''}</div>
+      </div>
+      <div class="plan-price">
+        ${finalPrice.toLocaleString('ru-RU')} ₽
+        <span>/ ${selectedMonths === 1 ? 'мес' : `${selectedMonths} мес`}</span>
+      </div>
+      <div class="plan-old-price">
+        ${dur.discount ? `${fullPrice.toLocaleString('ru-RU')} ₽ без скидки` : '&nbsp;'}
+      </div>
+      <div class="plan-features">
+        ${p.features.map(f => `<div class="feature"><span class="feature-dot">•</span>${f}</div>`).join('')}
+      </div>
+    `;
+    c.appendChild(card);
+  });
+}
+
+function buildTotalLine() {
+  const dur  = DURATIONS.find(d => d.months === selectedMonths) || DURATIONS[0];
+  const p    = PLANS[selectedPlan];
+  const total = calcPrice(p.price, selectedMonths, dur.discount);
+  document.getElementById('total-line').innerHTML =
+    `<strong>${p.label}</strong> × ${selectedMonths} мес — <strong>${total.toLocaleString('ru-RU')} ₽</strong>`;
+}
+
+function build() {
+  buildDurTabs();
+  buildPlanList();
+  buildTotalLine();
+  document.getElementById('err-msg').textContent = '';
+}
+
+async function pay() {
+  const btn = document.getElementById('pay-btn');
+  const err = document.getElementById('err-msg');
+  err.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Создаём платёж…';
+
+  const initData = tg?.initData || '';
+  if (!initData) {
+    err.textContent = 'Откройте через бота @great_guest_bot';
+    btn.disabled = false;
+    btn.textContent = 'Оплатить';
+    return;
+  }
+
+  try {
+    const resp = await fetch('/api/payments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData, plan: selectedPlan, months: selectedMonths }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || !data.confirmation_url) {
+      err.textContent = data.error || 'Ошибка сервера';
+      btn.disabled = false;
+      btn.textContent = 'Оплатить';
+      return;
+    }
+
+    // Redirect to ЮKassa payment page
+    window.location.href = data.confirmation_url;
+  } catch (e) {
+    err.textContent = 'Сетевая ошибка: ' + e.message;
+    btn.disabled = false;
+    btn.textContent = 'Оплатить';
+  }
+}
+
+// Check if returning from successful payment
+if (new URLSearchParams(location.search).get('status') === 'success') {
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('success-screen').style.display = 'flex';
+  if (tg) setTimeout(() => tg.close(), 4000);
+} else {
+  build();
+}
+</script>
+</body>
+</html>

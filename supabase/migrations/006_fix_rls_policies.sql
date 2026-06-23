@@ -22,7 +22,7 @@ DROP POLICY IF EXISTS "pending_visits_update" ON pending_visits;
 DROP POLICY IF EXISTS "visits_insert"        ON visits;
 
 -- ── guests: anon has NO access ───────────────────────────────
--- All guest reads/writes go through server-side API (service_role bypasses RLS)
+DROP POLICY IF EXISTS "guests_service_role_only" ON guests;
 CREATE POLICY "guests_service_role_only" ON guests
   FOR ALL
   USING (
@@ -33,6 +33,7 @@ CREATE POLICY "guests_service_role_only" ON guests
   );
 
 -- ── pending_visits: anon has NO access ───────────────────────
+DROP POLICY IF EXISTS "pending_visits_service_role_only" ON pending_visits;
 CREATE POLICY "pending_visits_service_role_only" ON pending_visits
   FOR ALL
   USING (
@@ -43,6 +44,7 @@ CREATE POLICY "pending_visits_service_role_only" ON pending_visits
   );
 
 -- ── visits: anon has NO access ───────────────────────────────
+DROP POLICY IF EXISTS "visits_service_role_only" ON visits;
 CREATE POLICY "visits_service_role_only" ON visits
   FOR ALL
   USING (
@@ -53,8 +55,8 @@ CREATE POLICY "visits_service_role_only" ON visits
   );
 
 -- ── restaurants: anon can SELECT only ────────────────────────
--- restaurant.html uses anon key to populate the scanner dropdown (id, name).
--- Writes go through server-side API only.
+DROP POLICY IF EXISTS "restaurants_anon_select" ON restaurants;
+DROP POLICY IF EXISTS "restaurants_service_role_write" ON restaurants;
 CREATE POLICY "restaurants_anon_select" ON restaurants
   FOR SELECT
   USING (true);

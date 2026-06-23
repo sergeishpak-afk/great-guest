@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LLM Council — Great Guest Design Decision</title>
+<style>
+  :root {
+    --bg: #F8F7F4;
+    --surface: #FFFFFF;
+    --border: #E5E2DC;
+    --text: #1A1814;
+    --muted: #6B665C;
+    --accent: #2563EB;
+    --agree: #059669;
+    --clash: #D97706;
+    --blind: #7C3AED;
+    --rec: #DC2626;
+    --contrarian: #EF4444;
+    --firstprinciples: #8B5CF6;
+    --expansionist: #10B981;
+    --outsider: #F59E0B;
+    --executor: #3B82F6;
+    --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.65; }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 48px 32px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    background: #EEF2FF;
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 99px;
+    margin-bottom: 16px;
+  }
+  header h1 { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
+  header p { color: var(--muted); font-size: 14px; max-width: 600px; line-height: 1.6; }
+  header .meta { margin-top: 20px; font-size: 12px; color: var(--muted); }
+
+  main { max-width: 900px; margin: 0 auto; padding: 40px 48px 80px; }
+
+  /* Agreement visual */
+  .alignment-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin: 32px 0;
+  }
+  .advisor-chip {
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .advisor-chip .name { font-size: 11px; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+  .advisor-chip .verdict { font-size: 10px; color: var(--muted); line-height: 1.4; }
+  .chip-contrarian   { border-top: 3px solid var(--contrarian); }
+  .chip-principles   { border-top: 3px solid var(--firstprinciples); }
+  .chip-expansionist { border-top: 3px solid var(--expansionist); }
+  .chip-outsider     { border-top: 3px solid var(--outsider); }
+  .chip-executor     { border-top: 3px solid var(--executor); }
+
+  /* Verdict sections */
+  .section {
+    margin-top: 40px;
+  }
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dot-agree { background: var(--agree); }
+  .dot-clash { background: var(--clash); }
+  .dot-blind { background: var(--blind); }
+  .dot-rec   { background: var(--rec); }
+
+  .verdict-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+  }
+  .verdict-box p { color: var(--text); font-size: 15px; margin-bottom: 12px; }
+  .verdict-box p:last-child { margin-bottom: 0; }
+  .verdict-box ul { padding-left: 20px; margin-top: 8px; margin-bottom: 12px; }
+  .verdict-box li { font-size: 14px; color: var(--text); margin-bottom: 6px; }
+  .verdict-box strong { font-weight: 600; }
+
+  /* Big recommendation box */
+  .rec-box {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .rec-box p { font-size: 15px; margin-bottom: 12px; }
+  .rec-box p:last-child { margin-bottom: 0; }
+
+  /* ONE THING box */
+  .one-thing {
+    background: var(--text);
+    color: white;
+    border-radius: 12px;
+    padding: 28px;
+    margin-top: 40px;
+  }
+  .one-thing .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.5);
+    margin-bottom: 12px;
+  }
+  .one-thing .text { font-size: 17px; line-height: 1.6; }
+  .one-thing .text strong { color: #FDE68A; }
+
+  /* Collapsible sections */
+  details {
+    margin-top: 40px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  summary {
+    padding: 18px 24px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+    user-select: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: '↓';
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform .2s;
+  }
+  details[open] summary::after { transform: rotate(180deg); }
+  details[open] summary { border-bottom: 1px solid var(--border); }
+
+  .advisor-response {
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .advisor-response:last-child { border-bottom: none; }
+  .advisor-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .tag-contrarian   { background: #FEE2E2; color: #B91C1C; }
+  .tag-principles   { background: #EDE9FE; color: #6D28D9; }
+  .tag-expansionist { background: #D1FAE5; color: #065F46; }
+  .tag-outsider     { background: #FEF3C7; color: #92400E; }
+  .tag-executor     { background: #DBEAFE; color: #1D4ED8; }
+
+  .advisor-response p { font-size: 14px; margin-bottom: 10px; color: var(--text); }
+  .advisor-response p:last-child { margin-bottom: 0; }
+
+  .peer-review-item {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .peer-review-item:last-child { border-bottom: none; }
+  .peer-review-item p { font-size: 14px; margin-bottom: 8px; }
+  .peer-review-item p:last-child { margin-bottom: 0; }
+  .peer-q { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 4px; }
+
+  footer {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 48px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">LLM Council — 5 советников + рецензирование</div>
+  <h1>Great Guest: Правильный ли Dark Glassmorphism для HoReCa B2B?</h1>
+  <p>B2B Telegram-платформа лояльности для ресторанов. Вопрос: соответствует ли luxury/tech дизайн (тёмный фон, орбы, золото) аудитории владельцев ресторанов РФ, и что нужно изменить чтобы лендинг конвертировал?</p>
+  <div class="meta">16 июня 2026 · 5 советников · 5 рецензентов · 1 председатель</div>
+</header>
+
+<main>
+
+  <!-- Alignment grid -->
+  <div class="alignment-grid">
+    <div class="advisor-chip chip-contrarian">
+      <div class="name" style="color:var(--contrarian)">Контрарианец</div>
+      <div class="verdict">Дизайн провален. Светлый интерфейс + скриншоты + цифры</div>
+    </div>
+    <div class="advisor-chip chip-principles">
+      <div class="name" style="color:var(--firstprinciples)">Первые принципы</div>
+      <div class="verdict">Неправильный вопрос. Нет кейсов — дизайн вторичен</div>
+    </div>
+    <div class="advisor-chip chip-expansionist">
+      <div class="name" style="color:var(--expansionist)">Экспансионист</div>
+      <div class="verdict">Недоиспользованный актив. Добавь FOMO, калькулятор, кейсы</div>
+    </div>
+    <div class="advisor-chip chip-outsider">
+      <div class="name" style="color:var(--outsider)">Аутсайдер</div>
+      <div class="verdict">Выглядит как ночной клуб. Светлый фон, одна фраза, кнопка</div>
+    </div>
+    <div class="advisor-chip chip-executor">
+      <div class="name" style="color:var(--executor)">Исполнитель</div>
+      <div class="verdict">A/B тест первого экрана в понедельник. Hotjar в пятницу</div>
+    </div>
+  </div>
+
+  <!-- WHERE COUNCIL AGREES -->
+  <div class="section">
+    <div class="section-label"><div class="dot dot-agree"></div>Где совет согласен</div>
+    <div class="verdict-box">
+      <p><strong>Dark glassmorphism — неправильный выбор для этой аудитории.</strong> Все пять советников признают: тёмный фон + орбы + золото = «ночной клуб», «крипта», «стартап для инвесторов» — не «рабочий инструмент которому я доверю базу гостей».</p>
+      <p><strong>Главное оружие не используется.</strong> «Запуск за 15 минут» — убийственное УТП, которое должно быть первым, крупным, доказанным прямо на лендинге. Сейчас потеряно в дизайне.</p>
+      <p><strong>Мобильный опыт критичен.</strong> Аудитория открывает лендинг с телефона в разгар рабочего дня. GSAP-анимации, Lenis, custom cursor — это не украшения, это враги конверсии на слабом 4G.</p>
+    </div>
+  </div>
+
+  <!-- WHERE COUNCIL CLASHES -->
+  <div class="section">
+    <div class="section-label"><div class="dot dot-clash"></div>Где совет расходится</div>
+    <div class="verdict-box">
+      <p><strong>Светлый или тёмный редизайн?</strong></p>
+      <p>Контрарианец, Аутсайдер и Исполнитель: уходи на белый/тёплый серый немедленно. Это стандарт B2B SaaS, это читаемо, это сигнал «серьёзный инструмент».</p>
+      <p>Экспансионист и часть рецензентов возражают: конкуренты выглядят как Excel 2015 — glassmorphism создаёт дифференциацию. «Совет делай светлый фон может быть шагом в серость».</p>
+      <p>→ <strong>Светлый фон правильнее,</strong> если это не означает безликий корпоративный дизайн. Дифференциация достигается голосом, цифрами и кейсами — не тёмными орбами.</p>
+      <p style="margin-top:16px"><strong>Дизайн как проблема или симптом?</strong></p>
+      <p>Первые Принципы и рецензенты: дизайн вторичен без живых кейсов, демо-бота и дифференциации. Исполнитель: даёт план редизайна на неделю, игнорируя этот вопрос.</p>
+      <p>→ <strong>Оба правы одновременно:</strong> нельзя ждать идеального продукта чтобы сделать читаемый лендинг — но нельзя ждать конверсий от редизайна без доказательств.</p>
+    </div>
+  </div>
+
+  <!-- BLIND SPOTS -->
+  <div class="section">
+    <div class="section-label"><div class="dot dot-blind"></div>Слепые пятна, выявленные советом</div>
+    <div class="verdict-box">
+      <p><strong>Канал трафика — самое важное, что все пропустили.</strong> Все пять рецензентов указали на это независимо. В B2B HoReCa продажи идут через живые встречи, Telegram-цепочки, рефералы. Лендинг — это точка подтверждения, не первичного убеждения. Человек приходит уже после разговора, чтобы проверить «выглядит ли это серьёзно». Это радикально меняет задачу.</p>
+      <p><strong>Конкурентный контекст неизвестен.</strong> Что делают GetMenuPro, Poster Loyalty, iiko Loyalty визуально? Рекомендация «делай светлый B2B-дизайн» может означать «стань таким же серым как конкуренты».</p>
+      <p><strong>⚠️ Опасная рекомендация Экспансиониста про «340 ресторанов уже используют».</strong> Три рецензента отметили независимо: фабрикация social proof на MVP-стадии — это не стратегия, это ложь, которая разрушит доверие при первом же разговоре с клиентом.</p>
+    </div>
+  </div>
+
+  <!-- RECOMMENDATION -->
+  <div class="section">
+    <div class="section-label"><div class="dot dot-rec"></div>Рекомендация</div>
+    <div class="rec-box">
+      <p><strong>Дизайн надо менять, но это не первый шаг.</strong></p>
+      <p>Текущий Dark Glassmorphism провален для этой аудитории по трём причинам: неправильные сигналы (крипта/клуб, не бизнес), проблемы читаемости на мобиле, технический оверхед (анимации убивают скорость).</p>
+      <p>Но конверсия лендинга зависит от трёх вещей, которых сейчас нет:</p>
+      <ul>
+        <li><strong>Один живой кейс с реальными цифрами</strong> — «Ресторан X, Казань: +23% возвратов за 2 месяца» с именем и фото владельца</li>
+        <li><strong>Рабочий демо-бот прямо с лендинга</strong> — нажал кнопку, за 30 секунд пощупал продукт</li>
+        <li><strong>Чёткий ответ «чем это отличается от карты лояльности»</strong> — одно предложение, крупно, до скролла</li>
+      </ul>
+      <p>Направление редизайна: светлый фон (белый или тёплый серый), Inter/DM Sans как основной шрифт, Cormorant Garamond только для акцентов, убрать орбы и custom cursor полностью, сохранить glassmorphism только в карточках тарифов как деталь. Первый экран: одна фраза + одна кнопка + время запуска.</p>
+    </div>
+  </div>
+
+  <!-- ONE THING -->
+  <div class="one-thing">
+    <div class="label">Одно действие первым делом</div>
+    <div class="text">Замени первый экран на белый фон с текстом <strong>«Гости возвращаются чаще. Запуск за 15 минут — прямо в Telegram»</strong> и одной CTA-кнопкой. Убери все анимации с этого экрана. Отправь ссылку пяти ресторанным знакомым — попроси открыть с телефона и сказать вслух что поняли за 10 секунд. Это даст реальные данные быстрее любого A/B теста.</div>
+  </div>
+
+  <!-- ADVISOR RESPONSES (collapsible) -->
+  <details>
+    <summary>Ответы советников — полная версия</summary>
+
+    <div class="advisor-response">
+      <div class="advisor-name"><span class="tag tag-contrarian">Контрарианец</span></div>
+      <p><strong>Дизайн убивает конверсию. Вот почему.</strong></p>
+      <p>Luxury/tech стилистика — это выбор для продукта, который продаётся через эмоцию и статус. Но владелец ресторана в 14:30, между обеденным сервисом и разговором с поставщиком, не покупает эмоцию. Он покупает решение проблемы за разумные деньги.</p>
+      <p>Фатальный сдвиг: тёмный glassmorphism + золото + particle effects сигнализируют «дорого и сложно». Это ровно то, чего боится ваша аудитория. Конкретные провалы: custom cursor и GSAP-анимации грузят страницу (на мобильном лаг = закрыл); Cormorant Garamond на тёмном фоне при ярком солнце в кафе = нечитаемо; glassmorphism — тренд 2022 года; аудитория 35-55 лет ассоциирует тёмные интерфейсы с играми и криптой.</p>
+      <p>Что реально продаёт: чистый светлый интерфейс, скриншоты реального продукта, конкретные цифры («средний ресторан добавил 340 гостей за 2 месяца»), лица реальных рестораторов с именами и названиями заведений.</p>
+    </div>
+
+    <div class="advisor-response">
+      <div class="advisor-name"><span class="tag tag-principles">Первые Принципы</span></div>
+      <p><strong>Вы спрашиваете не о том.</strong></p>
+      <p>Вопрос «правильный ли дизайн» предполагает, что дизайн — это проблема. Но фундаментальный вопрос другой: почему владелец ресторана должен вам доверять следующие 30 секунд?</p>
+      <p>Dark glassmorphism — это язык, которым говорят со стартаперами и инвесторами, не с ресторатором из Казани или Краснодара. Но это симптом, не болезнь. Настоящая проблема: лендинг визуализирует продукт, а не трансформацию.</p>
+      <p>Что нужно проверить до любого редизайна: есть ли хоть один живой ресторан-кейс с цифрами? Работает ли демо-бот прямо с лендинга за 30 секунд? Понятно ли с первого экрана чем это отличается от карты лояльности? Если нет ответа ни на один — дизайн вторичен. Сначала доказательство, потом упаковка.</p>
+    </div>
+
+    <div class="advisor-response">
+      <div class="advisor-name"><span class="tag tag-expansionist">Экспансионист</span></div>
+      <p><strong>Дизайн — не главная проблема.</strong></p>
+      <p>Luxury glassmorphism — не ошибка, это недоиспользованный актив. Ресторатор в 35-55 лет видит премиальную эстетику и думает: «Это для серьёзных людей, как я.» Главная упущенная возможность: лендинг продаёт инструмент, хотя должен продавать статус и конкурентное превосходство.</p>
+      <p>Конкретно что добавить: Social proof через FOMO («Уже 340 ресторанов Москвы и Петербурга используют Great Guest. Ваши конкуренты — среди них?»); живой калькулятор выгоды; кейс-цифры крупным шрифтом; переосмыслить tier naming («Империя» — уже aspirational).</p>
+      <p>Масштабный апсайд: эта платформа — готовая инфраструктура для ресторанного маркетингового агентства.</p>
+    </div>
+
+    <div class="advisor-response">
+      <div class="advisor-name"><span class="tag tag-outsider">Аутсайдер</span></div>
+      <p>Я вижу: тёмный фон, фиолетовые светящиеся шары, золото, анимации. Это выглядит как ночной клуб или парфюмерный бренд уровня люкс.</p>
+      <p>Человек 45 лет, три ресторана, открывает сайт в 14:47 с телефона между двумя звонками. Первое что чувствует: «Это не для меня. Это для каких-то стартапов.»</p>
+      <p>Конкретные проблемы: тёмный фон — сигнал развлечений и ночной жизни, не рабочих инструментов; анимации — замедляют загрузку, воспринимаются как шум; «Запуск за 15 минут» — главное оружие, должно быть первым огромными буквами.</p>
+      <p>Переключись на светлый фон, убери анимации орбов, первый экран: одна фраза + кнопка. Люкс-эстетика продаёт мечту. Тебе нужно продавать решение проблемы.</p>
+    </div>
+
+    <div class="advisor-response">
+      <div class="advisor-name"><span class="tag tag-executor">Исполнитель</span></div>
+      <p><strong>Дизайн неправильный. Вот что делать.</strong></p>
+      <p>Glassmorphism — это дизайн для крипто-стартапов и B2C приложений. Конкретные шаги на эту неделю:</p>
+      <p>Понедельник — A/B тест. Измени только первый экран: убери тёмный фон, поставь белый/тёплый серый. «Ваши гости возвращаются чаще. Запуск за 15 минут.»<br>
+      Вторник — Добавь social proof ДО первого CTA.<br>
+      Среда — Мобильная версия: можно ли нажать CTA большим пальцем не читая?<br>
+      Четверг — Убери сложную анимацию с главного экрана.<br>
+      Пятница — Hotjar или Clarity. Смотри где уходят.</p>
+      <p>Стиль можно сохранить в акцентах (карточки тарифов). Не на главный экран.</p>
+    </div>
+  </details>
+
+  <!-- PEER REVIEWS (collapsible) -->
+  <details>
+    <summary>Взаимное рецензирование — ключевые выводы</summary>
+
+    <div class="peer-review-item">
+      <div class="peer-q">Сильнейший ответ (5/5 голосов)</div>
+      <p><strong>Первые Принципы (E)</strong> — единственный, кто задал правильный вопрос до ответа на неправильный. Переформулировал проблему как диагностический фрейм: нет кейсов, нет демо, нет дифференциации. Три конкретных проверочных вопроса дают операционный фокус.</p>
+    </div>
+
+    <div class="peer-review-item">
+      <div class="peer-q">Главное слепое пятно (4/5 голосов)</div>
+      <p><strong>Экспансионист (A)</strong> — советует сфабриковать social proof («340 ресторанов уже используют») при том, что продукт на стадии MVP. Романтизирует аудиторию без доказательств. «Статус и конкурентное превосходство» продаётся Pernod Ricard, не SaaS-стартапу без кейсов.</p>
+    </div>
+
+    <div class="peer-review-item">
+      <div class="peer-q">Что пропустили все пятеро (5/5 голосов)</div>
+      <p><strong>Канал трафика.</strong> В B2B HoReCa продажи идут через живые встречи, Telegram-цепочки и рефералы. Лендинг — скорее точка подтверждения, чем первичной продажи. Это меняет всю задачу дизайна.</p>
+      <p><strong>Конкурентный контекст.</strong> Никто не проверил как выглядят Poster, iiko Loyalty, GetMenuPro. Совет «делай светлый фон» без конкурентного анализа — гадание.</p>
+    </div>
+  </details>
+
+</main>
+
+<footer>
+  <span>Great Guest · LLM Council · 16 июня 2026</span>
+  <span>5 советников · 5 рецензентов · 1 председатель</span>
+</footer>
+
+</body>
+</html>

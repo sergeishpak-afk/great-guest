@@ -306,7 +306,7 @@ async function init() {
 
   var res, data;
   try {
-    res  = await fetch('/api/webapp-init', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ initData:initData }) });
+    res  = await fetch('/api/create-qr', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ initData:initData, action:'init' }) });
     data = await res.json();
   } catch(e) { showErr('Сетевая ошибка: ' + e.message); return; }
 
