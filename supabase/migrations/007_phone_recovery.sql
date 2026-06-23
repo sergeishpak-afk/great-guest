@@ -22,10 +22,10 @@ CREATE OR REPLACE FUNCTION merge_guest_accounts(
 ) RETURNS JSONB
 LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
-  old_visits INTEGER;
-  new_visits INTEGER;
-  old_phone  TEXT;
-  new_phone  TEXT;
+  old_visits   INTEGER;
+  new_visits   INTEGER;
+  old_phone    TEXT;
+  new_phone    TEXT;
   merged_count INTEGER;
 BEGIN
   -- Prevent self-merge
@@ -33,17 +33,17 @@ BEGIN
     RETURN jsonb_build_object('error', 'same_account');
   END IF;
 
-  -- Fetch old guest
+  -- Fetch old guest (use FOUND to correctly detect "no row" even when visit_count = 0)
   SELECT visit_count, phone INTO old_visits, old_phone
     FROM guests WHERE telegram_id = p_old_telegram_id;
-  IF old_visits IS NULL THEN
+  IF NOT FOUND THEN
     RETURN jsonb_build_object('error', 'old_not_found');
   END IF;
 
-  -- Fetch new guest (create minimal record if missing — new Telegram, hasn't started bot yet)
+  -- Fetch new guest
   SELECT visit_count, phone INTO new_visits, new_phone
     FROM guests WHERE telegram_id = p_new_telegram_id;
-  IF new_visits IS NULL THEN
+  IF NOT FOUND THEN
     RETURN jsonb_build_object('error', 'new_not_found');
   END IF;
 
@@ -59,21 +59,21 @@ BEGIN
     SET telegram_id = p_new_telegram_id
     WHERE telegram_id = p_old_telegram_id AND used = false;
 
-  -- Transfer organizer contacts:
-  -- First delete new-account rows that conflict with old-account rows
-  -- (same organizer can't have two rows for same guest)
-  DELETE FROM organizer_contacts nc
-  USING organizer_contacts oc
-  WHERE nc.guest_id    = p_new_telegram_id
-    AND oc.guest_id    = p_old_telegram_id
-    AND nc.organizer_id = oc.organizer_id;
+  -- Delete conflicting organizer_contacts on new account before reassigning
+  -- (same organizer can't have two rows for the same guest)
+  DELETE FROM organizer_contacts
+    WHERE guest_id = p_new_telegram_id
+      AND organizer_id IN (
+        SELECT organizer_id FROM organizer_contacts
+          WHERE guest_id = p_old_telegram_id
+      );
 
-  -- Now reassign old-account rows to new account
+  -- Reassign old-account contacts to new account
   UPDATE organizer_contacts
     SET guest_id = p_new_telegram_id
     WHERE guest_id = p_old_telegram_id;
 
-  -- Update new guest record: merged count + carry over phone if new has none
+  -- Update new guest: merged visit count + carry over phone if new has none
   UPDATE guests SET
     visit_count = merged_count,
     phone       = COALESCE(new_phone, old_phone)
@@ -83,10 +83,10 @@ BEGIN
   DELETE FROM guests WHERE telegram_id = p_old_telegram_id;
 
   RETURN jsonb_build_object(
-    'success',        true,
-    'merged_visits',  merged_count,
-    'old_id',         p_old_telegram_id,
-    'new_id',         p_new_telegram_id
+    'success',       true,
+    'merged_visits', merged_count,
+    'old_id',        p_old_telegram_id,
+    'new_id',        p_new_telegram_id
   );
 END;
 $$;
