@@ -48,7 +48,7 @@ function fmtDate(d) {
 }
 function fmtStatus(count) {
   if (count === 0) {
-    return `🎉 *Добро пожаловать!*\n_Получи QR-код и посети первый ресторан-партнёр — программа лояльности начнётся с первого визита._`;
+    return `🎉 *Добро пожаловать!*\n_Получи QR-код и зарегистрируй первое посещение — твой статус гостя начнётся с первого визита._`;
   }
   const lvl  = getLevel(count);
   const next = getNext(count);
@@ -65,11 +65,15 @@ const guestKb = Markup.keyboard([
 ]).resize();
 
 const guestBtn = Markup.inlineKeyboard([[
-  Markup.button.webApp('🎁 Моя программа лояльности', MINI_APP),
+  Markup.button.webApp('⭐ Мой статус гостя', MINI_APP),
 ]]);
 
 const adminBtn = Markup.inlineKeyboard([[
-  Markup.button.webApp('🏪 Панель управления', ADMIN_APP),
+  Markup.button.webApp('🗂 Панель управления', ADMIN_APP),
+]]);
+
+const createClubBtn = Markup.inlineKeyboard([[
+  Markup.button.webApp('🚀 Создать клуб / мероприятие', ADMIN_APP),
 ]]);
 
 // ─── Consent keyboard ────────────────────────────────────────────────────────
@@ -86,11 +90,10 @@ async function ensureCommands() {
   commandsSet = true;
   try {
     await bot.telegram.setMyCommands([
-      { command: 'start',      description: '👋 Начать / Мой профиль гостя' },
-      { command: 'qr',         description: '🎫 Получить QR-код для визита' },
-      { command: 'status',     description: '⭐ Мой статус в программе' },
-      { command: 'history',    description: '📋 История моих визитов' },
-      { command: 'restaurant', description: '🏪 Открыть панель партнёра' },
+      { command: 'start',      description: '👋 Главное меню' },
+      { command: 'qr',         description: '🎫 Мой QR-код для входа на событие' },
+      { command: 'status',     description: '⭐ Мой статус гостя' },
+      { command: 'history',    description: '📋 История посещений' },
       { command: 'mydata',     description: '📊 Мои данные (152-ФЗ)' },
       { command: 'forget',     description: '🗑 Удалить мои данные' },
     ]);
@@ -175,20 +178,218 @@ async function checkAndSendRenewalAlert(telegramId, ownerSub) {
 // ─── CONSENT REQUEST ─────────────────────────────────────────────────────────
 async function sendConsentRequest(ctx) {
   await ctx.replyWithMarkdown(
-    `👋 Привет, *${ctx.from.first_name}*!\n\nДобро пожаловать в *Great Guest* — единую программу лояльности для ресторанов.\n\n` +
-    `Перед использованием сервиса нам необходимо ваше согласие на обработку персональных данных (Telegram ID, имя, история визитов) в соответствии с:\n` +
-    `• Федеральным законом № 152-ФЗ «О персональных данных»\n` +
-    `• Нашей [Политикой конфиденциальности](${APP_URL}/privacy.html)\n` +
+    `👋 Привет, *${ctx.from.first_name}*!\n\n` +
+    `Добро пожаловать в *Great Guest* — платформу для закрытых клубов и мероприятий.\n\n` +
+    `Создавайте события, управляйте гостями, сканируйте QR на входе и рассылайте приглашения.\n\n` +
+    `Перед использованием необходимо согласие на обработку персональных данных (Telegram ID, имя) в соответствии с:\n` +
+    `• ФЗ № 152-ФЗ «О персональных данных»\n` +
+    `• [Политикой конфиденциальности](${APP_URL}/privacy.html)\n` +
     `• [Условиями использования](${APP_URL}/terms.html)\n\n` +
-    `_Нажмите «Принимаю условия» для продолжения._`,
+    `_Нажмите «Принимаю» — и сразу создадим ваш первый клуб или мероприятие._`,
     consentKb
   );
+}
+
+// ─── Venue entry: handle QR scan + consent + checkin ─────────────────────────
+async function recordVenueCheckin(ctx, venue) {
+  const u = ctx.from;
+  const telegramId = String(u.id);
+
+  await registerGuestWithConsent(u); // upsert ensures guest row exists
+
+  const { data: newCount, error: rpcErr } = await supabase
+    .rpc('increment_guest_visits', { p_telegram_id: telegramId });
+
+  if (rpcErr) {
+    console.error('checkin rpc error:', rpcErr.message);
+    return ctx.replyWithMarkdown(`✅ *Вход подтверждён!*\n\n📍 ${venue.name}\n\nДобро пожаловать!`, guestKb);
+  }
+
+  await supabase.from('visits').insert({
+    telegram_id: telegramId,
+    restaurant_id: venue.id,
+    visit_token: uuidv4(),
+  });
+
+  // Persist guest into organizer's permanent contact base
+  if (venue.owner_telegram_id) {
+    supabase.rpc('upsert_organizer_contact', {
+      p_org: venue.owner_telegram_id, p_guest: telegramId,
+      p_first: u.first_name || '', p_last: u.last_name || '',
+      p_user: u.username || '', p_rsvp: false,
+    }).then().catch(() => {});
+  }
+
+  const lvl  = getLevel(newCount);
+  const next = getNext(newCount);
+  const lvlLine = lvl
+    ? `${lvl.emoji} *${lvl.name}* — ${newCount} визит${decl(newCount)}\n_${lvl.reward}_`
+    : `🥉 Первый визит — начало пути!`;
+  const nextLine = next ? `\nДо *${next.name}*: ещё ${next.min - newCount} визит${decl(next.min - newCount)}` : '';
+
+  await ctx.replyWithMarkdown(
+    `✅ *Чек-ин подтверждён!*\n\n📍 ${esc(venue.name)}\n\n${lvlLine}${nextLine}`,
+    guestKb
+  );
+}
+
+function esc(s) { return String(s || '').replace(/[*_`\[\]()~>#+=|{}.!-]/g, '\\$&'); }
+
+async function handleVenueEntry(ctx, venueId) {
+  const u = ctx.from;
+  const { data: venue } = await supabase
+    .from('restaurants')
+    .select('id, name, venue_type, event_type, owner_telegram_id')
+    .eq('id', venueId)
+    .single();
+
+  if (!venue) return ctx.reply('QR-код недействителен или мероприятие не найдено.');
+
+  const label = venue.venue_type === 'event' ? (venue.event_type || 'Мероприятие') : 'Ресторан';
+
+  if (!(await hasConsent(String(u.id)))) {
+    return ctx.replyWithMarkdown(
+      `👋 Привет, *${u.first_name}*!\n\n` +
+      `Вы сканируете вход на *${venue.name}* (${label}).\n\n` +
+      `Для чек-ина необходимо ваше согласие на обработку персональных данных (Telegram ID, имя, история визитов) согласно ФЗ-152.\n\n` +
+      `_Нажмите кнопку — и вы сразу попадёте в список участников._`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback('✅ Принимаю и отмечаюсь на входе', `accept_consent_v_${venueId}`)],
+        [Markup.button.url('📄 Политика конфиденциальности', `${APP_URL}/privacy.html`)],
+        [Markup.button.url('📋 Условия использования', `${APP_URL}/terms.html`)],
+      ])
+    );
+  }
+
+  await recordVenueCheckin(ctx, venue);
+}
+
+// ─── RSVP: invite link confirmation ──────────────────────────────────────────
+async function recordRsvp(ctx, venue) {
+  const u = ctx.from;
+  const telegramId = String(u.id);
+
+  await registerGuestWithConsent(u);
+
+  await supabase.from('rsvp').upsert(
+    {
+      venue_id:    venue.id,
+      telegram_id: telegramId,
+      first_name:  u.first_name || '',
+      last_name:   u.last_name  || '',
+      username:    u.username   || '',
+    },
+    { onConflict: 'venue_id,telegram_id' }
+  );
+
+  // Persist guest into organizer's permanent contact base
+  if (venue.owner_telegram_id) {
+    supabase.rpc('upsert_organizer_contact', {
+      p_org: venue.owner_telegram_id, p_guest: telegramId,
+      p_first: u.first_name || '', p_last: u.last_name || '',
+      p_user: u.username || '', p_rsvp: true,
+    }).then().catch(() => {});
+  }
+
+  const dateStr = venue.event_date
+    ? `📅 ${fmtDate(venue.event_date)}\n`
+    : '';
+  const locStr = venue.address
+    ? `📍 ${esc(venue.address)}${venue.city ? ', ' + esc(venue.city) : ''}\n`
+    : venue.city
+    ? `📍 ${esc(venue.city)}\n`
+    : '';
+
+  await ctx.replyWithMarkdown(
+    `✅ *Участие подтверждено!*\n\n` +
+    `🎉 *${esc(venue.name)}*\n` +
+    `${dateStr}${locStr}\n` +
+    `Сохраните этот чат — на входе покажите QR организатору для регистрации прихода.\n\n` +
+    `_Чтобы открыть QR: нажмите «🎫 Получить QR для визита»_`,
+    guestKb
+  );
+}
+
+async function handleRsvp(ctx, venueId) {
+  const u = ctx.from;
+  const { data: venue } = await supabase
+    .from('restaurants')
+    .select('id, name, venue_type, event_type, event_date, address, city, owner_telegram_id')
+    .eq('id', venueId)
+    .single();
+
+  if (!venue) return ctx.reply('Ссылка недействительна или мероприятие не найдено.');
+
+  if (!(await hasConsent(String(u.id)))) {
+    const dateStr = venue.event_date ? ` (${fmtDate(venue.event_date)})` : '';
+    return ctx.replyWithMarkdown(
+      `👋 Привет, *${esc(u.first_name)}*!\n\n` +
+      `Вы подтверждаете участие в *${esc(venue.name)}*${dateStr}.\n\n` +
+      `Для регистрации необходимо ваше согласие на обработку персональных данных согласно ФЗ-152.\n\n` +
+      `_Нажмите — и вы сразу попадёте в список гостей._`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback('✅ Принимаю и подтверждаю участие', `accept_consent_r_${venueId}`)],
+        [Markup.button.url('📄 Политика конфиденциальности', `${APP_URL}/privacy.html`)],
+      ])
+    );
+  }
+
+  await recordRsvp(ctx, venue);
 }
 
 // ─── /start ──────────────────────────────────────────────────────────────────
 bot.start(async (ctx) => {
   ensureCommands();
   const u = ctx.from;
+
+  // Venue entry via QR scan: ?start=v_UUID
+  const payload = ctx.startPayload || '';
+  if (payload.startsWith('v_')) {
+    const venueId = payload.slice(2);
+    return handleVenueEntry(ctx, venueId);
+  }
+
+  // RSVP confirmation via invite link: ?start=rsvp_UUID
+  if (payload.startsWith('rsvp_')) {
+    const venueId = payload.slice(5);
+    return handleRsvp(ctx, venueId);
+  }
+
+  // QR-код для входа с инвайт-страницы: ?start=qr_UUID
+  if (payload.startsWith('qr_')) {
+    const venueId = payload.slice(3);
+    return handleQrRequest(ctx, venueId);
+  }
+
+  // Referral invite: ?start=ref_REFERRERID
+  if (payload.startsWith('ref_')) {
+    const referrerId = payload.slice(4);
+    if (referrerId === String(u.id)) {
+      // Can't refer yourself
+    } else {
+      const consentOk = await hasConsent(String(u.id));
+      if (!consentOk) {
+        return ctx.replyWithMarkdown(
+          `👋 Привет, *${esc(u.first_name)}*!\n\n` +
+          `Вас пригласили в *Great Guest* — платформу для закрытых клубов и мероприятий.\n\n` +
+          `*14 дней бесплатно* — без карты, без обязательств.\n\n` +
+          `Для начала нужно ваше согласие на обработку персональных данных (ФЗ-152).`,
+          Markup.inlineKeyboard([
+            [Markup.button.callback('✅ Принимаю условия', `accept_consent_ref_${referrerId}`)],
+            [Markup.button.url('📄 Политика', `${APP_URL}/privacy.html`)],
+          ])
+        );
+      }
+      await registerGuestWithConsent(u);
+      const adminWithRef = `${APP_URL}/admin.html?ref=${referrerId}`;
+      await ctx.replyWithMarkdown(
+        `👋 Привет, *${esc(u.first_name)}*!\n\n` +
+        `Вас пригласили в *Great Guest*.\n\n` +
+        `Создайте первый клуб или мероприятие — *14 дней бесплатно!*`
+      );
+      return ctx.reply('👇', Markup.inlineKeyboard([[Markup.button.webApp('🚀 Создать событие', adminWithRef)]]));
+    }
+  }
 
   // Check consent first — 152-ФЗ: must have consent before collecting data
   const consentGiven = await hasConsent(String(u.id));
@@ -203,10 +404,16 @@ bot.start(async (ctx) => {
 
   if (!ownerSub) {
     await ctx.replyWithMarkdown(
-      `👋 Привет, *${u.first_name}*!\n\nДобро пожаловать в *Great Guest* — единую программу лояльности для ресторанов.\n\nКаждый визит в ресторан-партнёр повышает ваш статус:\n🥉 Bronze → 🥈 Silver → 🥇 Gold → 💎 Platinum\n\nС каждым уровнем — больше привилегий во всех ресторанах сети.`,
-      guestKb
+      `👋 Привет, *${esc(u.first_name)}*!\n\n` +
+      `*Great Guest* — платформа для закрытых клубов и мероприятий.\n\n` +
+      `Что вы получаете:\n` +
+      `🎟 Страница события со ссылкой-приглашением\n` +
+      `📷 QR-сканер для регистрации гостей на входе\n` +
+      `👥 База гостей с уровнями и историей\n` +
+      `📣 Рассылка приглашений по базе\n\n` +
+      `*14 дней бесплатно* — без карты, без обязательств.`
     );
-    await ctx.reply('👇 Открой приложение:', guestBtn);
+    await ctx.reply('👇 Создайте первое событие прямо сейчас:', createClubBtn);
   } else {
     const venueCount = await getVenueCount(String(u.id));
     const statusLine = ownerStatusLine(ownerSub);
@@ -215,21 +422,29 @@ bot.start(async (ctx) => {
     await checkAndSendRenewalAlert(String(u.id), ownerSub);
 
     await ctx.replyWithMarkdown(
-      `👋 Привет, *${u.first_name}*!\n\nТы в *Great Guest* в двух ролях сразу:`,
-      guestKb
+      `👋 Привет, *${esc(u.first_name)}*!\n\n*Great Guest* — ваши события и гости под рукой.`,
     );
     await ctx.replyWithMarkdown(
-      `🎁 *Гость программы лояльности*\n\nСтатус обновляется с каждым визитом к партнёрам сети. Получи QR → покажи в ресторане.`,
-      guestBtn
-    );
-    await ctx.replyWithMarkdown(
-      `🏪 *Партнёр Great Guest*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nЗаведений: ${venueCount} из ${ownerSub.max_venues}`,
+      `🗂 *Панель организатора*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nСобытий: ${venueCount} из ${ownerSub.max_venues}`,
       adminBtn
     );
   }
 });
 
 // ─── Consent callback ─────────────────────────────────────────────────────────
+// ─── Consent + referral ──────────────────────────────────────────────────────
+bot.action(/^accept_consent_ref_(.+)$/, async (ctx) => {
+  const referrerId = ctx.match[1];
+  const u = ctx.from;
+  await registerGuestWithConsent(u);
+  await ctx.editMessageText('✅ Согласие получено! Добро пожаловать в Great Guest.', { parse_mode: 'Markdown' });
+  const adminWithRef = `${APP_URL}/admin.html?ref=${referrerId}`;
+  await ctx.replyWithMarkdown(
+    `✨ *14 дней бесплатно!*\n\nСоздайте первый клуб или мероприятие — ваш коллега уже внутри.`
+  );
+  await ctx.reply('👇', Markup.inlineKeyboard([[Markup.button.webApp('🚀 Создать событие', adminWithRef)]]));
+});
+
 bot.action('accept_consent', async (ctx) => {
   const u = ctx.from;
 
@@ -246,28 +461,122 @@ bot.action('accept_consent', async (ctx) => {
 
   if (!ownerSub) {
     await ctx.replyWithMarkdown(
-      `👋 Добро пожаловать в *Great Guest*, ${u.first_name}!\n\nКаждый визит в ресторан-партнёр повышает ваш статус:\n🥉 Bronze → 🥈 Silver → 🥇 Gold → 💎 Platinum\n\nС каждым уровнем — больше привилегий во всех ресторанах сети.`,
-      guestKb
+      `✨ *Добро пожаловать, ${esc(u.first_name)}!*\n\n` +
+      `Создайте свой первый клуб или мероприятие — *бесплатно на 14 дней*.\n\n` +
+      `Что доступно сразу:\n` +
+      `🎟 Страница события со ссылкой для гостей\n` +
+      `📷 QR-сканер для регистрации на входе\n` +
+      `👥 База гостей с уровнями и историей\n` +
+      `📣 Рассылка приглашений по базе`
     );
-    await ctx.reply('👇 Открой приложение:', guestBtn);
+    await ctx.reply('👇 Нажмите — откроется панель создания:', createClubBtn);
   } else {
     const venueCount = await getVenueCount(String(u.id));
     const statusLine = ownerStatusLine(ownerSub);
     const plan       = PLANS[ownerSub.plan] || PLANS.trial;
 
     await ctx.replyWithMarkdown(
-      `👋 *${u.first_name}*, ты в *Great Guest* в двух ролях сразу:`,
-      guestKb
-    );
-    await ctx.replyWithMarkdown(
-      `🎁 *Гость программы лояльности*\n\nСтатус обновляется с каждым визитом. Получи QR → покажи в ресторане.`,
-      guestBtn
-    );
-    await ctx.replyWithMarkdown(
-      `🏪 *Партнёр Great Guest*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nЗаведений: ${venueCount} из ${ownerSub.max_venues}`,
+      `🗂 *Ваша панель Great Guest*\n\n${plan.emoji} Тариф: ${plan.label}\n${statusLine}\nСобытий: ${venueCount} из ${ownerSub.max_venues}`,
       adminBtn
     );
   }
+});
+
+// ─── Consent + venue checkin (via QR scan) ───────────────────────────────────
+bot.action(/^accept_consent_v_(.+)$/, async (ctx) => {
+  const venueId = ctx.match[1];
+  const u = ctx.from;
+
+  await ctx.editMessageText(
+    `✅ Согласие получено и зафиксировано.\n\n_Отзыв — командой /forget_`,
+    { parse_mode: 'Markdown' }
+  );
+
+  const { data: venue } = await supabase
+    .from('restaurants')
+    .select('id, name, venue_type, event_type, owner_telegram_id')
+    .eq('id', venueId)
+    .single();
+
+  if (!venue) return ctx.reply('Ошибка: мероприятие не найдено.');
+
+  await recordVenueCheckin(ctx, venue);
+});
+
+// ─── Consent + RSVP (via invite link) ────────────────────────────────────────
+bot.action(/^accept_consent_r_(.+)$/, async (ctx) => {
+  const venueId = ctx.match[1];
+
+  await ctx.editMessageText(
+    `✅ Согласие получено и зафиксировано.\n\n_Отзыв — командой /forget_`,
+    { parse_mode: 'Markdown' }
+  );
+
+  const { data: venue } = await supabase
+    .from('restaurants')
+    .select('id, name, venue_type, event_type, event_date, address, city, owner_telegram_id')
+    .eq('id', venueId)
+    .single();
+
+  if (!venue) return ctx.reply('Ошибка: мероприятие не найдено.');
+  await recordRsvp(ctx, venue);
+});
+
+// ─── QR-код для входа с инвайт-страницы ─────────────────────────────────────
+const UUID_RE_BOT = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+async function sendQrForVenue(ctx, u, venueId) {
+  const telegramId = String(u.id);
+  await registerGuestWithConsent(u);
+
+  const { data: venue } = await supabase
+    .from('restaurants')
+    .select('id, name, event_type, event_date, city')
+    .eq('id', venueId)
+    .single();
+
+  if (!venue) return ctx.reply('Мероприятие не найдено — возможно, оно было удалено.');
+
+  const token     = uuidv4();
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const { error } = await supabase.from('pending_visits').insert({
+    token, telegram_id: telegramId, expires_at: expiresAt,
+  });
+  if (error) return ctx.reply('Не удалось создать QR-код. Попробуйте ещё раз.');
+
+  const visitUrl   = `${APP_URL}/restaurant.html?token=${token}&v=${venueId}`;
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(visitUrl)}&ecc=H&margin=1`;
+  const label      = venue.event_date
+    ? new Date(venue.event_date + 'T12:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+    : '';
+
+  await ctx.replyWithPhoto(qrImageUrl, {
+    caption: `🎫 *QR-код для входа*\n\n*${venue.name}*${label ? '\n📅 ' + label : ''}${venue.city ? '\n📍 ' + venue.city : ''}\n\n_Покажите этот код организатору на входе.\nКод действителен 60 минут._`,
+    parse_mode: 'Markdown',
+  });
+}
+
+async function handleQrRequest(ctx, venueId) {
+  if (!UUID_RE_BOT.test(venueId)) return ctx.reply('Неверная ссылка.');
+  const telegramId = String(ctx.from.id);
+
+  if (!(await hasConsent(telegramId))) {
+    return ctx.replyWithMarkdown(
+      `📱 *QR-код для входа*\n\nЧтобы получить QR-код, нужно ваше согласие на обработку персональных данных (152-ФЗ).`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback('✅ Принимаю и получить QR', `accept_consent_qr_${venueId}`)],
+        [Markup.button.url('📄 Политика конфиденциальности', `${APP_URL}/privacy.html`)],
+      ])
+    );
+  }
+  await sendQrForVenue(ctx, ctx.from, venueId);
+}
+
+bot.action(/^accept_consent_qr_(.+)$/, async (ctx) => {
+  const venueId = ctx.match[1];
+  await registerGuestWithConsent(ctx.from);
+  await ctx.editMessageText('✅ Согласие получено — генерируем QR-код…');
+  await sendQrForVenue(ctx, ctx.from, venueId);
 });
 
 // ─── /qr — QR-код гостя ──────────────────────────────────────────────────────
@@ -327,15 +636,110 @@ bot.command('history', async (ctx) => {
   await ctx.replyWithMarkdown(`📋 *Последние визиты*\n\n${lines.join('\n')}`);
 });
 
-// ─── /restaurant — панель партнёра ───────────────────────────────────────────
+// ─── /admin — owner-only panel ───────────────────────────────────────────────
+const ADMIN_ID = (process.env.ADMIN_TELEGRAM_ID || '').trim();
+const isAdmin = (ctx) => String(ctx.from?.id) === ADMIN_ID;
+
+bot.command('admin', async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.reply('⛔ Нет доступа');
+
+  const ownerSub = await getOwnerSub(String(ctx.from.id));
+  const plan   = ownerSub?.plan || '—';
+  const status = ownerSub?.subscription_status || '—';
+  const exp    = ownerSub?.subscription_expires_at
+    ? new Date(ownerSub.subscription_expires_at).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })
+    : '—';
+
+  await ctx.replyWithMarkdown(
+    `👑 *Панель администратора*\n\n📋 Тариф: *${plan}*\n📊 Статус: *${status}*\n📅 До: *${exp}*`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback('💎 Empire навсегда (себе)', 'adm_empire_self')],
+      [Markup.button.callback('👤 Управление пользователем', 'adm_manage_user')],
+    ])
+  );
+});
+
+bot.action('adm_empire_self', async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.answerCbQuery('⛔');
+  await ctx.answerCbQuery();
+  await supabase.from('owner_subscriptions').upsert({
+    telegram_id: String(ctx.from.id),
+    plan: 'empire',
+    max_venues: 999,
+    subscription_status: 'active',
+    subscription_expires_at: '2099-12-31T23:59:59+00:00',
+  }, { onConflict: 'telegram_id' });
+  await ctx.editMessageText('✅ *Empire до 2099 — установлен!* Перезапусти мини-апп.', { parse_mode: 'Markdown' });
+});
+
+bot.action('adm_manage_user', async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.answerCbQuery('⛔');
+  await ctx.answerCbQuery();
+  await ctx.reply('Введите ID пользователя:\n\n`/admin_user 123456789`', { parse_mode: 'Markdown' });
+});
+
+bot.command('admin_user', async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.reply('⛔ Нет доступа');
+
+  const targetId = (ctx.message.text || '').split(' ')[1];
+  if (!targetId || !/^\d+$/.test(targetId)) return ctx.reply('Укажите ID: `/admin_user 123456789`', { parse_mode: 'Markdown' });
+
+  const { data: sub } = await supabase.from('owner_subscriptions').select('*').eq('telegram_id', targetId).single();
+  if (!sub) return ctx.reply(`❌ Пользователь *${targetId}* не найден в системе`, { parse_mode: 'Markdown' });
+
+  const exp = sub.subscription_expires_at
+    ? new Date(sub.subscription_expires_at).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })
+    : '—';
+
+  await ctx.replyWithMarkdown(
+    `👤 *ID: ${targetId}*\n\n📋 Тариф: *${sub.plan}*\n📊 Статус: *${sub.subscription_status}*\n📅 До: *${exp}*`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback('💎 Empire до 2099', `adm_empire_${targetId}`)],
+      [Markup.button.callback('➕ +30 дней', `adm_add30_${targetId}`)],
+      [Markup.button.callback('➕ +1 год', `adm_add365_${targetId}`)],
+    ])
+  );
+});
+
+bot.action(/^adm_empire_(\d+)$/, async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.answerCbQuery('⛔');
+  await ctx.answerCbQuery();
+  const tid = ctx.match[1];
+  await supabase.from('owner_subscriptions').update({ plan:'empire', max_venues:999, subscription_status:'active', subscription_expires_at:'2099-12-31T23:59:59+00:00' }).eq('telegram_id', tid);
+  await ctx.editMessageText(`✅ Empire до 2099 установлен для *${tid}*`, { parse_mode: 'Markdown' });
+});
+
+bot.action(/^adm_add30_(\d+)$/, async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.answerCbQuery('⛔');
+  await ctx.answerCbQuery();
+  const tid = ctx.match[1];
+  const { data: s } = await supabase.from('owner_subscriptions').select('subscription_expires_at').eq('telegram_id', tid).single();
+  const base = s?.subscription_expires_at ? Math.max(new Date(s.subscription_expires_at).getTime(), Date.now()) : Date.now();
+  const newExp = new Date(base + 30 * 24 * 60 * 60 * 1000);
+  await supabase.from('owner_subscriptions').update({ subscription_status:'active', subscription_expires_at: newExp.toISOString() }).eq('telegram_id', tid);
+  await ctx.editMessageText(`✅ +30 дней для *${tid}*. До: *${newExp.toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})}*`, { parse_mode: 'Markdown' });
+});
+
+bot.action(/^adm_add365_(\d+)$/, async (ctx) => {
+  if (!isAdmin(ctx)) return ctx.answerCbQuery('⛔');
+  await ctx.answerCbQuery();
+  const tid = ctx.match[1];
+  const { data: s } = await supabase.from('owner_subscriptions').select('subscription_expires_at').eq('telegram_id', tid).single();
+  const base = s?.subscription_expires_at ? Math.max(new Date(s.subscription_expires_at).getTime(), Date.now()) : Date.now();
+  const newExp = new Date(base + 365 * 24 * 60 * 60 * 1000);
+  await supabase.from('owner_subscriptions').update({ subscription_status:'active', subscription_expires_at: newExp.toISOString() }).eq('telegram_id', tid);
+  await ctx.editMessageText(`✅ +1 год для *${tid}*. До: *${newExp.toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})}*`, { parse_mode: 'Markdown' });
+});
+
+// ─── /restaurant — редирект на /start (команда устарела) ─────────────────────
 bot.command('restaurant', async (ctx) => {
   const telegramId = String(ctx.from.id);
   const ownerSub   = await getOwnerSub(telegramId);
 
   if (!ownerSub) {
     await ctx.replyWithMarkdown(
-      `🏪 *Стать партнёром Great Guest*\n\nПодключите ваш ресторан или мероприятие к единой сети лояльности.\n\n✅ *14 дней бесплатно*\n\n*Что вы получаете:*\n• Весь список гостей сети (Bronze / Silver / Gold / Platinum)\n• ИИ-предложения для каждого гостя за 1 клик\n• Аналитика и история визитов\n• Добавление ресторанов и мероприятий`,
-      adminBtn
+      `🚀 *Great Guest — платформа для клубов и мероприятий*\n\n✅ *14 дней бесплатно*\n\nЧто получаете:\n• Страница события со ссылкой-приглашением\n• QR-сканер для регистрации гостей на входе\n• База гостей с уровнями и историей\n• Рассылка приглашений`,
+      createClubBtn
     );
     return;
   }
@@ -347,7 +751,7 @@ bot.command('restaurant', async (ctx) => {
   const plan       = PLANS[ownerSub.plan] || PLANS.trial;
 
   await ctx.replyWithMarkdown(
-    `🏪 *Панель партнёра*\n\n${plan.emoji} Тариф: *${plan.label}*\n${statusLine}\nЗаведений: *${venueCount}* из ${ownerSub.max_venues}\n\n👇 Открой панель управления:`,
+    `🗂 *Панель Great Guest*\n\n${plan.emoji} Тариф: *${plan.label}*\n${statusLine}\nСобытий: *${venueCount}* из ${ownerSub.max_venues}`,
     adminBtn
   );
 });
@@ -444,6 +848,108 @@ bot.action(/^confirm_forget_(.+)$/, async (ctx) => {
     console.error('forget error:', e);
     await ctx.editMessageText('Произошла ошибка при удалении. Обратитесь на privacy@great-guest.ru');
   }
+});
+
+// ─── /myid — гость узнаёт свой Telegram ID для передачи организатору ─────────
+bot.command('myid', async (ctx) => {
+  const telegramId = String(ctx.from.id);
+  await ctx.replyWithMarkdown(
+    `🪪 *Ваш Telegram ID*\n\n\`${telegramId}\`\n\n` +
+    `_Передайте этот ID организатору — он сможет перенести историю ваших визитов на новый аккаунт._`
+  );
+});
+
+// ─── /recover — восстановление аккаунта по номеру телефона ───────────────────
+bot.command('recover', async (ctx) => {
+  const telegramId = String(ctx.from.id);
+  if (!(await hasConsent(telegramId))) return sendConsentRequest(ctx);
+
+  await ctx.replyWithMarkdown(
+    `🔄 *Восстановление аккаунта*\n\n` +
+    `Если у вас был другой аккаунт Telegram, поделитесь номером телефона — ` +
+    `мы найдём ваш старый профиль и перенесём историю визитов.`,
+    Markup.keyboard([[Markup.button.contactRequest('📱 Поделиться номером')], ['⏭ Пропустить']])
+      .resize().oneTime()
+  );
+});
+
+// ─── Contact handler — обработка номера телефона ──────────────────────────────
+bot.on('contact', async (ctx) => {
+  // Telegram only allows sharing own contact via keyboard button
+  if (ctx.message.contact.user_id !== ctx.from.id) return;
+
+  const telegramId = String(ctx.from.id);
+  const rawPhone = ctx.message.contact.phone_number || '';
+  const phone = rawPhone.replace(/\D/g, ''); // normalize: digits only
+  if (!phone) return ctx.reply('Не удалось получить номер телефона.');
+
+  // Remove reply keyboard
+  await ctx.reply('📱 Проверяю номер…', Markup.removeKeyboard());
+
+  // Check if this phone belongs to a DIFFERENT account
+  const { data: existing } = await supabase
+    .from('guests')
+    .select('telegram_id, first_name, last_name, visit_count')
+    .eq('phone', phone)
+    .neq('telegram_id', telegramId)
+    .maybeSingle();
+
+  if (existing) {
+    const name = [existing.first_name, existing.last_name].filter(Boolean).join(' ') || 'Гость';
+    await ctx.replyWithMarkdown(
+      `🔍 *Найден аккаунт с этим номером*\n\n` +
+      `👤 ${esc(name)} — ${existing.visit_count || 0} визит${decl(existing.visit_count || 0)}\n\n` +
+      `Перенести историю визитов на ваш текущий аккаунт?`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback('✅ Да, перенести историю', `confirm_merge_${existing.telegram_id}_to_${telegramId}`)],
+        [Markup.button.callback('❌ Нет, оставить так', 'skip_merge')],
+      ])
+    );
+  } else {
+    // Save phone to current account
+    await supabase.from('guests').update({ phone }).eq('telegram_id', telegramId);
+    await ctx.replyWithMarkdown(
+      `✅ *Номер сохранён!*\n\n` +
+      `Если когда-нибудь смените Telegram — используйте /recover, ` +
+      `поделитесь номером, и история визитов восстановится автоматически.\n\n` +
+      `_Чтобы удалить все данные: /forget_`
+    );
+  }
+});
+
+// Пропустить номер телефона
+bot.hears('⏭ Пропустить', async (ctx) => {
+  await ctx.reply('Хорошо. Вы всегда сможете сделать это позже командой /recover.', Markup.removeKeyboard());
+});
+
+// ─── Confirm merge via phone ──────────────────────────────────────────────────
+bot.action(/^confirm_merge_(.+)_to_(.+)$/, async (ctx) => {
+  const oldId = ctx.match[1];
+  const newId = ctx.match[2];
+
+  // Security: newId must be the person pressing the button
+  if (String(ctx.from.id) !== newId) return ctx.answerCbQuery('Ошибка доступа');
+  await ctx.answerCbQuery();
+
+  const { data: result } = await supabase.rpc('merge_guest_accounts', {
+    p_old_telegram_id: oldId,
+    p_new_telegram_id: newId,
+  });
+
+  if (!result || result.error) {
+    const msgs = { old_not_found: 'Старый аккаунт не найден.', new_not_found: 'Новый аккаунт не найден.', same_account: 'Это один и тот же аккаунт.' };
+    return ctx.editMessageText(`❌ ${msgs[result?.error] || 'Ошибка переноса. Обратитесь в поддержку.'}`, { parse_mode: 'Markdown' });
+  }
+
+  await ctx.editMessageText(
+    `✅ *Аккаунт восстановлен!*\n\nВизитов всего: *${result.merged_visits}*\n\n_История переехала на ваш текущий аккаунт._`,
+    { parse_mode: 'Markdown' }
+  );
+});
+
+bot.action('skip_merge', async (ctx) => {
+  await ctx.answerCbQuery();
+  await ctx.editMessageText('Ок. Номер сохранён — история старого аккаунта не тронута.');
 });
 
 // ─── Keyboard handlers ────────────────────────────────────────────────────────

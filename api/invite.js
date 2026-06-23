@@ -216,8 +216,7 @@ module.exports = async (req, res) => {
   // ── POST ─────────────────────────────────────────────────────────────────────
   if (req.method === 'POST') {
     const { initData, venueId, invite_message, action, filter, customMessage } = req.body || {};
-    if (!initData || !venueId) return res.status(400).json({ error: 'initData and venueId required' });
-    if (!UUID_RE.test(venueId)) return res.status(400).json({ error: 'invalid venueId' });
+    if (!initData) return res.status(400).json({ error: 'initData required' });
     if (!validateInitData(initData, process.env.BOT_TOKEN))
       return res.status(401).json({ error: 'Invalid signature' });
 
@@ -226,6 +225,38 @@ module.exports = async (req, res) => {
     const ownerId  = String(tgUser.id || '');
     const senderName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Организатор';
     if (!ownerId) return res.status(401).json({ error: 'No user' });
+
+    // ── action: merge_guest — перенос истории на новый аккаунт ───────────────
+    if (action === 'merge_guest') {
+      const oldId = String(req.body.old_telegram_id || '').trim();
+      const newId = String(req.body.new_telegram_id || '').trim();
+      if (!/^\d+$/.test(oldId) || !/^\d+$/.test(newId))
+        return res.status(400).json({ error: 'Некорректные Telegram ID' });
+      if (oldId === newId)
+        return res.status(400).json({ error: 'same_account', message: 'Это один и тот же аккаунт' });
+
+      // Security: old guest must be in organizer's own contact base
+      const { data: contact } = await db
+        .from('organizer_contacts')
+        .select('guest_id')
+        .eq('organizer_id', ownerId)
+        .eq('guest_id', oldId)
+        .maybeSingle();
+      if (!contact)
+        return res.status(403).json({ error: 'guest_not_in_your_base', message: 'Гость не найден в вашей базе' });
+
+      const { data: result, error: rpcErr } = await db.rpc('merge_guest_accounts', {
+        p_old_telegram_id: oldId,
+        p_new_telegram_id: newId,
+      });
+      if (rpcErr || !result || result.error)
+        return res.status(400).json({ error: result?.error || rpcErr?.message || 'merge_failed' });
+
+      return res.status(200).json({ success: true, merged_visits: result.merged_visits });
+    }
+
+    if (!venueId) return res.status(400).json({ error: 'venueId required' });
+    if (!UUID_RE.test(venueId)) return res.status(400).json({ error: 'invalid venueId' });
 
     const { data: venue, error: fetchErr } = await db
       .from('restaurants')

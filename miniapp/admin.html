@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-  <title>Great Guest — Моя сеть</title>
+  <title>Great Guest — Мои события</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -24,6 +25,21 @@
       --red:#F87171;
       --red-bg:rgba(248,113,113,0.1);
       --blue:#60A5FA;
+    }
+    body.light{
+      --bg:#F2EFE9;
+      --card:#FFFFFF;
+      --card2:#EAE7E0;
+      --border:rgba(0,0,0,0.08);
+      --text:#1A1825;
+      --muted:rgba(26,24,37,0.5);
+      --gold-bg:rgba(201,169,110,0.12);
+      --gold-border:rgba(201,169,110,0.3);
+      --green:#16A34A;
+      --green-bg:rgba(22,163,74,0.1);
+      --red:#DC2626;
+      --red-bg:rgba(220,38,38,0.1);
+      --blue:#2563EB;
     }
     html,body{height:100%;background:var(--bg);color:var(--text);
       font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
@@ -66,6 +82,37 @@
     .net-upgrade{color:var(--gold);font-weight:600;cursor:pointer;text-decoration:none}
     .net-upgrade:hover{text-decoration:underline}
 
+    /* Owner profile row */
+    .owner-profile-row{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+    .owner-avatar-wrap{position:relative;flex-shrink:0;cursor:pointer}
+    .owner-avatar{width:54px;height:54px;border-radius:50%;background:var(--card2);
+      border:2px solid var(--border);display:flex;align-items:center;justify-content:center;
+      font-size:24px;overflow:hidden}
+    .owner-avatar img{width:100%;height:100%;object-fit:cover}
+    .owner-avatar-cam{position:absolute;bottom:0;right:0;width:20px;height:20px;
+      background:var(--gold);border-radius:50%;display:flex;align-items:center;
+      justify-content:center;font-size:11px;border:2px solid var(--card)}
+    .owner-name{font-size:17px;font-weight:700;letter-spacing:-0.3px;line-height:1.2}
+    .owner-handle{font-size:12px;color:var(--muted);margin-top:3px}
+
+    /* Event hero banner */
+    .event-hero{width:100%;height:220px;background-size:cover;background-position:center;position:relative;flex-shrink:0}
+    .event-hero-overlay{position:absolute;inset:0;
+      background:linear-gradient(180deg,rgba(0,0,0,0.55) 0%,rgba(0,0,0,0) 45%,rgba(0,0,0,0) 50%,rgba(0,0,0,0.75) 100%)}
+    .event-hero-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;
+      justify-content:space-between;padding:14px 16px}
+    .event-hero-bottom{position:absolute;bottom:0;left:0;right:0;padding:14px 16px}
+    .event-hero-title{font-size:21px;font-weight:800;letter-spacing:-0.4px;
+      text-shadow:0 2px 8px rgba(0,0,0,0.7);line-height:1.2;margin-bottom:3px}
+    .event-hero-sub{font-size:12px;color:rgba(255,255,255,0.8);text-shadow:0 1px 4px rgba(0,0,0,0.6)}
+    .hero-icon-btn{background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);
+      border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:7px 11px;
+      color:#fff;cursor:pointer;line-height:1;font-size:18px}
+    .hero-back-btn{background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);
+      border:1px solid rgba(255,255,255,0.18);border-radius:50%;width:36px;height:36px;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+      font-size:20px;color:var(--gold)}
+
     .venues-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:20px}
     .venue-card{background:var(--card);border:1px solid var(--border);border-radius:18px;
       padding:18px 14px;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;text-align:center}
@@ -82,7 +129,24 @@
     .venue-stat{text-align:center}
     .venue-stat-n{font-size:18px;font-weight:700;color:var(--gold);display:block;letter-spacing:-0.3px}
     .venue-stat-l{color:var(--muted);margin-top:2px}
+    .venue-cover-img{height:80px;margin:-18px -14px 12px;border-radius:14px 14px 0 0;background-size:cover;background-position:center}
+    .cover-zone{width:100%;height:130px;background:rgba(255,255,255,0.04);border:1.5px dashed rgba(255,255,255,0.15);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;margin-bottom:16px;gap:8px;transition:background .2s}
+    .cover-zone:hover,.cover-zone:active{background:rgba(255,255,255,0.08)}
+    .cover-zone-img{width:100%;height:130px;border-radius:14px;background-size:cover;background-position:center;margin-bottom:16px;position:relative;cursor:pointer;overflow:hidden}
+    .cover-zone-img-edit{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.65);border-radius:8px;padding:5px 10px;font-size:12px;color:#fff;font-weight:600}
+    .ef-field{margin-bottom:14px}
+    .ef-field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:6px}
+    .ef-field input,.ef-field select,.ef-field textarea{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .15s}
+    .ef-field input:focus,.ef-field select:focus,.ef-field textarea:focus{border-color:var(--gold-border)}
+    .ef-field textarea{min-height:80px;resize:vertical;line-height:1.5}
+    .ef-btn-save{background:var(--gold);color:#0D0C12;border:none;border-radius:12px;padding:13px 24px;font-size:14px;font-weight:700;cursor:pointer;flex:1}
+    .ef-btn-cancel{background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:13px 18px;font-size:14px;font-weight:600;cursor:pointer}
 
+    .mode-card{display:flex;align-items:center;gap:12px;background:var(--card2);
+      border:2px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;
+      transition:border-color .15s,background .15s}
+    .mode-card.selected{border-color:var(--gold);background:rgba(201,169,110,0.08)}
+    .mode-check{font-size:14px;font-weight:800;color:var(--gold);width:16px;text-align:center;flex-shrink:0}
     .add-venue-btn{margin:0 20px 32px;background:var(--gold);color:#0D0C12;
       border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:700;
       cursor:pointer;transition:opacity .2s,transform .1s;width:calc(100% - 40px);display:flex;
@@ -90,9 +154,50 @@
       letter-spacing:-0.2px}
     .add-venue-btn:active{opacity:.85;transform:scale(.98)}
 
-    .net-empty{text-align:center;padding:60px 20px;color:var(--muted)}
-    .net-empty-icon{font-size:48px;margin-bottom:16px}
-    .net-empty-text{font-size:15px;line-height:1.6;margin-bottom:24px}
+    .net-empty{text-align:center;padding:32px 20px 20px;color:var(--muted)}
+    .net-empty-icon{font-size:44px;margin-bottom:12px}
+    .net-empty-text{font-size:15px;line-height:1.6;margin-bottom:20px}
+
+    /* ─ Network tabs ─ */
+    .net-tabs{display:flex;gap:4px;margin-top:14px;background:rgba(255,255,255,0.04);
+      border-radius:12px;padding:4px}
+    .net-tab{flex:1;padding:8px 6px;border:none;border-radius:9px;font-size:13px;font-weight:600;
+      cursor:pointer;transition:background .15s,color .15s;background:transparent;
+      color:var(--muted);font-family:inherit;white-space:nowrap}
+    .net-tab.active{background:var(--card2);color:var(--text);
+      box-shadow:0 2px 8px rgba(0,0,0,0.25)}
+
+    /* ─ Guest base (network level) ─ */
+    .ngb-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+      padding:16px 20px 0}
+    .ngb-level-card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+      padding:10px 8px;text-align:center;cursor:pointer;transition:border-color .15s}
+    .ngb-level-card.active{border-color:rgba(201,169,110,0.5)}
+    .ngb-level-card:active{opacity:.8}
+    .ngb-level-emoji{font-size:22px;margin-bottom:4px}
+    .ngb-level-count{font-size:18px;font-weight:800;color:var(--gold)}
+    .ngb-level-name{font-size:10px;color:var(--muted);margin-top:2px}
+    .ngb-toolbar{display:flex;gap:8px;padding:12px 20px}
+    .ngb-search{flex:1;background:var(--card2);border:1px solid var(--border);
+      border-radius:10px;padding:9px 12px;color:var(--text);font-size:14px;font-family:inherit}
+    .ngb-search::placeholder{color:var(--muted)}
+    .ngb-export{background:rgba(255,255,255,0.06);border:1px solid var(--border);
+      border-radius:10px;padding:9px 12px;color:var(--muted);font-size:13px;
+      cursor:pointer;white-space:nowrap;font-family:inherit}
+    .ngb-list{padding:0 20px 100px}
+    .ngb-row{display:flex;align-items:center;gap:10px;padding:11px 0;
+      border-bottom:1px solid var(--border)}
+    .ngb-merge-btn{background:none;border:none;font-size:15px;padding:4px 6px;
+      cursor:pointer;border-radius:8px;color:var(--muted);flex-shrink:0;line-height:1;
+      transition:background .15s}
+    .ngb-merge-btn:hover{background:rgba(255,255,255,0.08)}
+    .ngb-avatar{width:38px;height:38px;border-radius:50%;background:var(--card2);
+      display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .ngb-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ngb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+    .ngb-right{text-align:right;flex-shrink:0}
+    .ngb-visits{font-size:14px;font-weight:700}
+    .ngb-visits-l{font-size:10px;color:var(--muted)}
 
     /* ─ Type chooser ─ */
     .back-btn{display:flex;align-items:center;gap:8px;font-size:14px;
@@ -361,19 +466,39 @@
     <div class="logo">Great<span>Guest</span></div>
     <div class="sub-label">Кабинет партнёра</div>
     <div class="chooser-hero">
-      <h1>Что вы открываете?</h1>
-      <p>Выберите тип — мы настроим кабинет и инструменты под ваши задачи</p>
+      <h1>Тип события или площадки</h1>
+      <p>Выберите — мы настроим кабинет и инструменты под ваши задачи</p>
     </div>
-    <div class="type-cards">
-      <div class="type-card" onclick="chooseType('restaurant')">
+    <div class="type-cards" style="grid-template-columns:repeat(3,1fr)">
+      <div class="type-card" onclick="chooseType('restaurant','')">
         <div class="type-card-icon">🍽</div>
         <div class="type-card-title">Ресторан</div>
-        <div class="type-card-desc">Постоянная работа с гостями, лояльность, повторные визиты</div>
+        <div class="type-card-desc">Постоянные гости, лояльность</div>
       </div>
-      <div class="type-card" onclick="chooseType('event')">
+      <div class="type-card" onclick="chooseType('event','Вечеринка')">
         <div class="type-card-icon">🎉</div>
-        <div class="type-card-title">Мероприятие</div>
-        <div class="type-card-desc">Ужин, вечеринка, концерт, гала — приглашения и регистрация гостей</div>
+        <div class="type-card-title">Вечеринка</div>
+        <div class="type-card-desc">Клуб, вписка, закрытое событие</div>
+      </div>
+      <div class="type-card" onclick="chooseType('event','Корпоратив')">
+        <div class="type-card-icon">💼</div>
+        <div class="type-card-title">Корпоратив</div>
+        <div class="type-card-desc">Тимбилдинг, бизнес-ужин</div>
+      </div>
+      <div class="type-card" onclick="chooseType('event','Конференция')">
+        <div class="type-card-icon">🎓</div>
+        <div class="type-card-title">Конференция</div>
+        <div class="type-card-desc">Форум, выставка, митап</div>
+      </div>
+      <div class="type-card" onclick="chooseType('event','Спорт')">
+        <div class="type-card-icon">🏅</div>
+        <div class="type-card-title">Спорт / Клуб</div>
+        <div class="type-card-desc">Тренировки, соревнования</div>
+      </div>
+      <div class="type-card" onclick="chooseType('event','Другое')">
+        <div class="type-card-icon">✨</div>
+        <div class="type-card-title">Другое</div>
+        <div class="type-card-desc">Любое событие с базой гостей</div>
       </div>
     </div>
   </div>
@@ -390,6 +515,11 @@
 <div id="s-dash" class="screen">
   <!-- filled by renderDashboard() -->
   <div id="legal-footer" style="display:none;text-align:center;padding:20px 20px 32px;font-size:11px;color:var(--muted)">
+    <button onclick="openLanding()" style="background:none;border:none;cursor:pointer;padding:4px 0 14px;
+      font-size:18px;font-weight:800;letter-spacing:-0.5px;color:var(--text)">
+      Great<span style="color:var(--gold)">Guest</span>
+    </button>
+    <br>
     <a href="privacy.html" style="color:var(--muted);text-decoration:none;margin:0 8px">Политика конфиденциальности</a>
     <span style="color:var(--border)">·</span>
     <a href="terms.html" style="color:var(--muted);text-decoration:none;margin:0 8px">Условия использования</a>
@@ -402,6 +532,14 @@
     <div class="modal-title" id="modal-title">Отправить предложение</div>
     <div class="modal-sub" id="modal-sub">Выберите вариант</div>
     <div id="offer-options"></div>
+    <div id="offer-edit-wrap" style="display:none;margin-top:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">✏️ Редактировать перед отправкой</div>
+      <textarea id="offer-edit" rows="4"
+        style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;
+          padding:11px 13px;color:var(--text);font-size:13px;font-family:inherit;
+          outline:none;resize:vertical;line-height:1.5;box-sizing:border-box"
+        placeholder="Текст сообщения…"></textarea>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeOfferModal()">Отмена</button>
       <button class="btn-send" id="modal-send-btn" onclick="sendOffer()" disabled>Отправить</button>
@@ -416,6 +554,247 @@
     <div id="upgrade-content">
       <!-- filled by showUpgradeModal() -->
     </div>
+  </div>
+</div>
+
+<!-- ─ Venue QR Modal ─────────────────────────────────────── -->
+<div id="venue-qr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+  z-index:200;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--card);border-radius:20px;padding:24px 20px 28px;
+    max-width:320px;width:100%;text-align:center;position:relative">
+    <button onclick="closeVenueQR()" aria-label="Закрыть"
+      style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);
+        border:none;border-radius:50%;width:30px;height:30px;color:var(--muted);
+        font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:4px">QR для входа гостей</div>
+    <div id="venue-qr-name" style="font-size:17px;font-weight:700;margin-bottom:16px;letter-spacing:-0.3px"></div>
+    <div style="background:#fff;border-radius:16px;padding:12px;display:inline-block;margin-bottom:14px">
+      <img id="venue-qr-img" src="" alt="QR код" width="220" height="220"
+        style="display:block;border-radius:8px"/>
+    </div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:18px">
+      Гость сканирует → открывается бот → принимает условия → чек-ин автоматически
+    </div>
+    <div style="background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);
+      border-radius:12px;padding:10px 12px;font-size:11px;color:var(--gold);line-height:1.5;margin-bottom:16px">
+      📋 152-ФЗ: согласие на обработку данных запрашивается у гостя автоматически при первом сканировании
+    </div>
+    <button onclick="closeVenueQR()"
+      style="width:100%;background:rgba(255,255,255,0.08);border:1px solid var(--border);
+        border-radius:12px;padding:12px;color:var(--text);font-size:14px;cursor:pointer;font-weight:500">
+      Закрыть
+    </button>
+  </div>
+</div>
+
+<!-- ─ Invite Link Modal ──────────────────────────────────────── -->
+<div id="invite-link-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+  z-index:200;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--card);border-radius:20px;padding:24px 20px 28px;
+    max-width:360px;width:100%;position:relative">
+    <button onclick="closeInviteLink()" aria-label="Закрыть"
+      style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);
+        border:none;border-radius:50%;width:30px;height:30px;color:var(--muted);
+        font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+
+    <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Ссылка-приглашение</div>
+    <div id="invite-link-name" style="font-size:17px;font-weight:700;margin-bottom:18px;letter-spacing:-0.3px"></div>
+
+    <!-- URL + copy -->
+    <div style="display:flex;gap:8px;margin-bottom:18px">
+      <input id="invite-link-url" readonly
+        style="flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+          border-radius:10px;padding:10px 12px;color:var(--muted);font-size:12px;
+          font-family:monospace;min-width:0;outline:none"/>
+      <button onclick="copyInviteLink()" id="copy-invite-btn"
+        style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.25);
+          border-radius:10px;padding:10px 14px;color:#60A5FA;font-size:13px;
+          font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
+        Копировать
+      </button>
+    </div>
+
+    <!-- Custom message edit -->
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">
+      Текст для гостей <span style="font-weight:400">(показывается на странице приглашения)</span>
+    </div>
+    <textarea id="invite-link-msg" maxlength="1000"
+      placeholder="Напишите что-нибудь для гостей: дресс-код, программа, как добраться…"
+      style="width:100%;min-height:100px;background:rgba(255,255,255,0.04);
+        border:1px solid var(--border);border-radius:10px;padding:12px;
+        color:var(--text);font-size:13px;font-family:inherit;resize:vertical;
+        line-height:1.5;margin-bottom:14px"></textarea>
+
+    <button onclick="saveInviteMessage()" id="save-invite-btn"
+      style="width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+        border:none;border-radius:12px;padding:13px;color:#0D0C12;font-size:14px;
+        font-weight:700;cursor:pointer;margin-bottom:10px">
+      Сохранить текст
+    </button>
+    <button onclick="closeInviteLink()"
+      style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);
+        border-radius:12px;padding:12px;color:var(--text);font-size:14px;cursor:pointer;font-weight:500">
+      Закрыть
+    </button>
+  </div>
+</div>
+
+<!-- ─ Broadcast Modal ───────────────────────────────────────── -->
+<div id="broadcast-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+  z-index:200;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--card);border-radius:20px;padding:24px 20px 28px;
+    max-width:380px;width:100%;position:relative;max-height:90vh;overflow-y:auto">
+    <button onclick="closeBroadcastModal()" aria-label="Закрыть"
+      style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);
+        border:none;border-radius:50%;width:30px;height:30px;color:var(--muted);
+        font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+
+    <div style="font-size:13px;color:var(--muted);margin-bottom:4px">📣 Рассылка приглашений</div>
+    <div id="broadcast-event-name" style="font-size:17px;font-weight:700;margin-bottom:18px;letter-spacing:-0.3px"></div>
+
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">Кому отправить</div>
+    <select id="broadcast-filter" onchange="updateBroadcastCount()"
+      style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+        border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;
+        margin-bottom:10px;outline:none;font-family:inherit">
+      <option value="all">Всем контактам сети</option>
+      <option value="Platinum">💎 Только Platinum</option>
+      <option value="Gold">🥇 Только Gold</option>
+      <option value="Silver">🥈 Только Silver</option>
+      <option value="Bronze">🥉 Только Bronze</option>
+    </select>
+
+    <div id="broadcast-count" style="font-size:13px;color:var(--gold);font-weight:600;
+      margin-bottom:16px;padding:10px 14px;background:rgba(201,169,110,0.08);
+      border:1px solid rgba(201,169,110,0.15);border-radius:10px;text-align:center">
+      0 получателей
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">Текст сообщения</div>
+    <textarea id="broadcast-msg" maxlength="1000"
+      placeholder="Текст приглашения. Если пусто — отправится только название события и кнопка."
+      style="width:100%;min-height:90px;background:rgba(255,255,255,0.04);
+        border:1px solid var(--border);border-radius:10px;padding:12px;
+        color:var(--text);font-size:13px;font-family:inherit;resize:vertical;
+        line-height:1.5;margin-bottom:14px;outline:none"></textarea>
+
+    <button onclick="sendBroadcast()" id="broadcast-send-btn"
+      style="width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+        border:none;border-radius:12px;padding:14px;color:#0D0C12;font-size:15px;
+        font-weight:700;cursor:pointer;margin-bottom:10px;letter-spacing:-0.2px">
+      Отправить
+    </button>
+    <button onclick="closeBroadcastModal()"
+      style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);
+        border-radius:12px;padding:12px;color:var(--text);font-size:14px;cursor:pointer;font-weight:500">
+      Отмена
+    </button>
+
+    <div style="margin-top:12px;font-size:11px;color:var(--muted);text-align:center;line-height:1.5">
+      Каждый получит кнопку «Подтвердить участие» → откроется страница события в браузере
+    </div>
+  </div>
+</div>
+
+<!-- ─ Camera QR Scanner ─────────────────────────────────────── -->
+<div id="cam-scanner" style="display:none;position:fixed;inset:0;background:#000;
+  z-index:600;flex-direction:column">
+  <div style="position:relative;flex:1;overflow:hidden">
+    <video id="cam-video" playsinline autoplay muted
+      style="width:100%;height:100%;object-fit:cover;display:block"></video>
+    <canvas id="cam-canvas" style="display:none"></canvas>
+    <!-- dim + viewfinder -->
+    <div style="position:absolute;inset:0;pointer-events:none;
+      display:flex;align-items:center;justify-content:center">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45)"></div>
+      <div style="position:relative;width:230px;height:230px;
+        border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,0.45)">
+        <!-- corner brackets -->
+        <div style="position:absolute;top:0;left:0;width:32px;height:32px;
+          border-top:3px solid #4ADE80;border-left:3px solid #4ADE80;border-radius:10px 0 0 0"></div>
+        <div style="position:absolute;top:0;right:0;width:32px;height:32px;
+          border-top:3px solid #4ADE80;border-right:3px solid #4ADE80;border-radius:0 10px 0 0"></div>
+        <div style="position:absolute;bottom:0;left:0;width:32px;height:32px;
+          border-bottom:3px solid #4ADE80;border-left:3px solid #4ADE80;border-radius:0 0 0 10px"></div>
+        <div style="position:absolute;bottom:0;right:0;width:32px;height:32px;
+          border-bottom:3px solid #4ADE80;border-right:3px solid #4ADE80;border-radius:0 0 10px 0"></div>
+      </div>
+    </div>
+    <!-- Hint text -->
+    <div id="cam-status"
+      style="position:absolute;bottom:24px;left:16px;right:16px;text-align:center;
+        color:#fff;font-size:14px;font-weight:600;line-height:1.45;
+        text-shadow:0 2px 8px rgba(0,0,0,0.9);pointer-events:none">
+      Наведите камеру на QR-код гостя
+    </div>
+  </div>
+  <!-- Bottom bar -->
+  <div style="background:#111;padding:14px 20px 20px;flex-shrink:0">
+    <div id="cam-result" style="display:none;border-radius:12px;padding:11px 16px;
+      margin-bottom:12px;text-align:center;font-size:14px;font-weight:600;
+      border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.1);color:#4ADE80"></div>
+    <button onclick="closeQRScanner()"
+      style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+        border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer">
+      ✕ Закрыть сканер
+    </button>
+  </div>
+</div>
+
+<!-- ─ Scan Result Overlay ───────────────────────────────────── -->
+<div id="scan-overlay" style="display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);z-index:400;align-items:center;
+  justify-content:center;padding:24px" onclick="closeScanOverlay()">
+  <div id="scan-card" onclick="event.stopPropagation()"
+    style="background:var(--card);border-radius:24px;padding:32px 24px;
+      text-align:center;max-width:300px;width:100%">
+  </div>
+</div>
+
+<!-- ─ Guest Base Modal ──────────────────────────────────────── -->
+<div id="guest-base-modal" style="display:none;position:fixed;inset:0;
+  background:var(--bg);z-index:300;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div style="max-width:500px;margin:0 auto;padding:0 0 80px">
+
+    <!-- sticky header -->
+    <div style="position:sticky;top:0;background:var(--bg);z-index:10;
+      padding:16px 20px 12px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:12px">
+      <button onclick="closeGuestBase()" aria-label="Назад"
+        style="background:rgba(255,255,255,0.06);border:1px solid var(--border);
+          border-radius:50%;width:36px;height:36px;color:var(--text);
+          font-size:18px;cursor:pointer;display:flex;align-items:center;
+          justify-content:center;flex-shrink:0">←</button>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:17px;font-weight:700;letter-spacing:-0.3px">👥 База гостей сети</div>
+        <div id="gb-count" style="font-size:12px;color:var(--muted)"></div>
+      </div>
+      <button onclick="exportGuestBaseCSV()"
+        style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);
+          border-radius:10px;padding:7px 12px;color:#4ADE80;font-size:12px;
+          font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
+        📊 Excel
+      </button>
+    </div>
+
+    <div style="padding:14px 20px 10px">
+      <!-- Search -->
+      <input id="gb-search" type="search" placeholder="🔍 Поиск по имени или username…"
+        oninput="filterGuestBase()"
+        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+          border-radius:12px;padding:11px 14px;color:var(--text);font-size:14px;
+          font-family:inherit;outline:none;margin-bottom:12px"/>
+      <!-- Level filter -->
+      <div class="filter-row" style="margin-bottom:0">
+        <button class="filter-btn active" onclick="gbSetFilter('all',this)">Все</button>
+        <button class="filter-btn" onclick="gbSetFilter('Platinum',this)">💎 Plat</button>
+        <button class="filter-btn" onclick="gbSetFilter('Gold',this)">🥇 Gold</button>
+        <button class="filter-btn" onclick="gbSetFilter('Silver',this)">🥈 Silver</button>
+        <button class="filter-btn" onclick="gbSetFilter('Bronze',this)">🥉 Bronze</button>
+      </div>
+    </div>
+
+    <div id="gb-list" style="padding:0 20px"></div>
   </div>
 </div>
 
@@ -447,10 +826,55 @@
   </div>
 </div>
 
+<!-- ─ Merge Guest Modal ───────────────────────────────────── -->
+<div class="modal-overlay" id="merge-modal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-title">🔄 Перенести аккаунт</div>
+    <div class="modal-sub" id="merge-modal-sub">Перенос истории визитов на новый Telegram</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Старый аккаунт (ID)</div>
+      <input id="merge-old-id" type="text" readonly
+        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+        border-radius:10px;padding:10px 12px;color:var(--muted);font-size:13px;
+        font-family:monospace;box-sizing:border-box" placeholder="telegram_id">
+    </div>
+    <div style="margin-bottom:6px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Новый Telegram ID</div>
+      <input id="merge-new-id" type="text" inputmode="numeric"
+        style="width:100%;background:var(--card);border:1px solid var(--border);
+        border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;
+        font-family:monospace;box-sizing:border-box" placeholder="Введите ID нового аккаунта">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.5">
+      Попросите гостя написать <strong style="color:var(--gold)">/myid</strong> в боте — он получит свой ID.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeMergeModal()">Отмена</button>
+      <button class="btn-send" id="merge-confirm-btn" onclick="confirmMerge()">Перенести</button>
+    </div>
+    <div id="merge-result" style="margin-top:12px;font-size:13px;text-align:center"></div>
+  </div>
+</div>
+
 <script>
+// ─ Theme ─────────────────────────────────────────────────────────────────────
+function initTheme() {
+  if (localStorage.getItem('gg_theme') === 'light') document.body.classList.add('light');
+}
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('gg_theme', isLight ? 'light' : 'dark');
+  // Re-render network header button label
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+}
+initTheme();
+
 // ─ Global state ──────────────────────────────────────────────────────────────
 const tg = window.Telegram?.WebApp;
 const initData = tg?.initData || '';
+const tgUser = tg?.initDataUnsafe?.user || {};
+const referralCode = new URLSearchParams(location.search).get('ref') || '';
 
 let ownerData = null;         // owner subscription info
 let venuesData = [];          // all venues
@@ -458,7 +882,10 @@ let currentVenue = null;      // selected venue object
 let globalGuests = [];        // all guests across network
 let allOffers = [];           // all offers across network
 let venueType = 'restaurant'; // for new venue registration
+let venueEventType = '';      // pre-filled event type from type chooser
+let classMode = 'loyalty';   // classification mode for new venue
 let activeFilter = 'all';     // guest filter
+let evEditMode = false;       // event info tab edit toggle
 
 let currentGuestId = null;
 let currentGuestName = null;
@@ -551,108 +978,301 @@ async function init() {
 }
 
 // ─ Network screen ────────────────────────────────────────────────────────────
+let netActiveTab = 'events';
+let ngbFilter    = 'all';
+
 function renderNetwork() {
-  const owner = ownerData;
+  const owner  = ownerData;
   const venues = venuesData;
 
-  const planLabel = {
-    trial: 'Пробный',
-    basic: 'Базовый',
-    network: 'Сеть',
-    empire: 'Империя',
-  }[owner.plan] || owner.plan;
-
-  const badgeClass = owner.subscription_status === 'trial'
-    ? 'net-trial'
-    : owner.is_active
-      ? 'net-active'
-      : 'net-expired';
-
-  const badgeText = owner.subscription_status === 'trial'
-    ? `⏳ ${owner.days_left} дн.`
-    : owner.is_active
-      ? `✅ Активна`
-      : `⛔ Истекла`;
-
-  const subStatus = owner.subscription_status === 'trial'
-    ? `Пробный период истекает через ${owner.days_left} ${owner.days_left === 1 ? 'день' : owner.days_left < 5 ? 'дня' : 'дней'}`
-    : owner.is_active
-      ? `Подписка активна до ${fmtDate(owner.subscription_expires_at)}`
-      : `Подписка истекла ${fmtDate(owner.subscription_expires_at)}`;
-
+  const planLabel = { trial:'Пробный', basic:'Базовый', network:'Сеть', empire:'Империя' }[owner.plan] || owner.plan;
+  const badgeClass = owner.subscription_status === 'trial' ? 'net-trial' : owner.is_active ? 'net-active' : 'net-expired';
+  const badgeText  = owner.subscription_status === 'trial' ? `⏳ ${owner.days_left} дн.` : owner.is_active ? `✅ Активна` : `⛔ Истекла`;
+  const subStatus  = owner.subscription_status === 'trial'
+    ? `Пробный период — ${owner.days_left} ${owner.days_left===1?'день':owner.days_left<5?'дня':'дней'}`
+    : owner.is_active ? `Активна до ${fmtDate(owner.subscription_expires_at)}` : `Истекла ${fmtDate(owner.subscription_expires_at)}`;
   const showUpgrade = !owner.is_active || owner.subscription_status === 'trial' || owner.plan === 'trial';
+  const gc = globalGuests.length;
+
+  const ownerName    = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Организатор';
+  const ownerHandle  = tgUser.username ? '@' + tgUser.username : 'Great Guest';
+  const ownerInitial = (tgUser.first_name || 'О')[0].toUpperCase();
+  const avatarSrc    = owner.profile_photo_url || null;
+  const avatarInner  = avatarSrc
+    ? `<img src="${esc(avatarSrc)}" alt="Фото профиля" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`
+    : `<span style="font-size:22px;line-height:1">${ownerInitial}</span>`;
 
   let content = `
     <div class="net-header">
-      <button onclick="window.location.href='app.html'" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:rgba(240,235,224,0.45);font-family:inherit;font-size:13px;font-weight:500;padding:0 0 14px 0;-webkit-tap-highlight-color:transparent">
-        <span style="font-size:20px;line-height:1">‹</span> Карта лояльности
-      </button>
+      <div class="owner-profile-row">
+        <div class="owner-avatar-wrap" onclick="editProfile()">
+          <div class="owner-avatar">${avatarInner}</div>
+          <div class="owner-avatar-cam">📷</div>
+        </div>
+        <div>
+          <div class="owner-name">${esc(ownerName)}</div>
+          <div class="owner-handle">${esc(ownerHandle)}</div>
+        </div>
+      </div>
       <div class="net-title">
-        <h1><span style="color:var(--gold)">Great</span>Guest · Моя сеть</h1>
-        <span class="net-badge ${badgeClass}">${badgeText}</span>
+        <h1><span style="color:var(--gold)">Great</span>Guest</h1>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button id="theme-toggle" onclick="toggleTheme()" style="background:none;border:none;cursor:pointer;font-size:18px;padding:2px 4px;line-height:1" title="Сменить тему">${document.body.classList.contains('light') ? '🌙' : '☀️'}</button>
+          <span class="net-badge ${badgeClass}">${badgeText}</span>
+        </div>
       </div>
       <div class="net-sub-bar">
         <div class="net-sub-left">
           <span class="net-sub-label">${planLabel}</span>
           <span class="net-sub-value">${subStatus}</span>
         </div>
-        ${showUpgrade ? `<a class="net-upgrade" onclick="showUpgradeModal('expired')">Upgrade</a>` : ''}
+        <div style="display:flex;align-items:center;gap:8px">
+          ${showUpgrade ? `<a class="net-upgrade" onclick="showUpgradeModal('expired')">Upgrade</a>` : ''}
+          <a class="net-upgrade" onclick="showSubscriptionModal()" style="color:var(--muted)">⚙️ Управление</a>
+        </div>
       </div>
-    </div>
-  `;
+      <div class="net-tabs">
+        <button class="net-tab${netActiveTab==='events'?' active':''}" onclick="switchNetTab('events')">
+          📅 События${venues.length>0?` (${venues.length})`:''}
+        </button>
+        <button class="net-tab${netActiveTab==='guests'?' active':''}" onclick="switchNetTab('guests')">
+          👥 Гости${gc>0?` (${gc})`:''}
+        </button>
+      </div>
+    </div>`;
 
+  // ── Tab: Events ─────────────────────────────────────────────────
+  content += `<div id="net-tab-events" style="display:${netActiveTab==='events'?'block':'none'}">`;
   if (venues.length === 0) {
     content += `
       <div class="net-empty">
-        <div class="net-empty-icon">🏪</div>
-        <div class="net-empty-text">
-          У вас пока нет заведений.<br>
-          Добавьте первое заведение чтобы начать работу с гостями.
-        </div>
-      </div>
-      <button class="add-venue-btn" onclick="addVenue()">
-        <span style="font-size:20px">＋</span> Добавить заведение
-      </button>
-    `;
+        <div class="net-empty-icon">🎉</div>
+        <div class="net-empty-text">Создайте первое мероприятие<br>и начните собирать базу гостей</div>
+        <button onclick="addVenue()" style="display:flex;align-items:center;justify-content:center;gap:8px;
+          background:linear-gradient(135deg,var(--gold),#E8C97E);color:#0D0C12;border:none;
+          border-radius:14px;padding:15px 28px;font-size:16px;font-weight:700;cursor:pointer;
+          width:100%;max-width:280px;margin:0 auto;letter-spacing:-0.2px;
+          box-shadow:0 4px 20px rgba(201,169,110,0.35)">
+          <span style="font-size:20px">＋</span> Создать мероприятие
+        </button>
+      </div>`;
   } else {
     content += `<div class="venues-grid">`;
     venues.forEach(v => {
-      venuesMap.set(v.id, v); // Store venue in map to avoid JSON in onclick
-      const icon = v.venue_type === 'event' ? '🎉' : '🍽';
-      const subtitle = v.venue_type === 'event'
-        ? (v.event_type || 'Мероприятие')
-        : (v.cuisine || 'Ресторан');
+      venuesMap.set(v.id, v);
+      const EV_ICONS = {'Вечеринка':'🎉','Корпоратив':'💼','Конференция':'🎓','Спорт':'🏅','Гала-ужин':'🍷','Концерт':'🎵','Другое':'✨'};
+      const icon     = v.venue_type === 'event' ? (EV_ICONS[v.event_type] || '🎉') : '🍽';
+      const subtitle = v.venue_type === 'event' ? (v.event_type || 'Мероприятие') : (v.cuisine || 'Ресторан');
       const location = [v.city, subtitle].filter(Boolean).join(' · ');
+      const coverHtml = v.cover_image_url
+        ? `<div class="venue-cover-img" style="background-image:url('${esc(v.cover_image_url)}')"></div>`
+        : `<div class="venue-icon">${icon}</div>`;
       content += `
         <div class="venue-card" onclick="openVenueById('${v.id}')">
-          <div class="venue-icon">${icon}</div>
+          ${coverHtml}
           <div class="venue-name">${esc(v.name)}</div>
           <div class="venue-loc">${esc(location)}</div>
           <div class="venue-stats">
-            <div class="venue-stat">
-              <span class="venue-stat-n">${v.stats.visits30d}</span>
-              <span class="venue-stat-l">визиты/30д</span>
-            </div>
-            <div class="venue-stat">
-              <span class="venue-stat-n">${v.stats.totalVisits}</span>
-              <span class="venue-stat-l">всего</span>
-            </div>
-            <div class="venue-stat">
-              <span class="venue-stat-n">${v.stats.offersCount}</span>
-              <span class="venue-stat-l">офферов</span>
-            </div>
+            <div class="venue-stat"><span class="venue-stat-n">${v.stats.visits30d}</span><span class="venue-stat-l">30д</span></div>
+            <div class="venue-stat"><span class="venue-stat-n">${v.stats.totalVisits}</span><span class="venue-stat-l">всего</span></div>
+            <div class="venue-stat"><span class="venue-stat-n">${v.stats.rsvpCount}</span><span class="venue-stat-l">RSVP</span></div>
           </div>
-        </div>
-      `;
+        </div>`;
     });
     content += `</div>`;
-    content += `<button class="add-venue-btn" onclick="addVenue()">
-      <span style="font-size:20px">＋</span> Добавить заведение
-    </button>`;
   }
+  content += `
+    <button class="add-venue-btn" onclick="addVenue()">
+      <span style="font-size:20px">＋</span> Добавить событие
+    </button>
+  </div>`;
+
+  // ── Tab: Guest base ─────────────────────────────────────────────
+  content += `<div id="net-tab-guests" style="display:${netActiveTab==='guests'?'block':'none'}">`;
+
+  if (!owner.is_active) {
+    content += `<div class="net-empty"><div class="net-empty-icon">⛔</div>
+      <div class="net-empty-text">Подписка истекла.<br>Оформите тариф чтобы видеть базу гостей.</div></div>`;
+  } else if (gc === 0) {
+    content += `<div class="net-empty">
+      <div class="net-empty-icon">👥</div>
+      <div class="net-empty-text">База гостей пока пустая.<br>Гости попадают сюда при сканировании QR, RSVP или регистрации.</div></div>`;
+  } else {
+    // Level summary cards
+    const levels = [
+      { key:'Bronze',   emoji:'🥉', min:1,  max:4  },
+      { key:'Silver',   emoji:'🥈', min:5,  max:14 },
+      { key:'Gold',     emoji:'🥇', min:15, max:29 },
+      { key:'Platinum', emoji:'💎', min:30, max:Infinity },
+    ];
+    const counts = {};
+    levels.forEach(l => { counts[l.key] = globalGuests.filter(g => { const v=g.visit_count||0; return v>=l.min && v<=l.max; }).length; });
+
+    content += `<div class="ngb-summary">`;
+    levels.forEach(l => {
+      content += `<div class="ngb-level-card${ngbFilter===l.key?' active':''}" onclick="ngbSetFilter('${l.key}',this)">
+        <div class="ngb-level-emoji">${l.emoji}</div>
+        <div class="ngb-level-count">${counts[l.key]}</div>
+        <div class="ngb-level-name">${l.key}</div>
+      </div>`;
+    });
+    content += `</div>`;
+
+    content += `<div class="ngb-toolbar">
+      <input class="ngb-search" id="ngb-search" placeholder="🔍 Поиск гостя…" oninput="ngbRender()" value="">
+      <button class="ngb-export" onclick="exportGuestBaseCSV()">📥 CSV</button>
+    </div>`;
+
+    content += `<div id="ngb-total" style="padding:0 20px 8px;font-size:12px;color:var(--muted)">${gc} гостей в базе</div>`;
+    content += `<div class="ngb-list" id="ngb-list"></div>`;
+  }
+  content += `</div>`;
+
+  content += `<div style="text-align:center;padding:20px 20px 36px">
+    <button onclick="openLanding()" style="background:none;border:none;cursor:pointer;padding:8px 16px;
+      font-size:18px;font-weight:800;letter-spacing:-0.5px;color:var(--text)">
+      Great<span style="color:var(--gold)">Guest</span>
+    </button>
+  </div>`;
 
   document.getElementById('s-network').innerHTML = content;
   show('s-network');
+  if (netActiveTab === 'guests' && gc > 0) ngbRender();
+}
+
+function switchNetTab(tab) {
+  netActiveTab = tab;
+  document.querySelectorAll('.net-tab').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('net-tab-events').style.display = tab === 'events' ? 'block' : 'none';
+  document.getElementById('net-tab-guests').style.display = tab === 'guests' ? 'block' : 'none';
+  if (tab === 'guests' && globalGuests.length > 0) ngbRender();
+}
+
+function ngbSetFilter(f, el) {
+  ngbFilter = ngbFilter === f ? 'all' : f;
+  document.querySelectorAll('.ngb-level-card').forEach(b => b.classList.remove('active'));
+  if (ngbFilter !== 'all') el.classList.add('active');
+  ngbRender();
+}
+
+function ngbRender() {
+  const listEl = document.getElementById('ngb-list');
+  const totalEl = document.getElementById('ngb-total');
+  if (!listEl) return;
+  const search = (document.getElementById('ngb-search')?.value || '').toLowerCase().trim();
+  const LEVEL_RANGES = { Bronze:[1,4], Silver:[5,14], Gold:[15,29], Platinum:[30,Infinity] };
+
+  let list = globalGuests.slice();
+  if (ngbFilter !== 'all') {
+    const [mn, mx] = LEVEL_RANGES[ngbFilter] || [0, Infinity];
+    list = list.filter(g => { const v=g.visit_count||0; return v>=mn && v<=mx; });
+  }
+  if (search) {
+    list = list.filter(g => {
+      const name = `${g.first_name||''} ${g.last_name||''}`.toLowerCase();
+      return name.includes(search) || (g.username||'').toLowerCase().includes(search);
+    });
+  }
+
+  if (totalEl) totalEl.textContent = `${list.length} гостей${ngbFilter!=='all'?' ('+ngbFilter+')':''}${search?' · «'+search+'»':''}`;
+
+  if (!list.length) {
+    listEl.innerHTML = `<div class="net-empty" style="padding:40px 0">Никого не найдено</div>`;
+    return;
+  }
+
+  const LEVELS = { Bronze:'🥉', Silver:'🥈', Gold:'🥇', Platinum:'💎' };
+  listEl.innerHTML = list.map(g => {
+    const lvl  = getLevel(g.visit_count || 0);
+    const name = [g.first_name, g.last_name].filter(Boolean).join(' ') || 'Гость';
+    const sub  = [g.username ? '@'+g.username : '', g.last_visit_at ? new Date(g.last_visit_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) : ''].filter(Boolean).join(' · ');
+    return `<div class="ngb-row">
+      <div class="ngb-avatar">${lvl.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div class="ngb-name">${esc(name)}</div>
+        <div class="ngb-sub">${sub}</div>
+      </div>
+      <div class="ngb-right">
+        <div class="ngb-visits">${g.visit_count||0}</div>
+        <div class="ngb-visits-l">${lvl.name}</div>
+      </div>
+      <button class="ngb-merge-btn" onclick="openMergeModal('${g.telegram_id}','${esc(name)}')" title="Перенести аккаунт">🔄</button>
+    </div>`;
+  }).join('');
+}
+
+// ─ Merge guest modal ──────────────────────────────────────────────────────────
+function openMergeModal(telegramId, name) {
+  document.getElementById('merge-old-id').value = telegramId;
+  document.getElementById('merge-new-id').value = '';
+  document.getElementById('merge-result').textContent = '';
+  document.getElementById('merge-modal-sub').textContent = `Перенос истории: ${name}`;
+  document.getElementById('merge-confirm-btn').disabled = false;
+  document.getElementById('merge-confirm-btn').textContent = 'Перенести';
+  document.getElementById('merge-modal').classList.add('active');
+}
+
+function closeMergeModal() {
+  document.getElementById('merge-modal').classList.remove('active');
+}
+
+async function confirmMerge() {
+  const oldId = document.getElementById('merge-old-id').value.trim();
+  const newId = document.getElementById('merge-new-id').value.trim();
+  const resultEl = document.getElementById('merge-result');
+  const btn = document.getElementById('merge-confirm-btn');
+
+  if (!newId || !/^\d+$/.test(newId)) {
+    resultEl.style.color = 'var(--error, #e57373)';
+    resultEl.textContent = 'Введите корректный Telegram ID (только цифры)';
+    return;
+  }
+  if (newId === oldId) {
+    resultEl.style.color = 'var(--error, #e57373)';
+    resultEl.textContent = 'Старый и новый ID совпадают';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Переносим…';
+  resultEl.textContent = '';
+
+  try {
+    const initData = window.Telegram?.WebApp?.initData || '';
+    const resp = await fetch('/api/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData, action: 'merge_guest', old_telegram_id: oldId, new_telegram_id: newId }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      resultEl.style.color = 'var(--green, #66bb6a)';
+      resultEl.textContent = `✅ Готово! Визитов перенесено: ${data.merged_visits}`;
+      btn.textContent = 'Готово';
+      // Refresh guest list
+      globalGuests = globalGuests.filter(g => g.telegram_id !== oldId);
+      const merged = globalGuests.find(g => g.telegram_id === newId);
+      if (merged) merged.visit_count = data.merged_visits;
+      setTimeout(() => { closeMergeModal(); ngbRender(); }, 1500);
+    } else {
+      const msgs = {
+        guest_not_in_your_base: 'Гость не найден в вашей базе.',
+        old_not_found: 'Старый аккаунт не найден в системе.',
+        new_not_found: 'Новый аккаунт не найден. Гость должен сначала запустить бота (/start).',
+        same_account: 'Это один и тот же аккаунт.',
+      };
+      resultEl.style.color = 'var(--error, #e57373)';
+      resultEl.textContent = msgs[data.error] || data.message || 'Ошибка переноса. Попробуйте ещё раз.';
+      btn.disabled = false;
+      btn.textContent = 'Перенести';
+    }
+  } catch {
+    resultEl.style.color = 'var(--error, #e57373)';
+    resultEl.textContent = 'Ошибка сети. Проверьте подключение.';
+    btn.disabled = false;
+    btn.textContent = 'Перенести';
+  }
 }
 
 // ─ Add venue ─────────────────────────────────────────────────────────────────
@@ -670,10 +1290,17 @@ function addVenue() {
 }
 
 // ─ Type chooser ──────────────────────────────────────────────────────────────
-function chooseType(type) {
+function chooseType(type, eventTypePreset) {
   venueType = type;
+  venueEventType = eventTypePreset || '';
+  classMode = type === 'event' ? 'guestlist' : 'loyalty';
   renderRegistrationForm();
   show('s-reg');
+}
+
+function selectMode(m) {
+  classMode = m;
+  renderRegistrationForm();
 }
 
 // ─ Registration form ─────────────────────────────────────────────────────────
@@ -685,17 +1312,19 @@ function renderRegistrationForm() {
     ? 'Создайте кабинет для управления гостями мероприятия, рассылки приглашений и регистрации.'
     : 'Получите доступ к сети гостей, отправляйте персональные предложения и растите вместе с экосистемой.';
 
+  const sel = v => `${v === venueEventType ? ' selected' : ''}`;
   const extraFields = isEvent ? `
     <div class="field">
-      <label>Тип мероприятия</label>
+      <label>Тип события</label>
       <select id="r-etype">
         <option value="">Выберите тип</option>
-        <option value="Гала-ужин">Гала-ужин</option>
-        <option value="Частная вечеринка">Частная вечеринка</option>
-        <option value="Концерт">Концерт</option>
-        <option value="Фестиваль">Фестиваль</option>
-        <option value="Бизнес-мероприятие">Бизнес-мероприятие</option>
-        <option value="Другое">Другое</option>
+        <option value="Вечеринка"${sel('Вечеринка')}>🎉 Вечеринка / Клуб</option>
+        <option value="Корпоратив"${sel('Корпоратив')}>💼 Корпоратив / Тимбилдинг</option>
+        <option value="Конференция"${sel('Конференция')}>🎓 Конференция / Форум</option>
+        <option value="Спорт"${sel('Спорт')}>🏅 Спорт / Соревнования</option>
+        <option value="Гала-ужин"${sel('Гала-ужин')}>🍷 Гала-ужин / Банкет</option>
+        <option value="Концерт"${sel('Концерт')}>🎵 Концерт / Фестиваль</option>
+        <option value="Другое"${sel('Другое')}>✨ Другое</option>
       </select>
     </div>
     <div class="field">
@@ -752,7 +1381,7 @@ function renderRegistrationForm() {
 
     <div class="field">
       <label>${isEvent ? 'Название мероприятия *' : 'Название ресторана *'}</label>
-      <input id="r-name" placeholder="${isEvent ? 'Гала-ужин «Звёзды»' : 'Ресторан «Гаврош»'}" maxlength="80"/>
+      <input id="r-name" placeholder="${isEvent ? 'Например: Новогодний корпоратив Acme 2025' : 'Ресторан «Гаврош»'}" maxlength="80"/>
     </div>
     <div class="field">
       <label>${isEvent ? 'Площадка / адрес' : 'Адрес'}</label>
@@ -764,8 +1393,35 @@ function renderRegistrationForm() {
     </div>
     ${extraFields}
 
+    <div class="field">
+      <label>Классификация гостей</label>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+        ${[
+          {k:'loyalty',   e:'🏅', l:'Лоялти',        d:'Уровни Bronze → Platinum, медали'},
+          {k:'guestlist', e:'🎟', l:'Список гостей',  d:'Приглашён / Пришёл — для мероприятий'},
+          {k:'open',      e:'🔓', l:'Открытый',       d:'Просто база без уровней и значков'},
+        ].map(m => `<div class="mode-card${classMode===m.k?' selected':''}" onclick="selectMode('${m.k}')">
+          <span style="font-size:22px">${m.e}</span>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">${m.l}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:1px">${m.d}</div>
+          </div>
+          <div class="mode-check">${classMode===m.k?'✓':''}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Сообщение для гостей <span style="color:var(--muted);font-weight:400">(появится в ссылке-приглашении)</span></label>
+      <textarea id="r-invite-msg" maxlength="1000"
+        placeholder="${isEvent ? 'Например: Дресс-код — Black Tie. Регистрация обязательна. Вход строго по списку.' : 'Например: Добро пожаловать! Покажите QR-код на входе.'}"
+        style="width:100%;min-height:90px;background:var(--card);border:1px solid var(--border);
+        border-radius:10px;padding:12px;color:var(--text);font-size:14px;
+        font-family:inherit;resize:vertical;line-height:1.5"></textarea>
+    </div>
+
     <button class="btn-primary" id="reg-btn" onclick="register()">
-      ${isEvent ? 'Создать кабинет мероприятия →' : venuesData.length === 0 ? 'Подключить ресторан бесплатно →' : 'Добавить заведение →'}
+      ${isEvent ? 'Создать кабинет мероприятия →' : venuesData.length === 0 ? 'Подключить ресторан бесплатно →' : 'Добавить событие →'}
     </button>
     ${showTrialBadge ? '<div class="price-note">После пробного периода — 2 990 ₽/мес. Отмена в любой момент.</div>' : ''}
   `;
@@ -788,19 +1444,22 @@ async function register() {
   const data = await apiFetch('/api/restaurant-register', {
     initData,
     name,
-    address:    (document.getElementById('r-addr')?.value || '').trim(),
-    city:       (document.getElementById('r-city')?.value || 'Москва').trim(),
+    address:        (document.getElementById('r-addr')?.value || '').trim(),
+    city:           (document.getElementById('r-city')?.value || 'Москва').trim(),
     cuisine,
-    venue_type: venueType,
+    venue_type:     venueType,
     event_type,
     event_date,
+    invite_message: (document.getElementById('r-invite-msg')?.value || '').trim(),
+    referredBy:            referralCode || undefined,
+    classification_mode:   classMode,
   });
 
   if (data.error === 'limit_reached') {
     btn.disabled = false;
     btn.textContent = venueType === 'event'
       ? 'Создать кабинет мероприятия →'
-      : 'Добавить заведение →';
+      : 'Добавить событие →';
     showUpgradeModal('limit_reached', data);
     return;
   }
@@ -809,7 +1468,7 @@ async function register() {
     btn.disabled = false;
     btn.textContent = venueType === 'event'
       ? 'Создать кабинет мероприятия →'
-      : 'Добавить заведение →';
+      : 'Добавить событие →';
     showUpgradeModal('expired');
     return;
   }
@@ -818,7 +1477,7 @@ async function register() {
     btn.disabled = false;
     btn.textContent = venueType === 'event'
       ? 'Создать кабинет мероприятия →'
-      : 'Добавить заведение →';
+      : 'Добавить событие →';
     alert('Ошибка: ' + data.error);
     return;
   }
@@ -843,6 +1502,7 @@ function openVenueById(id) {
 function openVenue(venue) {
   currentVenue = venue;
   activeFilter = 'all';
+  evEditMode = false;
   renderDashboard();
 }
 
@@ -873,10 +1533,41 @@ function renderDashboard() {
 
   const venueOffers = allOffers.filter(o => o.restaurant_id === v.id);
 
-  const dashContent = document.getElementById('s-dash');
-  const footer = dashContent.querySelector('#legal-footer');
+  const qrSvg = `<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1" y="1" width="6" height="6" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <rect x="3" y="3" width="2" height="2"/>
+    <rect x="11" y="1" width="6" height="6" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <rect x="13" y="3" width="2" height="2"/>
+    <rect x="1" y="11" width="6" height="6" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <rect x="3" y="13" width="2" height="2"/>
+    <rect x="9" y="9" width="1.5" height="1.5"/><rect x="11.5" y="9" width="1.5" height="1.5"/>
+    <rect x="14" y="9" width="1.5" height="1.5"/><rect x="9" y="11.5" width="1.5" height="1.5"/>
+    <rect x="14" y="11.5" width="1.5" height="1.5"/><rect x="11.5" y="14" width="1.5" height="1.5"/>
+    <rect x="9" y="14" width="1.5" height="1.5"/><rect x="14" y="14" width="1.5" height="1.5"/>
+  </svg>`;
 
-  dashContent.innerHTML = `
+  const hasHero = isEvent && !!v.cover_image_url;
+  const heroDateStr = v.event_date
+    ? new Date(v.event_date + 'T12:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+    : '';
+
+  const headerSection = hasHero ? `
+    <div class="event-hero" style="background-image:url('${esc(v.cover_image_url)}')">
+      <div class="event-hero-overlay"></div>
+      <div class="event-hero-top">
+        <div class="hero-back-btn" onclick="show('s-network')">←</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="showInviteLink()" aria-label="Ссылка-приглашение" class="hero-icon-btn">🔗</button>
+          <button onclick="showVenueQR()" aria-label="QR входа" class="hero-icon-btn"
+            style="display:flex;align-items:center;justify-content:center">${qrSvg}</button>
+        </div>
+      </div>
+      <div class="event-hero-bottom">
+        <div class="event-hero-title">${esc(v.name)}</div>
+        <div class="event-hero-sub">${esc(v.event_type || 'Мероприятие')}${v.city ? ' · ' + esc(v.city) : ''}${heroDateStr ? ' · ' + heroDateStr : ''}</div>
+      </div>
+    </div>
+  ` : `
     <div class="topbar">
       <div class="topbar-left">
         <div class="topbar-back" onclick="show('s-network')">←</div>
@@ -885,10 +1576,26 @@ function renderDashboard() {
           <div class="rest-sub">${esc(isEvent ? (v.event_type || 'Мероприятие') : (v.cuisine || 'Ресторан'))}${v.city ? ' · ' + esc(v.city) : ''}</div>
         </div>
       </div>
-      <span class="sub-badge ${badgeClass}">${badgeText}</span>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button onclick="showInviteLink()" aria-label="Ссылка-приглашение"
+          style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);border-radius:10px;
+            padding:7px 11px;color:#60A5FA;font-size:18px;cursor:pointer;line-height:1">🔗</button>
+        <button onclick="showVenueQR()" aria-label="QR входа"
+          style="background:rgba(201,169,110,0.12);border:1px solid rgba(201,169,110,0.3);border-radius:10px;
+            padding:7px 11px;color:var(--gold);cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">
+          ${qrSvg}
+        </button>
+      </div>
     </div>
+  `;
 
-    <div class="tabs">
+  const dashContent = document.getElementById('s-dash');
+  const footer = dashContent.querySelector('#legal-footer');
+
+  dashContent.innerHTML = `
+    ${headerSection}
+
+    <div class="tabs" ${hasHero ? 'style="top:0"' : ''}>
       ${tabLabels.map((l,i) => `<div class="tab${i===0?' active':''}" data-tab="${tabKeys[i]}" onclick="switchTab('${tabKeys[i]}')">${l}</div>`).join('')}
     </div>
 
@@ -920,19 +1627,46 @@ function renderGuestsPane(guests, owner, isEvent) {
   if (!owner.is_active) {
     return `<div class="empty">⛔ Подписка истекла.<br><br>Оформите подписку чтобы видеть гостей сети.<br><br>Напишите нам: @great_guest_support</div>`;
   }
+  const scanBtn = `
+    <button onclick="openQRScanner()"
+      style="width:100%;background:linear-gradient(135deg,rgba(74,222,128,0.12),rgba(74,222,128,0.06));
+        border:1px solid rgba(74,222,128,0.25);border-radius:14px;padding:14px;
+        color:#4ADE80;font-size:15px;font-weight:700;cursor:pointer;
+        display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;
+        letter-spacing:-0.2px">
+      📷 Сканировать QR-код гостя
+    </button>`;
+
   if (!guests || !guests.length) {
-    return `<div class="empty">В сети Great Guest пока нет гостей.<br>Отсканируйте первый QR-код!</div>`;
+    return scanBtn + `<div class="empty" style="margin-top:8px">Гостей пока нет.<br>Отсканируйте первый QR-код!</div>`;
   }
 
-  const filters = [
-    {k:'all',l:'Все'},
-    {k:'Platinum',l:'💎 Platinum'},
-    {k:'Gold',l:'🥇 Gold'},
-    {k:'Silver',l:'🥈 Silver'},
-    {k:'Bronze',l:'🥉 Bronze'},
-  ];
+  const mode = currentVenue?.classification_mode || 'loyalty';
+  const filters = mode === 'loyalty'
+    ? [{k:'all',l:'Все'},{k:'Platinum',l:'💎 Platinum'},{k:'Gold',l:'🥇 Gold'},{k:'Silver',l:'🥈 Silver'},{k:'Bronze',l:'🥉 Bronze'}]
+    : mode === 'guestlist'
+    ? [{k:'all',l:'Все'},{k:'attended',l:'🟢 Пришли'},{k:'invited',l:'✉️ В списке'}]
+    : [{k:'all',l:'Все'}];
 
-  return `
+  return scanBtn + `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--muted);flex:1">
+        <span style="font-weight:700;color:var(--text)">${guests.length}</span> в базе сети
+      </div>
+      <button onclick="downloadAnalytics()"
+        style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;
+          padding:6px 10px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;
+          display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0">
+        📥 CSV
+      </button>
+      <button onclick="showBroadcastModal()"
+        style="background:linear-gradient(135deg,rgba(201,169,110,0.15),rgba(232,201,126,0.1));
+          border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:6px 12px;
+          color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;
+          display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0">
+        📣 Разослать
+      </button>
+    </div>
     <div class="filter-row" role="group" aria-label="Фильтр по статусу">
       ${filters.map(f => `<button class="filter-btn${activeFilter===f.k?' active':''}"
         onclick="setFilter('${f.k}')">${f.l}</button>`).join('')}
@@ -949,39 +1683,57 @@ function renderGuestCards(guests, isEvent) {
   const venueOffers = allOffers.filter(o => o.restaurant_id === currentVenue.id);
   const targetedIds = new Set(venueOffers.map(o => String(o.guest_telegram_id)));
 
-  const filtered = activeFilter === 'all'
-    ? guests
-    : guests.filter(g => getLevel(g.visit_count).name === activeFilter);
+  const mode = currentVenue?.classification_mode || 'loyalty';
+
+  let filtered;
+  if (activeFilter === 'all') {
+    filtered = guests;
+  } else if (mode === 'loyalty') {
+    filtered = guests.filter(g => getLevel(g.visit_count).name === activeFilter);
+  } else if (mode === 'guestlist') {
+    filtered = activeFilter === 'attended'
+      ? guests.filter(g => (g.visit_count || 0) > 0)
+      : guests.filter(g => (g.visit_count || 0) === 0);
+  } else {
+    filtered = guests;
+  }
 
   if (!filtered.length) {
     return `<div class="empty">Нет гостей с этим статусом</div>`;
   }
 
-  const btnLabel = isEvent ? 'Пригласить' : 'Оффер';
+  const btnLabel = (mode === 'guestlist' || isEvent) ? 'Пригласить' : 'Оффер';
 
   return filtered.map(g => {
     const alreadyTargeted = targetedIds.has(String(g.telegram_id));
     const lvl      = getLevel(g.visit_count);
     const initial  = (g.first_name || '?')[0].toUpperCase();
     const fullName = [g.first_name, g.last_name].filter(Boolean).join(' ');
-    const visits   = g.visit_count;
+    const visits   = g.visit_count || 0;
     const lastV    = g.last_visit_at
       ? new Date(g.last_visit_at).toLocaleDateString('ru-RU', {day:'numeric',month:'short'})
       : null;
     const metaParts = [
-      `${visits} ${visits===1?'визит':visits<5?'визита':'визитов'}`,
+      visits > 0 ? `${visits} ${visits===1?'визит':visits<5?'визита':'визитов'}` : null,
       lastV ? `последний ${lastV}` : null,
     ].filter(Boolean).join(' · ');
+
+    const badgeHtml = mode === 'loyalty'
+      ? `<span class="level-badge lvl-${lvl.name}">${lvl.emoji} ${lvl.name}</span>`
+      : mode === 'guestlist'
+      ? `<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;
+          background:${visits>0?'rgba(74,222,128,0.12)':'rgba(255,255,255,0.06)'};
+          color:${visits>0?'#4ADE80':'var(--muted)'}">
+          ${visits>0?'🟢 Пришёл':'✉️ В списке'}</span>`
+      : '';
 
     return `
       <div class="guest-card">
         <div class="guest-left">
           <div class="guest-avatar">${initial}</div>
           <div>
-            <div class="guest-name">${esc(fullName)}
-              <span class="level-badge lvl-${lvl.name}">${lvl.emoji} ${lvl.name}</span>
-            </div>
-            <div class="guest-meta">${metaParts}</div>
+            <div class="guest-name">${esc(fullName)} ${badgeHtml}</div>
+            <div class="guest-meta">${metaParts || (mode==='guestlist'&&visits===0?'Ещё не пришёл':'')}</div>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
@@ -1008,7 +1760,17 @@ function renderGuestCards(guests, isEvent) {
 function renderStatsPane(v) {
   const venueOffers = allOffers.filter(o => o.restaurant_id === v.id);
   const conversionRate = Math.round((venueOffers.length / Math.max(v.stats.totalVisits, 1)) * 100);
+  const coverSection = v.cover_image_url
+    ? `<div class="cover-zone-img" onclick="uploadCover('${v.id}')" style="background-image:url('${esc(v.cover_image_url)}')">
+         <div class="cover-zone-img-edit">📷 Изменить</div>
+       </div>`
+    : `<div class="cover-zone" onclick="uploadCover('${v.id}')">
+         <span style="font-size:28px">🖼</span>
+         <span style="font-size:13px;color:var(--muted);font-weight:500">Добавить обложку заведения</span>
+         <span style="font-size:11px;color:var(--muted)">JPG / PNG / WebP · до 4 МБ</span>
+       </div>`;
   return `
+    ${coverSection}
     <div class="section-title">Статистика</div>
     <div class="stats-grid" style="margin-bottom:20px">
       <div class="stat-card"><div class="stat-n">${v.stats.visits30d}</div><div class="stat-l">Визитов<br>за 30 дн.</div></div>
@@ -1029,31 +1791,122 @@ function renderStatsPane(v) {
       ${v.city ? infoRow('Город', v.city) : ''}
       ${v.cuisine ? infoRow('Кухня', v.cuisine) : ''}
     </div>
-    <button class="add-venue-btn" style="margin-top:20px" onclick="showImportModal()">
-      <span style="font-size:18px">📥</span> Импорт гостей
+    ${renderLevelChart(globalGuests)}
+
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="add-venue-btn" style="margin:0;flex:1" onclick="showImportModal()">
+        <span style="font-size:18px">📥</span> Импорт
+      </button>
+      <button class="add-venue-btn" style="margin:0;flex:1;background:rgba(201,169,110,0.12);color:var(--gold);border:1px solid rgba(201,169,110,0.3);box-shadow:none" onclick="downloadAnalytics()">
+        <span style="font-size:18px">📊</span> Скачать аналитику
+      </button>
+    </div>
+    <button onclick="confirmDeleteVenue()" style="margin-top:10px;margin-bottom:32px;width:100%;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:14px;padding:14px;color:#F87171;font-size:14px;font-weight:600;cursor:pointer">
+      🗑 Удалить это заведение
     </button>
   `;
 }
 
 function renderEventPane(v) {
+  const coverUrl = v.cover_image_url || '';
+  const coverSection = coverUrl
+    ? `<div class="cover-zone-img" onclick="uploadCover('${v.id}')" style="background-image:url('${esc(coverUrl)}')">
+         <div class="cover-zone-img-edit">📷 Изменить</div>
+       </div>`
+    : `<div class="cover-zone" onclick="uploadCover('${v.id}')">
+         <span style="font-size:28px">🖼</span>
+         <span style="font-size:13px;color:var(--muted);font-weight:500">Добавить обложку мероприятия</span>
+         <span style="font-size:11px;color:var(--muted)">JPG / PNG / WebP · до 4 МБ</span>
+       </div>`;
+
+  if (evEditMode) {
+    const EV_TYPES = ['Вечеринка','Корпоратив','Конференция','Спорт','Гала-ужин','Концерт','Другое'];
+    const EV_EMOJIS = {'Вечеринка':'🎉','Корпоратив':'💼','Конференция':'🎓','Спорт':'🏅','Гала-ужин':'🍷','Концерт':'🎵','Другое':'✨'};
+    const typeOpts = EV_TYPES.map(t =>
+      `<option value="${t}"${v.event_type===t?' selected':''}>${EV_EMOJIS[t]} ${t}</option>`).join('');
+    return `
+      ${coverSection}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:0">✏️ Редактирование</div>
+        <button class="ef-btn-cancel" onclick="toggleEventEdit()">✕ Отмена</button>
+      </div>
+      <div class="info-card" style="padding:16px 14px">
+        <div class="ef-field">
+          <label>Название *</label>
+          <input id="ef-name" value="${esc(v.name)}" maxlength="80" placeholder="Название мероприятия"/>
+        </div>
+        <div class="ef-field">
+          <label>Тип события</label>
+          <select id="ef-etype">
+            <option value="">— Не указан —</option>
+            ${typeOpts}
+          </select>
+        </div>
+        <div class="ef-field">
+          <label>Дата</label>
+          <input type="date" id="ef-date" value="${esc(v.event_date||'')}"/>
+        </div>
+        <div class="ef-field">
+          <label>Площадка / адрес</label>
+          <input id="ef-addr" value="${esc(v.address||'')}" maxlength="120" placeholder="Lotte Hotel, банкетный зал"/>
+        </div>
+        <div class="ef-field">
+          <label>Город</label>
+          <input id="ef-city" value="${esc(v.city||'')}" maxlength="60" placeholder="Москва"/>
+        </div>
+        <div class="ef-field">
+          <label>Сообщение для гостей (в ссылке-приглашении)</label>
+          <textarea id="ef-msg" maxlength="1000" placeholder="Дресс-код, условия входа, пожелания…">${esc(v.invite_message||'')}</textarea>
+        </div>
+      </div>
+      <button class="ef-btn-save" id="ef-save-btn" onclick="saveEventInfo('${v.id}')" style="width:100%;margin-bottom:24px">
+        💾 Сохранить изменения
+      </button>`;
+  }
+
   const dateStr = v.event_date
     ? new Date(v.event_date + 'T12:00:00').toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})
     : 'не указана';
   return `
-    <div class="section-title">Мероприятие</div>
+    ${coverSection}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="section-title" style="margin-bottom:0">Мероприятие</div>
+      <button onclick="toggleEventEdit()" style="background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.25);border-radius:8px;padding:5px 12px;color:var(--gold);font-size:12px;font-weight:600;cursor:pointer">
+        ✏️ Изменить
+      </button>
+    </div>
     <div class="info-card">
       ${infoRow('Название', v.name)}
       ${v.event_type ? infoRow('Тип', v.event_type) : ''}
       ${infoRow('Дата', dateStr)}
       ${v.address ? infoRow('Площадка', v.address) : ''}
       ${v.city ? infoRow('Город', v.city) : ''}
+      ${v.invite_message ? infoRow('Сообщение', v.invite_message.slice(0,60) + (v.invite_message.length>60?'…':'')) : ''}
     </div>
     <div class="section-title" style="margin-top:20px">Статистика</div>
-    <div class="stats-grid">
+    <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="stat-card" style="border-color:rgba(96,165,250,0.2);background:rgba(96,165,250,0.06)">
+        <div class="stat-n" style="color:#60A5FA">${v.stats.rsvpCount}</div>
+        <div class="stat-l">Подтвердили<br>участие</div>
+      </div>
+      <div class="stat-card"><div class="stat-n">${v.stats.totalVisits}</div><div class="stat-l">Пришли<br>(отметок)</div></div>
       <div class="stat-card"><div class="stat-n">${v.stats.visits30d}</div><div class="stat-l">Отметок<br>за 30 дн.</div></div>
-      <div class="stat-card"><div class="stat-n">${v.stats.totalVisits}</div><div class="stat-l">Всего<br>отметок</div></div>
       <div class="stat-card"><div class="stat-n">${v.stats.offersCount}</div><div class="stat-l">Приглашений<br>отправлено</div></div>
     </div>
+
+    ${renderLevelChart(globalGuests)}
+
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="add-venue-btn" style="margin:0;flex:1" onclick="showImportModal()">
+        <span style="font-size:18px">📥</span> Импорт
+      </button>
+      <button class="add-venue-btn" style="margin:0;flex:1;background:rgba(201,169,110,0.12);color:var(--gold);border:1px solid rgba(201,169,110,0.3);box-shadow:none" onclick="downloadAnalytics()">
+        <span style="font-size:18px">📊</span> Аналитика
+      </button>
+    </div>
+    <button onclick="confirmDeleteVenue()" style="margin-top:10px;margin-bottom:32px;width:100%;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:14px;padding:14px;color:#F87171;font-size:14px;font-weight:600;cursor:pointer">
+      🗑 Удалить это событие
+    </button>
   `;
 }
 
@@ -1063,6 +1916,157 @@ function infoRow(label, value) {
     <span class="info-value">${esc(String(value||''))}</span>
   </div>`;
 }
+
+// ─ Level distribution infographic ────────────────────────────────────────────
+function renderLevelChart(guests) {
+  if (!guests || !guests.length) return '';
+  const counts = { Bronze:0, Silver:0, Gold:0, Platinum:0 };
+  guests.forEach(g => { const n = getLevel(g.visit_count).name; counts[n]++; });
+  const total = guests.length;
+  const levels = [
+    { name:'Bronze',   emoji:'🥉', color:'#C47A3D' },
+    { name:'Silver',   emoji:'🥈', color:'#9CA3AF' },
+    { name:'Gold',     emoji:'🥇', color:'#C9A96E' },
+    { name:'Platinum', emoji:'💎', color:'#60A5FA' },
+  ];
+  const bars = levels.map(l => {
+    const cnt = counts[l.name];
+    const pct = total > 0 ? Math.round(cnt / total * 100) : 0;
+    return `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <span style="font-size:13px;font-weight:600">${l.emoji} ${l.name}</span>
+          <span style="font-size:12px;color:var(--muted)">${cnt} гост. · ${pct}%</span>
+        </div>
+        <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${l.color};border-radius:4px;transition:width .6s ease"></div>
+        </div>
+      </div>`;
+  });
+  // Donut-style SVG summary
+  const svgSize = 80;
+  const cx = svgSize/2, cy = svgSize/2, r = 30, stroke = 10;
+  let offset = 0;
+  const circumference = 2 * Math.PI * r;
+  const arcs = levels.map(l => {
+    const pct = total > 0 ? counts[l.name] / total : 0;
+    const dasharray = `${pct * circumference} ${circumference}`;
+    const rotation = offset * 360 - 90;
+    offset += pct;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${l.color}"
+      stroke-width="${stroke}" stroke-dasharray="${dasharray}"
+      stroke-dashoffset="0" transform="rotate(${rotation} ${cx} ${cy})"
+      style="transition:stroke-dasharray .6s ease"/>`;
+  });
+
+  return `
+    <div class="section-title" style="margin-top:20px">Структура участников</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px">
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px">
+        <svg width="${svgSize}" height="${svgSize}" style="flex-shrink:0">
+          ${arcs.join('')}
+          <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
+            fill="#F0EBE0" font-size="14" font-weight="700" font-family="Inter,sans-serif">${total}</text>
+        </svg>
+        <div style="flex:1;font-size:13px;color:var(--muted);line-height:1.6">
+          Всего участников<br>
+          <strong style="color:var(--text);font-size:22px;font-weight:700">${total}</strong>
+        </div>
+      </div>
+      ${bars.join('')}
+    </div>`;
+}
+
+// ─ Event info edit ────────────────────────────────────────────────────────────
+function toggleEventEdit() {
+  evEditMode = !evEditMode;
+  const pane = document.getElementById('tab-info');
+  if (pane && currentVenue) pane.innerHTML = renderEventPane(currentVenue);
+}
+
+async function saveEventInfo(venueId) {
+  const name = (document.getElementById('ef-name')?.value || '').trim();
+  if (!name) { alert('Введите название'); return; }
+
+  const btn = document.getElementById('ef-save-btn');
+  if (btn) { btn.textContent = '⏳ Сохранение…'; btn.disabled = true; }
+
+  const r = await apiFetch('/api/invite', {
+    action: 'update_event',
+    initData, venueId,
+    name,
+    event_type:     document.getElementById('ef-etype')?.value || '',
+    event_date:     document.getElementById('ef-date')?.value || null,
+    address:        document.getElementById('ef-addr')?.value.trim() || '',
+    city:           document.getElementById('ef-city')?.value.trim() || '',
+    invite_message: document.getElementById('ef-msg')?.value.trim() || '',
+  });
+
+  if (r && r.success) {
+    const idx = venuesData.findIndex(x => x.id === venueId);
+    if (idx >= 0) {
+      venuesData[idx] = { ...venuesData[idx], ...r.venue };
+      venuesMap.set(venueId, venuesData[idx]);
+      if (currentVenue?.id === venueId) currentVenue = venuesData[idx];
+    }
+    // Update topbar
+    const topbarName = document.querySelector('.rest-name');
+    const topbarSub  = document.querySelector('.rest-sub');
+    if (topbarName) topbarName.textContent = currentVenue.name;
+    if (topbarSub && currentVenue.event_type) topbarSub.textContent = currentVenue.event_type + (currentVenue.city ? ' · ' + currentVenue.city : '');
+    evEditMode = false;
+    const pane = document.getElementById('tab-info');
+    if (pane) pane.innerHTML = renderEventPane(currentVenue);
+  } else {
+    if (btn) { btn.textContent = '💾 Сохранить изменения'; btn.disabled = false; }
+    alert('Ошибка: ' + ((r && r.error) || 'попробуйте снова'));
+  }
+}
+
+// ─ Cover image upload ─────────────────────────────────────────────────────────
+function uploadCover(venueId) {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/jpeg,image/png,image/webp';
+  inp.onchange = () => {
+    const file = inp.files[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { alert('Файл слишком большой (макс. 8 МБ)'); return; }
+    const objUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onerror = () => { URL.revokeObjectURL(objUrl); alert('Не удалось прочитать изображение'); };
+    img.onload = async () => {
+      const MAX_W = 1200, MAX_H = 630;
+      let w = img.width, h = img.height;
+      const ratio = Math.min(MAX_W / w, MAX_H / h, 1);
+      w = Math.round(w * ratio); h = Math.round(h * ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+      URL.revokeObjectURL(objUrl);
+
+      const r = await apiFetch('/api/restaurant-dashboard', {
+        action: 'update_cover', initData, venueId, base64: b64, mimeType: 'image/jpeg',
+      });
+      if (r && r.success) {
+        const idx = venuesData.findIndex(x => x.id === venueId);
+        if (idx >= 0) venuesData[idx].cover_image_url = r.url;
+        if (currentVenue?.id === venueId) currentVenue.cover_image_url = r.url;
+        if (idx >= 0) venuesMap.set(venueId, venuesData[idx]);
+        // Re-render full dashboard (hero depends on cover_image_url) then restore tab
+        renderDashboard();
+        switchTab('info');
+      } else {
+        alert('Ошибка загрузки: ' + ((r && r.error) || 'попробуйте снова'));
+      }
+    };
+    img.src = objUrl;
+  };
+  inp.click();
+}
+
+// ─ Download analytics CSV ─────────────────────────────────────────────────────
 
 // ─ Offers/Invites history ────────────────────────────────────────────────────
 function renderHistoryPane(offers, guests, isEvent) {
@@ -1239,6 +2243,412 @@ function renderDiscoverySection(v, guests, targetedIds) {
   `;
 }
 
+// ─ Venue entry QR ────────────────────────────────────────────────────────────
+function showVenueQR() {
+  const v = currentVenue;
+  if (!v) return;
+  const deepLink = `https://t.me/great_guest_bot?start=v_${v.id}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=440x440&data=${encodeURIComponent(deepLink)}&ecc=H&margin=2&color=0D0C12&bgcolor=ffffff`;
+  document.getElementById('venue-qr-img').src = qrUrl;
+  document.getElementById('venue-qr-name').textContent = v.name;
+  const modal = document.getElementById('venue-qr-modal');
+  modal.style.display = 'flex';
+}
+function closeVenueQR() {
+  document.getElementById('venue-qr-modal').style.display = 'none';
+}
+
+function showInviteLink() {
+  const v = currentVenue;
+  if (!v) return;
+  const APP = 'https://great-guest.vercel.app';
+  const link = `${APP}/api/invite?v=${v.id}`;
+  document.getElementById('invite-link-name').textContent = v.name;
+  document.getElementById('invite-link-url').value = link;
+  document.getElementById('invite-link-msg').value = v.invite_message || '';
+  document.getElementById('copy-invite-btn').textContent = 'Копировать';
+  document.getElementById('invite-link-modal').style.display = 'flex';
+}
+function closeInviteLink() {
+  document.getElementById('invite-link-modal').style.display = 'none';
+}
+async function copyInviteLink() {
+  const url = document.getElementById('invite-link-url').value;
+  try {
+    await navigator.clipboard.writeText(url);
+    const btn = document.getElementById('copy-invite-btn');
+    btn.textContent = '✅ Скопировано';
+    setTimeout(() => { btn.textContent = 'Копировать'; }, 2000);
+  } catch {
+    document.getElementById('invite-link-url').select();
+  }
+}
+async function saveInviteMessage() {
+  const v = currentVenue;
+  if (!v) return;
+  const msg = document.getElementById('invite-link-msg').value.trim();
+  const btn = document.getElementById('save-invite-btn');
+  btn.disabled = true;
+  btn.textContent = 'Сохраняем…';
+  const data = await apiFetch('/api/invite', { initData, venueId: v.id, invite_message: msg });
+  btn.disabled = false;
+  if (data.success) {
+    currentVenue.invite_message = msg;
+    btn.textContent = '✅ Сохранено';
+    setTimeout(() => { btn.textContent = 'Сохранить текст'; }, 2000);
+  } else {
+    btn.textContent = 'Сохранить текст';
+    alert('Ошибка: ' + (data.error || 'неизвестная ошибка'));
+  }
+}
+
+function confirmDeleteVenue() {
+  const v = currentVenue;
+  if (!v) return;
+  const ok = confirm(`Удалить событие «${v.name}»?\n\nВсе данные гостей и статистика будут удалены безвозвратно.`);
+  if (ok) deleteVenue(v.id);
+}
+
+async function deleteVenue(venueId) {
+  const initData = window.Telegram?.WebApp?.initData || '';
+  try {
+    const r = await fetch('/api/restaurant-register', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData, venueId }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Ошибка удаления');
+    currentVenue = null;
+    const dash = await apiFetch('/api/restaurant-dashboard', { initData });
+    if (dash.owner) {
+      ownerData = dash.owner;
+      venuesData = dash.venues || [];
+      globalGuests = dash.globalGuests || [];
+      allOffers = dash.offers || [];
+    }
+    renderNetwork();
+  } catch (e) {
+    alert('Не удалось удалить: ' + e.message);
+  }
+}
+
+// ─ Broadcast ─────────────────────────────────────────────────────────────────
+async function downloadAnalytics() {
+  if (!globalGuests || !globalGuests.length) { alert('Нет данных для экспорта'); return; }
+
+  // In Telegram WebView file downloads via <a> are blocked — send via bot instead
+  const btn = document.querySelector('[onclick="downloadAnalytics()"]');
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '⏳'; btn.disabled = true; }
+
+  const r = await apiFetch('/api/restaurant-dashboard', {
+    action: 'export_csv', initData,
+    venueId: currentVenue?.id,
+  });
+
+  if (btn) { btn.innerHTML = origText; btn.disabled = false; }
+
+  if (r && r.success) {
+    showToast('📊 CSV отправлен в ваш Telegram чат');
+  } else {
+    alert('Ошибка экспорта: ' + ((r && r.error) || 'попробуйте снова'));
+  }
+}
+
+function showBroadcastModal() {
+  const v = currentVenue;
+  if (!v) return;
+  document.getElementById('broadcast-event-name').textContent = v.name;
+  document.getElementById('broadcast-msg').value = v.invite_message || '';
+  document.getElementById('broadcast-filter').value = 'all';
+  const btn = document.getElementById('broadcast-send-btn');
+  btn.disabled = false;
+  btn.textContent = 'Отправить';
+  updateBroadcastCount();
+  document.getElementById('broadcast-modal').style.display = 'flex';
+}
+function closeBroadcastModal() {
+  document.getElementById('broadcast-modal').style.display = 'none';
+}
+function updateBroadcastCount() {
+  const filter = document.getElementById('broadcast-filter').value;
+  let count;
+  if (filter === 'all') {
+    count = globalGuests.length;
+  } else {
+    count = globalGuests.filter(g => getLevel(g.visit_count || 0).name === filter).length;
+  }
+  const decl = count === 1 ? 'ь' : count < 5 ? 'я' : 'ей';
+  document.getElementById('broadcast-count').textContent = `${count} получател${decl}`;
+}
+async function sendBroadcast() {
+  const v = currentVenue;
+  if (!v) return;
+  const filter = document.getElementById('broadcast-filter').value;
+  const msg    = document.getElementById('broadcast-msg').value.trim();
+  const btn    = document.getElementById('broadcast-send-btn');
+
+  // Confirm before sending
+  const countEl = document.getElementById('broadcast-count').textContent;
+  if (!confirm(`Отправить приглашение на «${v.name}»?\n\n${countEl}`)) return;
+
+  btn.disabled    = true;
+  btn.textContent = 'Отправляем…';
+
+  const data = await apiFetch('/api/invite', {
+    action: 'broadcast',
+    initData,
+    venueId:       v.id,
+    filter,
+    customMessage: msg,
+  });
+
+  btn.disabled = false;
+  if (data.success !== undefined || data.sent !== undefined) {
+    btn.textContent = `✅ Отправлено ${data.sent || 0}`;
+    setTimeout(() => { closeBroadcastModal(); btn.textContent = 'Отправить'; }, 3000);
+  } else {
+    btn.textContent = 'Отправить';
+    alert('Ошибка: ' + (data.error || 'попробуйте позже'));
+  }
+}
+
+// ─ Camera QR Scanner ─────────────────────────────────────────────────────────
+let camStream = null;
+let camRaf    = null;
+let camBusy   = false;
+
+async function openQRScanner() {
+  const overlay = document.getElementById('cam-scanner');
+  overlay.style.display = 'flex';
+  const resEl = document.getElementById('cam-result');
+  resEl.style.display = 'none';
+  camBusy = false;
+  setCamStatus('Запрашиваем доступ к камере…', '#fff');
+
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } },
+    });
+    const video = document.getElementById('cam-video');
+    video.srcObject = camStream;
+    await video.play();
+    setCamStatus('Наведите камеру на QR-код гостя', '#fff');
+    camScanLoop();
+  } catch {
+    closeQRScanner();
+    // Fallback: Telegram native scanner
+    if (tg?.showScanQrPopup) {
+      tg.showScanQrPopup({ text: 'Наведите на QR-код гостя' }, async (raw) => {
+        tg.closeScanQrPopup();
+        const tok = extractToken(raw);
+        if (!tok) { showScanResult('error', null, 'Неверный QR — попросите гостя нажать /qr'); return; }
+        await confirmVisitToken(tok);
+        return false;
+      });
+    } else {
+      alert('Нет доступа к камере. Разрешите камеру в настройках.');
+    }
+  }
+}
+
+function setCamStatus(text, color) {
+  const el = document.getElementById('cam-status');
+  if (el) { el.textContent = text; el.style.color = color || '#fff'; }
+}
+
+function camScanLoop() {
+  if (!camStream) return;
+  const video  = document.getElementById('cam-video');
+  const canvas = document.getElementById('cam-canvas');
+  const ctx2d  = canvas.getContext('2d');
+
+  function tick() {
+    if (!camStream) return;
+    if (!camBusy && video.readyState >= 2 && typeof jsQR !== 'undefined') {
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx2d.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const img  = ctx2d.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (code) processCamQR(code.data);
+    }
+    camRaf = requestAnimationFrame(tick);
+  }
+  camRaf = requestAnimationFrame(tick);
+}
+
+function extractToken(raw) {
+  let tok = null, vid = null;
+  try {
+    const u = new URL(raw);
+    tok = u.searchParams.get('token');
+    vid = u.searchParams.get('v');
+  } catch {}
+  if (!tok) { const m = (raw || '').match(/[?&]token=([0-9a-f-]{36})/i); if (m) tok = m[1]; }
+  if (!vid) { const m = (raw || '').match(/[?&]v=([0-9a-f-]{36})/i); if (m) vid = m[1]; }
+  return { token: tok, venueId: vid };
+}
+
+async function processCamQR(raw) {
+  if (camBusy) return;
+  camBusy = true;
+  const { token: tok, venueId: vid } = extractToken(raw);
+  if (!tok) {
+    setCamStatus('❌ Не QR-код гостя — попросите /qr в боте', '#F87171');
+    setTimeout(() => { setCamStatus('Наведите камеру на QR-код гостя', '#fff'); camBusy = false; }, 2500);
+    return;
+  }
+  setCamStatus('⏳ Регистрируем…', '#E8C97E');
+  const result = await confirmVisitToken(tok, vid);
+  if (result?.ok) {
+    const lvl = getLevel(result.guest.visits || 0);
+    const resEl = document.getElementById('cam-result');
+    resEl.style.display = 'block';
+    resEl.innerHTML = `✅ <strong>${result.guest.name || 'Гость'}</strong> &nbsp;${lvl.emoji} ${lvl.name} · ${result.guest.visits} визитов`;
+    setCamStatus('Следующий гость → наведите камеру', '#4ADE80');
+  } else {
+    setCamStatus(`❌ ${result?.error || 'Ошибка'}`, '#F87171');
+  }
+  setTimeout(() => {
+    document.getElementById('cam-result').style.display = 'none';
+    setCamStatus('Наведите камеру на QR-код гостя', '#fff');
+    camBusy = false;
+  }, 3500);
+}
+
+async function confirmVisitToken(token, qrVenueId) {
+  // venueId from QR takes priority — ensures guest lands in the right event
+  const restaurantId = qrVenueId || currentVenue?.id;
+  try {
+    const r   = await fetch('/api/confirm-visit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, restaurantId }),
+    });
+    const dat = await r.json();
+    if (r.ok && dat.success) {
+      if (currentVenue) { currentVenue.stats = currentVenue.stats || {}; currentVenue.stats.totalVisits = (currentVenue.stats.totalVisits||0)+1; currentVenue.stats.visits30d = (currentVenue.stats.visits30d||0)+1; }
+      return { ok: true, guest: dat.guest };
+    }
+    return { ok: false, error: dat.error || 'Ошибка' };
+  } catch { return { ok: false, error: 'Нет соединения' }; }
+}
+
+function closeQRScanner() {
+  if (camRaf)    { cancelAnimationFrame(camRaf); camRaf = null; }
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  camBusy = false;
+  document.getElementById('cam-scanner').style.display = 'none';
+}
+
+function showScanResult() {}   // kept for compatibility — camera scanner shows inline
+function closeScanOverlay() {
+  document.getElementById('scan-overlay').style.display = 'none';
+}
+
+// ─ Guest Base ─────────────────────────────────────────────────────────────────
+let gbActiveFilter = 'all';
+
+function showGuestBase() {
+  gbActiveFilter = 'all';
+  const modal = document.getElementById('guest-base-modal');
+  modal.style.display = 'block';
+  document.getElementById('gb-search').value = '';
+  // Reset filter buttons
+  modal.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  modal.querySelector('.filter-btn').classList.add('active');
+  renderGuestBaseList();
+}
+function closeGuestBase() {
+  document.getElementById('guest-base-modal').style.display = 'none';
+}
+function gbSetFilter(f, btn) {
+  gbActiveFilter = f;
+  document.querySelectorAll('#guest-base-modal .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGuestBaseList();
+}
+function filterGuestBase() { renderGuestBaseList(); }
+
+function renderGuestBaseList() {
+  const search = (document.getElementById('gb-search').value || '').toLowerCase().trim();
+  let guests = globalGuests.slice();
+
+  if (gbActiveFilter !== 'all') {
+    guests = guests.filter(g => getLevel(g.visit_count || 0).name === gbActiveFilter);
+  }
+  if (search) {
+    guests = guests.filter(g => {
+      const name = `${g.first_name} ${g.last_name}`.toLowerCase();
+      const uname = (g.username || '').toLowerCase();
+      return name.includes(search) || uname.includes(search);
+    });
+  }
+
+  document.getElementById('gb-count').textContent = `${guests.length} контактов`;
+
+  if (!guests.length) {
+    document.getElementById('gb-list').innerHTML = `<div class="empty" style="padding:40px 0">Нет гостей по фильтру</div>`;
+    return;
+  }
+
+  document.getElementById('gb-list').innerHTML = guests.map(g => {
+    const lvl  = getLevel(g.visit_count || 0);
+    const name = [g.first_name, g.last_name].filter(Boolean).join(' ') || 'Гость';
+    const uname = g.username ? `@${g.username}` : '';
+    const last = g.last_visit_at
+      ? new Date(g.last_visit_at).toLocaleDateString('ru-RU', { day:'numeric', month:'short' })
+      : '';
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 0;
+        border-bottom:1px solid var(--border)">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--card2);
+          display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+          ${lvl.emoji}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
+          <div style="font-size:12px;color:var(--muted)">${uname}${uname&&last?' · ':''}${last}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:13px;font-weight:700">${g.visit_count || 0}</div>
+          <div style="font-size:10px;color:var(--muted)">визитов</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function exportGuestBaseCSV() {
+  const guests = globalGuests;
+  if (!guests.length) { alert('База пустая'); return; }
+  const BOM = '﻿';
+  const header = 'Имя,Фамилия,Username,Статус,Визитов (сеть),Визитов (у вас),RSVP,Последняя активность\n';
+  const rows = guests.map(g => {
+    const lvl = getLevel(g.visit_count || 0).name;
+    const last = g.last_visit_at ? new Date(g.last_visit_at).toLocaleDateString('ru-RU') : '';
+    return [
+      g.first_name || '',
+      g.last_name  || '',
+      g.username   || '',
+      lvl,
+      g.visit_count  || 0,
+      g.org_visits   || 0,
+      g.rsvp_count   || 0,
+      last,
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  }).join('\n');
+  const blob = new Blob([BOM + header + rows], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `great-guest-contacts-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function aiGoToLevel(levelName) {
   activeFilter = levelName;
   switchTab('guests');
@@ -1340,11 +2750,17 @@ function selectOffer(idx) {
     const check = document.getElementById('check-' + i);
     if (check) check.textContent = i === idx ? '✓' : '';
   });
+  const wrap = document.getElementById('offer-edit-wrap');
+  const ta   = document.getElementById('offer-edit');
+  if (wrap) wrap.style.display = 'block';
+  if (ta)   ta.value = selectedOffer;
   document.getElementById('modal-send-btn').disabled = false;
 }
 
 async function sendOffer() {
-  if (!selectedOffer || !currentGuestId || !currentVenue) return;
+  const ta = document.getElementById('offer-edit');
+  const finalText = (ta ? ta.value : selectedOffer || '').trim();
+  if (!finalText || !currentGuestId || !currentVenue) return;
 
   const btn = document.getElementById('modal-send-btn');
   btn.disabled    = true;
@@ -1353,7 +2769,7 @@ async function sendOffer() {
   const data = await apiFetch('/api/send-offer', {
     initData,
     guestTelegramId: currentGuestId,
-    offerText:       selectedOffer,
+    offerText:       finalText,
     restaurantId:    currentVenue.id,
   });
 
@@ -1387,6 +2803,10 @@ function closeOfferModal() {
   document.getElementById('offer-modal').classList.remove('open');
   selectedOffer = null;
   currentGuestId = null;
+  const wrap = document.getElementById('offer-edit-wrap');
+  const ta   = document.getElementById('offer-edit');
+  if (wrap) wrap.style.display = 'none';
+  if (ta)   ta.value = '';
 }
 
 document.getElementById('offer-modal').addEventListener('click', e => {
@@ -1402,8 +2822,8 @@ function showUpgradeModal(reason, errorData) {
   if (reason === 'limit_reached') {
     const current = errorData?.current || venuesData.length;
     const max = errorData?.max || owner.max_venues;
-    title = 'Достигнут лимит заведений';
-    desc = `Ваш тариф "${owner.plan}" позволяет подключить до ${max} ${max === 1 ? 'заведения' : 'заведений'}. У вас уже ${current}. Выберите расширенный тариф:`;
+    title = 'Достигнут лимит событий';
+    desc = `Ваш тариф "${owner.plan}" позволяет подключить до ${max} ${max === 1 ? 'события' : 'событий'}. У вас уже ${current}. Выберите расширенный тариф:`;
   } else if (reason === 'expired') {
     title = 'Подписка истекла';
     desc = 'Оформите новую подписку чтобы продолжить работу с гостями:';
@@ -1414,14 +2834,14 @@ function showUpgradeModal(reason, errorData) {
   const currentInfo = `
     <div class="upgrade-current">
       <div class="upgrade-current-label">Текущий тариф</div>
-      <div class="upgrade-current-value">${owner.plan === 'trial' ? 'Пробный период' : owner.plan} · ${owner.max_venues} ${owner.max_venues === 1 ? 'заведение' : 'заведения'}</div>
+      <div class="upgrade-current-value">${owner.plan === 'trial' ? 'Пробный период' : owner.plan} · ${owner.max_venues} ${owner.max_venues === 1 ? 'событие' : 'событий'}</div>
     </div>
   `;
 
   const plansHtml = UPGRADE_PLANS.map(p => `
     <div class="upgrade-plan">
       <div class="upgrade-plan-name">${p.label}</div>
-      <div class="upgrade-plan-venues">До ${p.max_venues} ${typeof p.max_venues === 'number' && p.max_venues === 1 ? 'заведения' : 'заведений'}</div>
+      <div class="upgrade-plan-venues">До ${p.max_venues} ${typeof p.max_venues === 'number' && p.max_venues === 1 ? 'события' : 'событий'}</div>
       <div class="upgrade-plan-price">${p.price}</div>
       <button class="upgrade-plan-btn" onclick="contactSupport()">Подключить</button>
     </div>
@@ -1581,6 +3001,216 @@ async function importGuests() {
 }
 
 // ─ Toast notification ────────────────────────────────────────────────────────
+// ─ Subscription management modal ─────────────────────────────────────────────
+function showSubscriptionModal() {
+  const existing = document.getElementById('sub-modal-sheet');
+  if (existing) { existing.remove(); return; }
+
+  const owner = ownerData;
+  if (!owner) return;
+
+  const PLAN_LABELS = { trial:'Пробный', basic:'Базовый', network:'Сеть', empire:'Империя' };
+  const PLAN_PRICES = { trial:'Бесплатно 14 дней', basic:'2 990 ₽/мес', network:'7 990 ₽/мес', empire:'19 990 ₽/мес' };
+  const planLabel = PLAN_LABELS[owner.plan] || owner.plan;
+  const planPrice = PLAN_PRICES[owner.plan] || '';
+  const isActive  = owner.is_active;
+  const expiresAt = owner.subscription_expires_at
+    ? new Date(owner.subscription_expires_at).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })
+    : '—';
+
+  const statusColor = owner.subscription_status === 'trial'
+    ? 'var(--gold)' : isActive ? 'var(--green)' : 'var(--red)';
+  const statusText  = owner.subscription_status === 'trial'
+    ? `⏳ Пробный — осталось ${owner.days_left} дн.`
+    : isActive ? `✅ Активна до ${expiresAt}` : `⛔ Истекла ${expiresAt}`;
+
+  // Referral
+  const ownerId   = String(tgUser.id || '');
+  const refLink   = ownerId ? `https://t.me/great_guest_bot?start=ref_${ownerId}` : '';
+  const refCount  = owner.referral_count || 0;
+  const refMonths = owner.referral_rewarded_count || 0;
+
+  const sheet = document.createElement('div');
+  sheet.id = 'sub-modal-sheet';
+  sheet.style.cssText = `position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;justify-content:flex-end`;
+  sheet.innerHTML = `
+    <div onclick="document.getElementById('sub-modal-sheet').remove()"
+      style="flex:1;background:rgba(0,0,0,0.5)"></div>
+    <div style="background:var(--card);border-radius:20px 20px 0 0;padding:20px 20px 40px;
+      max-height:85vh;overflow-y:auto">
+      <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px"></div>
+
+      <!-- Subscription section -->
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;
+        letter-spacing:0.5px;margin-bottom:12px">Подписка</div>
+      <div style="background:var(--card2);border-radius:14px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-size:17px;font-weight:700">${planLabel}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${planPrice}</div>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:${statusColor};text-align:right;max-width:140px">${statusText}</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted)">Событий: ${venuesData.length} из ${owner.max_venues}</div>
+      </div>
+
+      <a href="https://t.me/great_guest_support" target="_blank"
+        style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+          padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#E8C97E);
+          color:#0D0C12;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:20px">
+        💬 Написать менеджеру
+      </a>
+
+      <!-- Divider -->
+      <div style="height:1px;background:var(--border);margin-bottom:20px"></div>
+
+      <!-- Referral section -->
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;
+        letter-spacing:0.5px;margin-bottom:12px">Пригласи друга — получи 1 месяц</div>
+
+      <div style="background:var(--card2);border-radius:14px;padding:16px;margin-bottom:12px">
+        <div style="font-size:13px;line-height:1.55;color:var(--text);margin-bottom:12px">
+          Поделитесь ссылкой с коллегой-организатором. Когда он зарегистрируется в Great Guest —
+          вы автоматически получите <strong>+1 месяц</strong> к подписке.
+        </div>
+        ${refLink ? `
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;
+            padding:10px 12px;font-size:12px;color:var(--muted);overflow:hidden;
+            text-overflow:ellipsis;white-space:nowrap">${refLink}</div>
+          <button id="copy-ref-btn" onclick="copyRefLink('${refLink}')"
+            style="background:var(--gold);color:#0D0C12;border:none;border-radius:10px;
+              padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
+            Копировать
+          </button>
+        </div>
+        <button onclick="shareRefLink('${refLink}')"
+          style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+            margin-top:10px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);
+            border-radius:10px;padding:12px;color:#60A5FA;font-size:14px;font-weight:600;cursor:pointer">
+          📤 Поделиться в Telegram
+        </button>
+        ` : '<div style="font-size:12px;color:var(--muted)">Откройте через Telegram-бот для получения реф-ссылки</div>'}
+      </div>
+
+      ${refCount > 0 ? `
+      <div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);
+        border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:28px">🎉</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--green)">Приглашено: ${refCount} ${refCount===1?'человек':'человека'}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Бонусных месяцев получено: ${refMonths}</div>
+        </div>
+      </div>
+      ` : ''}
+    </div>
+  `;
+  document.body.appendChild(sheet);
+}
+
+function openLanding() {
+  const url = 'https://great-guest.vercel.app/';
+  if (tg && tg.openLink) { tg.openLink(url); } else { window.open(url, '_blank'); }
+}
+
+function copyRefLink(link) {
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('copy-ref-btn');
+    if (btn) { btn.textContent = '✅ Скопировано'; setTimeout(() => { btn.textContent = 'Копировать'; }, 2000); }
+  }).catch(() => { showToast('Скопируйте ссылку вручную', 'error'); });
+}
+
+function shareRefLink(link) {
+  const text = `Привет! Рекомендую Great Guest — платформу для управления гостями клубов и мероприятий. Зарегистрируйся по ссылке — 14 дней бесплатно:\n${link}`;
+  if (tg && tg.openTelegramLink) {
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Попробуй Great Guest — 14 дней бесплатно 🎉')}`);
+  } else if (navigator.share) {
+    navigator.share({ title: 'Great Guest', text, url: link }).catch(() => {});
+  } else {
+    copyRefLink(link);
+    showToast('Ссылка скопирована — вставьте в сообщение');
+  }
+}
+
+// ─ Profile photo ─────────────────────────────────────────────────────────────
+function editProfile() {
+  const existing = document.getElementById('profile-action-sheet');
+  if (existing) { existing.remove(); return; }
+
+  const sheet = document.createElement('div');
+  sheet.id = 'profile-action-sheet';
+  sheet.style.cssText = `position:fixed;bottom:0;left:0;right:0;background:var(--card);
+    border-radius:16px 16px 0 0;padding:20px 16px 32px;z-index:200;
+    border-top:1px solid var(--border);animation:slideIn .25s ease`;
+  sheet.innerHTML = `
+    <div style="text-align:center;font-size:15px;font-weight:700;margin-bottom:16px">Фото профиля</div>
+    <button onclick="syncTgAvatar()" style="display:flex;align-items:center;gap:12px;width:100%;
+      background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;
+      color:var(--text);font-size:14px;cursor:pointer;margin-bottom:10px">
+      <span style="font-size:22px">📲</span>
+      <div style="text-align:left">
+        <div style="font-weight:600">Загрузить из Telegram</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Использовать вашу аватарку из TG</div>
+      </div>
+    </button>
+    <button onclick="document.getElementById('profile-photo-input').click()"
+      style="display:flex;align-items:center;gap:12px;width:100%;
+      background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;
+      color:var(--text);font-size:14px;cursor:pointer;margin-bottom:10px">
+      <span style="font-size:22px">📷</span>
+      <div style="text-align:left">
+        <div style="font-weight:600">Загрузить своё фото</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Выбрать из галереи</div>
+      </div>
+    </button>
+    <button onclick="document.getElementById('profile-action-sheet').remove()"
+      style="width:100%;background:none;border:none;color:var(--muted);font-size:14px;
+      padding:12px;cursor:pointer">Отмена</button>
+    <input type="file" id="profile-photo-input" accept="image/*" style="display:none"
+      onchange="uploadProfilePhoto(this)"/>
+  `;
+  document.body.appendChild(sheet);
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
+}
+
+async function syncTgAvatar() {
+  const sheet = document.getElementById('profile-action-sheet');
+  if (sheet) sheet.remove();
+  showToast('⏳ Загружаю из Telegram...', 'success');
+  const r = await apiFetch('/api/restaurant-dashboard', { action: 'sync_avatar', initData });
+  if (r && r.url) {
+    if (ownerData) ownerData.profile_photo_url = r.url;
+    renderNetwork();
+    showToast('✅ Фото обновлено!');
+  } else {
+    showToast('Фото в Telegram не найдено или закрыто настройками', 'error');
+  }
+}
+
+async function uploadProfilePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 4 * 1024 * 1024) { showToast('Фото не должно превышать 4 МБ', 'error'); return; }
+  const sheet = document.getElementById('profile-action-sheet');
+  if (sheet) sheet.remove();
+  showToast('⏳ Загружаю фото...', 'success');
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const base64 = e.target.result.split(',')[1];
+    const r = await apiFetch('/api/restaurant-dashboard', {
+      action: 'update_avatar', initData, base64, mimeType: file.type
+    });
+    if (r && r.url) {
+      if (ownerData) ownerData.profile_photo_url = r.url;
+      renderNetwork();
+      showToast('✅ Фото обновлено!');
+    } else {
+      showToast('Ошибка загрузки', 'error');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
 function showToast(message, type = 'success') {
   const existing = document.getElementById('toast-notification');
   if (existing) existing.remove();
