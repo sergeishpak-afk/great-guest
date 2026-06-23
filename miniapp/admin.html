@@ -542,15 +542,16 @@
   <div class="modal">
     <div class="modal-title" id="modal-title">Отправить предложение</div>
     <div class="modal-sub" id="modal-sub">Выберите вариант</div>
-    <div id="offer-options"></div>
-    <div id="offer-edit-wrap" style="display:none;margin-top:12px">
-      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">✏️ Редактировать перед отправкой</div>
+    <div id="offer-edit-wrap" style="margin-bottom:10px">
       <textarea id="offer-edit" rows="4"
         style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;
           padding:11px 13px;color:var(--text);font-size:13px;font-family:inherit;
           outline:none;resize:vertical;line-height:1.5;box-sizing:border-box"
-        placeholder="Текст сообщения…"></textarea>
+        placeholder="Напишите своё сообщение или выберите вариант ниже…"
+        oninput="onOfferEditInput()"></textarea>
     </div>
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">🤖 ИИ-варианты</div>
+    <div id="offer-options"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeOfferModal()">Отмена</button>
       <button class="btn-send" id="modal-send-btn" onclick="sendOffer()" disabled>Отправить</button>
@@ -1067,8 +1068,8 @@ function renderNetwork() {
           <span class="net-sub-value">${subStatus}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          ${showUpgrade ? `<a class="net-upgrade" onclick="showUpgradeModal('expired')">Upgrade</a>` : ''}
-          <a class="net-upgrade" onclick="showSubscriptionModal()" style="color:var(--muted)">⚙️ Управление</a>
+          ${showUpgrade ? `<a class="net-upgrade" onclick="showUpgradeModal('expired')">⬆️ Тариф</a>` : ''}
+          <a class="net-upgrade" onclick="showSubscriptionModal()" style="color:var(--muted)">⚙️ Подписка</a>
         </div>
       </div>
       <div class="net-tabs">
@@ -2855,10 +2856,12 @@ async function openOfferModal(btn) {
   document.getElementById('modal-sub').innerHTML =
     `Для <b>${esc(currentGuestName || 'гостя')}</b> ${lvl.emoji} ${lvl.name} — ИИ генерирует варианты…`;
   document.getElementById('offer-options').innerHTML = `
-    <div style="text-align:center;padding:32px 16px">
+    <div style="text-align:center;padding:16px">
       <div class="spinner" style="margin:0 auto 12px"></div>
-      <div style="color:var(--muted);font-size:13px">ИИ создаёт персональные варианты…</div>
+      <div style="color:var(--muted);font-size:13px">Генерируем варианты…</div>
     </div>`;
+  const ta = document.getElementById('offer-edit');
+  if (ta) { ta.value = ''; }
   document.getElementById('modal-send-btn').disabled    = true;
   document.getElementById('modal-send-btn').textContent = 'Отправить';
   document.getElementById('offer-modal').classList.add('open');
@@ -2893,6 +2896,12 @@ async function openOfferModal(btn) {
     </div>`).join('');
 }
 
+function onOfferEditInput() {
+  const ta  = document.getElementById('offer-edit');
+  const btn = document.getElementById('modal-send-btn');
+  if (btn) btn.disabled = !(ta && ta.value.trim());
+}
+
 function selectOffer(idx) {
   selectedOffer = offerOptions[idx];
   document.querySelectorAll('.offer-option').forEach((el, i) => {
@@ -2900,10 +2909,8 @@ function selectOffer(idx) {
     const check = document.getElementById('check-' + i);
     if (check) check.textContent = i === idx ? '✓' : '';
   });
-  const wrap = document.getElementById('offer-edit-wrap');
-  const ta   = document.getElementById('offer-edit');
-  if (wrap) wrap.style.display = 'block';
-  if (ta)   ta.value = selectedOffer;
+  const ta = document.getElementById('offer-edit');
+  if (ta) { ta.value = selectedOffer; ta.focus(); }
   document.getElementById('modal-send-btn').disabled = false;
 }
 
@@ -2953,10 +2960,10 @@ function closeOfferModal() {
   document.getElementById('offer-modal').classList.remove('open');
   selectedOffer = null;
   currentGuestId = null;
-  const wrap = document.getElementById('offer-edit-wrap');
-  const ta   = document.getElementById('offer-edit');
-  if (wrap) wrap.style.display = 'none';
-  if (ta)   ta.value = '';
+  const ta = document.getElementById('offer-edit');
+  if (ta) ta.value = '';
+  const btn = document.getElementById('modal-send-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Отправить'; }
 }
 
 document.getElementById('offer-modal').addEventListener('click', e => {
@@ -3028,8 +3035,9 @@ async function addBonusVisit(btn) {
   btn.disabled = true;
   btn.textContent = '⏳';
 
-  const data = await apiFetch('/api/bonus-visit', {
+  const data = await apiFetch('/api/restaurant-dashboard', {
     initData,
+    action: 'bonus_visit',
     guestTelegramId: guestId,
     restaurantId: currentVenue.id,
   });
