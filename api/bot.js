@@ -15,7 +15,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 
 const APP_URL   = (process.env.APP_URL || 'https://great-guest.vercel.app').replace(/\/$/, '');
 const MINI_APP  = `${APP_URL}/app.html`;
-const ADMIN_APP = `${APP_URL}/admin.html`;
+const ADMIN_APP = `${APP_URL}/admin.html?v=20260624`;
 
 const CONSENT_VERSION = '1.0';
 
