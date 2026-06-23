@@ -878,6 +878,23 @@ bot.command('myid', async (ctx) => {
   );
 });
 
+// ─── /superadmin — владелец открывает панель управления ──────────────────────
+bot.command('superadmin', async (ctx) => {
+  const telegramId = String(ctx.from.id);
+  const ownerIds = (process.env.OWNER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!ownerIds.includes(telegramId)) return ctx.reply('Нет доступа.');
+  await ctx.replyWithMarkdown(
+    `🔐 *Super Admin Panel*\n\nВаш ID: \`${telegramId}\``,
+    {
+      reply_markup: {
+        inline_keyboard: [[
+          { text: '⚙️ Открыть панель', web_app: { url: `${process.env.WEBAPP_URL || 'https://great-guest.vercel.app'}/superadmin.html` } }
+        ]]
+      }
+    }
+  );
+});
+
 // ─── /recover — восстановление аккаунта по номеру телефона ───────────────────
 bot.command('recover', async (ctx) => {
   const telegramId = String(ctx.from.id);
