@@ -77,10 +77,12 @@ module.exports = async (req, res) => {
     const { targetId, plan } = req.body;
     if (!targetId || !/^\d+$/.test(targetId)) return res.status(400).json({ error: 'invalid targetId' });
     if (!PLANS[plan]) return res.status(400).json({ error: 'invalid plan' });
-    await db.from('owner_subscriptions').update({
+    const { data: updated } = await db.from('owner_subscriptions').update({
       plan,
       max_venues: PLANS[plan].max_venues,
-    }).eq('telegram_id', targetId);
+      subscription_status: 'active',
+    }).eq('telegram_id', targetId).select('telegram_id').maybeSingle();
+    if (!updated) return res.status(404).json({ error: 'Organizer not found' });
     return res.status(200).json({ success: true });
   }
 

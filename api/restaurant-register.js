@@ -70,6 +70,7 @@ module.exports = async (req, res) => {
       .from('restaurants').select('id, name, owner_telegram_id').eq('id', venueId).single();
     if (fetchErr || !venue) return res.status(404).json({ error: 'Venue not found' });
     if (venue.owner_telegram_id !== ownerId) return res.status(403).json({ error: 'Not your venue' });
+    await db.from('rsvp').delete().eq('venue_id', venueId);
     await db.from('offers').delete().eq('restaurant_id', venueId);
     await db.from('visits').delete().eq('restaurant_id', venueId);
     await db.from('pending_visits').delete().eq('restaurant_id', venueId);

@@ -93,9 +93,9 @@ function generateEventInvites(guest, restaurant) {
   const etype = restaurant.event_type || 'мероприятие';
 
   return [
-    `${name}, вас ждут на ${ename}! 🎉\n\n${date} — особенный вечер для особенных гостей. Для вас зарезервировано место как для ${lvl.emoji} ${lvl.name}-гостя программы Great Guest.\n\nОтветьте «+» чтобы подтвердить участие.`,
-    `${name}, персональное приглашение для вас 💌\n\n${ename} — ${date}. Мы выбрали вас из базы Great Guest как ${lvl.emoji} ${lvl.name}-гостя. Ваш статус открывает приоритетный вход.\n\nМест немного — подтвердите участие до конца недели.`,
-    `${name}, вас заметили! ✨\n\nПриглашаем на ${ename} — ${date}. Специально для гостей уровня ${lvl.emoji} ${lvl.name} предусмотрены особые условия и привилегии.\n\nПодтвердите участие в ответ на это сообщение.`,
+    `${name}, вас ждут на ${ename}! 🎉\n\n${date} — особенный вечер для особенных гостей. Для вас зарезервировано место как для ${lvl.emoji} ${lvl.name}-гостя программы Great Guest.`,
+    `${name}, персональное приглашение для вас 💌\n\n${ename} — ${date}. Мы выбрали вас из базы Great Guest как ${lvl.emoji} ${lvl.name}-гостя. Ваш статус открывает приоритетный вход.`,
+    `${name}, вас заметили! ✨\n\nПриглашаем на ${ename} — ${date}. Специально для гостей уровня ${lvl.emoji} ${lvl.name} предусмотрены особые условия и привилегии.`,
   ];
 }
 
@@ -169,7 +169,14 @@ module.exports = async (req, res) => {
       .eq('telegram_id', guestTelegramId)
       .in('restaurant_id', ownerVenueIds);
 
-    if (!visitCount || visitCount === 0) {
+    // Also allow guests who RSVPed but haven't visited yet
+    const { count: contactCount } = await db
+      .from('organizer_contacts')
+      .select('*', { count: 'exact', head: true })
+      .eq('organizer_id', ownerId)
+      .eq('guest_id', guestTelegramId);
+
+    if ((!visitCount || visitCount === 0) && (!contactCount || contactCount === 0)) {
       return res.status(403).json({ error: 'guest_not_in_your_network' });
     }
   }
@@ -181,12 +188,13 @@ module.exports = async (req, res) => {
   }
 
   // Send the chosen offer/invite via bot
-  const lvl       = getLevel(guest.visit_count);
-  const isEvent   = restaurant.venue_type === 'event';
-  const typeLabel = isEvent ? 'Приглашение' : 'Персональное предложение';
-  const footer    = isEvent
-    ? `_Приглашение от ${restaurant.name} через Great Guest ${lvl.emoji}_`
-    : `_Предложение от партнёра Great Guest ${lvl.emoji} для ${lvl.name}-гостей_`;
+  const lvl        = getLevel(guest.visit_count);
+  const isEvent    = restaurant.venue_type === 'event';
+  const typeLabel  = isEvent ? 'Приглашение' : 'Персональное предложение';
+  const senderName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Организатор';
+  const footer     = isEvent
+    ? `_${senderName} · ${restaurant.name} ${lvl.emoji}_`
+    : `_${senderName} · ${restaurant.name} ${lvl.emoji}_`;
 
   const msg = [
     `🎁 *${typeLabel} от «${restaurant.name}»*`,

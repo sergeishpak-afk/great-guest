@@ -38,9 +38,21 @@ module.exports = async (req, res) => {
   const tgUser = JSON.parse(params.get('user') || '{}');
   if (!tgUser.id) return res.status(400).json({ error: 'No user in initData' });
 
+  const { data: existing } = await supabaseAdmin
+    .from('guests')
+    .select('telegram_id, consent_at')
+    .eq('telegram_id', String(tgUser.id))
+    .maybeSingle();
+
+  if (!existing) {
+    // Never started the bot / no consent — do not silently create a record
+    return res.status(403).json({ error: 'consent_required' });
+  }
+
   const { data: guest, error } = await supabaseAdmin
     .from('guests')
-    .upsert({ telegram_id: String(tgUser.id), first_name: tgUser.first_name || '', last_name: tgUser.last_name || '', username: tgUser.username || '' }, { onConflict: 'telegram_id' })
+    .update({ first_name: tgUser.first_name || '', last_name: tgUser.last_name || '', username: tgUser.username || '' })
+    .eq('telegram_id', String(tgUser.id))
     .select().single();
 
   if (error) return res.status(500).json({ error: 'DB error' });

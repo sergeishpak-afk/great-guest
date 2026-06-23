@@ -59,24 +59,35 @@ module.exports = async (req, res) => {
 
   const pending = claimedVisit;
 
+  // Use pending_visits.restaurant_id as the authoritative venue (set at QR generation time),
+  // fall back to client-supplied restaurantId only for non-guestlist venues.
+  const effectiveRestaurantId = claimedVisit.restaurant_id || restaurantId || null;
+
   // Fetch guest name + restaurant info in parallel
   const [guestResult, restResult] = await Promise.all([
     supabase.from('guests').select('first_name, last_name').eq('telegram_id', pending.telegram_id).single(),
-    restaurantId && UUID_RE.test(restaurantId)
-      ? supabase.from('restaurants').select('name, owner_telegram_id, classification_mode').eq('id', restaurantId).single()
+    effectiveRestaurantId && UUID_RE.test(effectiveRestaurantId)
+      ? supabase.from('restaurants').select('name, owner_telegram_id, classification_mode').eq('id', effectiveRestaurantId).single()
       : Promise.resolve({ data: null }),
   ]);
 
   if (!guestResult.data) return res.status(404).json({ error: 'Гость не найден' });
-  if (restaurantId && !UUID_RE.test(restaurantId)) return res.status(400).json({ error: 'invalid restaurantId' });
-  if (restaurantId && !restResult.data) return res.status(404).json({ error: 'Ресторан не найден' });
+  if (effectiveRestaurantId && !UUID_RE.test(effectiveRestaurantId)) return res.status(400).json({ error: 'invalid restaurantId' });
+  if (effectiveRestaurantId && !restResult.data) return res.status(404).json({ error: 'Ресторан не найден' });
 
   // Guestlist mode: deny entry if guest never confirmed RSVP
-  if (restResult.data?.classification_mode === 'guestlist' && restaurantId) {
+  if (restResult.data?.classification_mode === 'guestlist') {
+    // Anonymous QR (generated via /qr command, no venue binding) — reject at guestlist venues
+    if (!claimedVisit.restaurant_id) {
+      return res.status(403).json({
+        error: 'guestlist_requires_venue_qr',
+        message: 'QR-код не привязан к мероприятию. Гость должен получить QR через ссылку события.',
+      });
+    }
     const { data: rsvpRow } = await supabase
       .from('rsvp')
       .select('id')
-      .eq('venue_id', restaurantId)
+      .eq('venue_id', claimedVisit.restaurant_id)
       .eq('telegram_id', pending.telegram_id)
       .maybeSingle();
 
@@ -100,10 +111,10 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Ошибка обновления счётчика' });
   }
 
-  await supabase.from('visits').insert({ telegram_id: pending.telegram_id, restaurant_id: restaurantId || null, visit_token: token });
+  await supabase.from('visits').insert({ telegram_id: pending.telegram_id, restaurant_id: effectiveRestaurantId || null, visit_token: token });
 
   // Update persistent organizer contact base (fire-and-forget)
-  if (restaurantId && restResult.data?.owner_telegram_id) {
+  if (effectiveRestaurantId && restResult.data?.owner_telegram_id) {
     supabase.rpc('upsert_organizer_contact', {
       p_org:   restResult.data.owner_telegram_id,
       p_guest: pending.telegram_id,
