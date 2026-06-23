@@ -9,10 +9,28 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 // Basic UUID v4 format check — prevent arbitrary token enumeration attempts
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// In-memory rate limit: max 60 scan attempts per IP per minute
+const RL_MAP = new Map();
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const window = 60_000;
+  const entry = RL_MAP.get(ip) || { count: 0, reset: now + window };
+  if (now > entry.reset) { entry.count = 0; entry.reset = now + window; }
+  entry.count++;
+  RL_MAP.set(ip, entry);
+  if (RL_MAP.size > 5000) {
+    for (const [k, v] of RL_MAP) { if (v.reset < now) RL_MAP.delete(k); }
+  }
+  return entry.count > 60;
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
+  if (checkRateLimit(ip)) return res.status(429).json({ error: 'Слишком много запросов. Подождите минуту.' });
 
   const { token, restaurantId } = req.body || {};
   if (!token || !UUID_RE.test(token)) return res.status(400).json({ error: 'token required' });
@@ -45,7 +63,7 @@ module.exports = async (req, res) => {
   const [guestResult, restResult] = await Promise.all([
     supabase.from('guests').select('first_name, last_name').eq('telegram_id', pending.telegram_id).single(),
     restaurantId && UUID_RE.test(restaurantId)
-      ? supabase.from('restaurants').select('name').eq('id', restaurantId).single()
+      ? supabase.from('restaurants').select('name, owner_telegram_id').eq('id', restaurantId).single()
       : Promise.resolve({ data: null }),
   ]);
 
@@ -66,7 +84,18 @@ module.exports = async (req, res) => {
   }
 
   await supabase.from('visits').insert({ telegram_id: pending.telegram_id, restaurant_id: restaurantId || null, visit_token: token });
-  // pending_visits already marked as used atomically above
+
+  // Update persistent organizer contact base (fire-and-forget)
+  if (restaurantId && restResult.data?.owner_telegram_id) {
+    supabase.rpc('upsert_organizer_contact', {
+      p_org:   restResult.data.owner_telegram_id,
+      p_guest: pending.telegram_id,
+      p_first: guest.first_name || '',
+      p_last:  guest.last_name  || '',
+      p_user:  '',
+      p_rsvp:  false,
+    }).then().catch(() => {});
+  }
 
   try {
     await bot.telegram.sendMessage(pending.telegram_id, `✅ *Визит подтверждён!*\n\n📍 ${restaurantName}\n\n${formatStatus(newCount)}`, { parse_mode: 'Markdown' });
