@@ -191,6 +191,18 @@
       cursor:pointer;border-radius:8px;color:var(--muted);flex-shrink:0;line-height:1;
       transition:background .15s}
     .ngb-merge-btn:hover{background:rgba(255,255,255,0.08)}
+    .rsvp-btn{background:rgba(201,169,110,0.12);border:1px solid rgba(201,169,110,0.2);
+      border-radius:10px;padding:7px 12px;color:var(--gold);font-size:12px;
+      font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;
+      margin-top:10px;width:100%;display:block;transition:background .15s}
+    .rsvp-btn:hover{background:rgba(201,169,110,0.2)}
+    .rsvp-guest-row{display:flex;align-items:center;gap:10px;padding:10px 0;
+      border-bottom:1px solid var(--border)}
+    .rsvp-guest-name{flex:1;font-size:14px;font-weight:600}
+    .rsvp-guest-sub{font-size:11px;color:var(--muted);margin-top:1px}
+    .rsvp-remove-btn{background:rgba(239,83,80,0.12);border:none;border-radius:8px;
+      padding:5px 10px;color:var(--error,#ef5350);font-size:12px;cursor:pointer;
+      font-family:inherit;white-space:nowrap}
     .ngb-avatar{width:38px;height:38px;border-radius:50%;background:var(--card2);
       display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
     .ngb-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -826,6 +838,35 @@
   </div>
 </div>
 
+<!-- ─ RSVP Guestlist Modal ───────────────────────────────── -->
+<div class="modal-overlay" id="rsvp-modal" role="dialog" aria-modal="true">
+  <div class="modal" style="max-height:80vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="modal-title" style="margin-bottom:0" id="rsvp-modal-title">📋 Гостевой список</div>
+      <button onclick="closeRsvpPanel()" style="background:none;border:none;font-size:20px;
+        cursor:pointer;color:var(--muted);line-height:1">×</button>
+    </div>
+    <div class="modal-sub" id="rsvp-modal-sub">Только эти гости смогут получить QR и войти</div>
+
+    <!-- Add by ID -->
+    <div style="display:flex;gap:8px;margin:14px 0 10px">
+      <input id="rsvp-add-id" type="text" inputmode="numeric" placeholder="Telegram ID гостя"
+        style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;
+        padding:9px 12px;color:var(--text);font-size:13px;font-family:monospace;outline:none">
+      <button onclick="rsvpAddGuest()" style="background:var(--gold);color:#0F0E17;border:none;
+        border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;
+        font-family:inherit;white-space:nowrap">Добавить</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5">
+      Гость сам добавляется при подтверждении по инвайт-ссылке.<br>
+      Для ручного добавления — попросите гостя написать <strong style="color:var(--gold)">/myid</strong> боту.
+    </div>
+
+    <div id="rsvp-list-content"><div style="text-align:center;padding:20px;color:var(--muted)">Загрузка…</div></div>
+    <div id="rsvp-msg" style="font-size:13px;text-align:center;margin-top:10px"></div>
+  </div>
+</div>
+
 <!-- ─ Merge Guest Modal ───────────────────────────────────── -->
 <div class="modal-overlay" id="merge-modal" role="dialog" aria-modal="true">
   <div class="modal">
@@ -1067,6 +1108,9 @@ function renderNetwork() {
       const coverHtml = v.cover_image_url
         ? `<div class="venue-cover-img" style="background-image:url('${esc(v.cover_image_url)}')"></div>`
         : `<div class="venue-icon">${icon}</div>`;
+      const rsvpBtn = v.classification_mode === 'guestlist'
+        ? `<button class="rsvp-btn" onclick="event.stopPropagation();openRsvpPanel('${v.id}','${esc(v.name)}')">📋 Гостевой список · ${v.stats.rsvpCount} подтверждено</button>`
+        : '';
       content += `
         <div class="venue-card" onclick="openVenueById('${v.id}')">
           ${coverHtml}
@@ -1077,6 +1121,7 @@ function renderNetwork() {
             <div class="venue-stat"><span class="venue-stat-n">${v.stats.totalVisits}</span><span class="venue-stat-l">всего</span></div>
             <div class="venue-stat"><span class="venue-stat-n">${v.stats.rsvpCount}</span><span class="venue-stat-l">RSVP</span></div>
           </div>
+          ${rsvpBtn}
         </div>`;
     });
     content += `</div>`;
@@ -1200,6 +1245,112 @@ function ngbRender() {
       <button class="ngb-merge-btn" onclick="openMergeModal('${g.telegram_id}','${esc(name)}')" title="Перенести аккаунт">🔄</button>
     </div>`;
   }).join('');
+}
+
+// ─ RSVP Guestlist Panel ──────────────────────────────────────────────────────
+let rsvpCurrentVenueId = '';
+
+function openRsvpPanel(venueId, venueName) {
+  rsvpCurrentVenueId = venueId;
+  document.getElementById('rsvp-modal-title').textContent = '📋 ' + venueName;
+  document.getElementById('rsvp-add-id').value = '';
+  document.getElementById('rsvp-msg').textContent = '';
+  document.getElementById('rsvp-modal').classList.add('active');
+  loadRsvpList(venueId);
+}
+
+function closeRsvpPanel() {
+  document.getElementById('rsvp-modal').classList.remove('active');
+}
+
+async function loadRsvpList(venueId) {
+  const el = document.getElementById('rsvp-list-content');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Загрузка…</div>';
+  try {
+    const initData = window.Telegram?.WebApp?.initData || '';
+    const resp = await fetch('/api/restaurant-dashboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData, action: 'get_rsvp_list', venueId }),
+    });
+    const data = await resp.json();
+    const list = data.rsvps || [];
+    if (!list.length) {
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Список пуст.<br>Гости добавляются при подтверждении по инвайт-ссылке.</div>';
+      return;
+    }
+    el.innerHTML = list.map(g => {
+      const name = [g.first_name, g.last_name].filter(Boolean).join(' ') || 'Гость';
+      const sub  = [g.username ? '@'+g.username : '', g.telegram_id].filter(Boolean).join(' · ');
+      const date = g.created_at ? new Date(g.created_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) : '';
+      return `<div class="rsvp-guest-row">
+        <div style="flex:1;min-width:0">
+          <div class="rsvp-guest-name">${esc(name)}</div>
+          <div class="rsvp-guest-sub">${sub}${date?' · '+date:''}</div>
+        </div>
+        <button class="rsvp-remove-btn" onclick="rsvpRemoveGuest('${g.telegram_id}')">Удалить</button>
+      </div>`;
+    }).join('');
+    document.getElementById('rsvp-modal-sub').textContent =
+      `${list.length} гост${list.length===1?'ь':list.length<5?'я':'ей'} в списке`;
+  } catch {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Ошибка загрузки</div>';
+  }
+}
+
+async function rsvpRemoveGuest(telegramId) {
+  const msgEl = document.getElementById('rsvp-msg');
+  try {
+    const initData = window.Telegram?.WebApp?.initData || '';
+    const resp = await fetch('/api/restaurant-dashboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData, action: 'remove_rsvp', venueId: rsvpCurrentVenueId, telegramId }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      msgEl.style.color = 'var(--green, #66bb6a)';
+      msgEl.textContent = 'Гость удалён из списка';
+      loadRsvpList(rsvpCurrentVenueId);
+    } else {
+      msgEl.style.color = 'var(--error, #e57373)';
+      msgEl.textContent = data.error || 'Ошибка';
+    }
+  } catch {
+    msgEl.style.color = 'var(--error, #e57373)';
+    msgEl.textContent = 'Ошибка сети';
+  }
+}
+
+async function rsvpAddGuest() {
+  const telegramId = document.getElementById('rsvp-add-id').value.trim();
+  const msgEl = document.getElementById('rsvp-msg');
+  if (!telegramId || !/^\d+$/.test(telegramId)) {
+    msgEl.style.color = 'var(--error, #e57373)';
+    msgEl.textContent = 'Введите корректный Telegram ID (только цифры)';
+    return;
+  }
+  try {
+    const initData = window.Telegram?.WebApp?.initData || '';
+    const resp = await fetch('/api/restaurant-dashboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData, action: 'add_rsvp', venueId: rsvpCurrentVenueId, telegramId }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      msgEl.style.color = 'var(--green, #66bb6a)';
+      msgEl.textContent = 'Гость добавлен в список';
+      document.getElementById('rsvp-add-id').value = '';
+      loadRsvpList(rsvpCurrentVenueId);
+    } else {
+      msgEl.style.color = 'var(--error, #e57373)';
+      msgEl.textContent = data.error || 'Ошибка';
+    }
+  } catch {
+    msgEl.style.color = 'var(--error, #e57373)';
+    msgEl.textContent = 'Ошибка сети';
+  }
 }
 
 // ─ Merge guest modal ──────────────────────────────────────────────────────────

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>Great Guest — Super Admin</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0F0E17;--card:#1A1928;--card2:#221F35;--border:rgba(255,255,255,0.08);
+      --text:#F0EBE0;--muted:rgba(240,235,224,0.45);--gold:#C9A96E;
+      --green:#66BB6A;--red:#EF5350;--blue:#5C9BF5;
+    }
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+    .header{padding:20px 20px 0;display:flex;align-items:center;gap:12px}
+    .header-title{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+    .header-title span{color:var(--gold)}
+    .badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;
+      padding:2px 7px;border-radius:20px;letter-spacing:0.5px}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+      padding:14px 16px}
+    .stat-value{font-size:28px;font-weight:800;color:var(--gold)}
+    .stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+    .section-title{font-size:12px;font-weight:700;color:var(--muted);
+      text-transform:uppercase;letter-spacing:0.5px;padding:0 20px 10px}
+    .org-list{padding:0 20px 100px}
+    .org-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+      padding:14px 16px;margin-bottom:10px}
+    .org-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .org-id{font-size:12px;font-family:monospace;color:var(--muted)}
+    .org-plan{font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;
+      background:rgba(201,169,110,0.12);color:var(--gold)}
+    .org-plan.expired{background:rgba(239,83,80,0.12);color:var(--red)}
+    .org-plan.active{background:rgba(102,187,106,0.12);color:var(--green)}
+    .org-stats{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-bottom:10px}
+    .org-stats span{display:flex;align-items:center;gap:3px}
+    .org-expires{font-size:11px;color:var(--muted)}
+    .org-expires.ok{color:var(--green)}
+    .org-expires.warn{color:#FFA726}
+    .org-expires.bad{color:var(--red)}
+    .org-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .btn{border:none;border-radius:10px;padding:7px 12px;font-size:12px;
+      font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s}
+    .btn:hover{opacity:0.85}
+    .btn-extend{background:rgba(92,155,245,0.15);color:var(--blue)}
+    .btn-plan{background:rgba(255,255,255,0.06);color:var(--text)}
+    .btn-danger{background:rgba(239,83,80,0.12);color:var(--red)}
+    .search-bar{padding:0 20px 12px}
+    .search-input{width:100%;background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:10px 14px;color:var(--text);font-size:14px;
+      font-family:inherit;outline:none}
+    .search-input::placeholder{color:var(--muted)}
+    .loading{text-align:center;padding:60px 20px;color:var(--muted)}
+    .error-box{margin:20px;background:rgba(239,83,80,0.1);border:1px solid rgba(239,83,80,0.3);
+      border-radius:12px;padding:16px;color:var(--red);font-size:14px;text-align:center}
+    .plan-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;
+      align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;
+      transition:opacity .2s}
+    .plan-modal.active{opacity:1;pointer-events:auto}
+    .plan-sheet{background:var(--card);border-radius:20px 20px 0 0;padding:20px;
+      width:100%;max-width:480px;transform:translateY(20px);transition:transform .2s}
+    .plan-modal.active .plan-sheet{transform:translateY(0)}
+    .plan-option{background:var(--card2);border-radius:12px;padding:14px 16px;
+      margin-bottom:8px;cursor:pointer;border:2px solid transparent;transition:.15s}
+    .plan-option:hover{border-color:var(--gold)}
+    .plan-option.current{border-color:var(--gold)}
+    .plan-option-name{font-size:15px;font-weight:700}
+    .plan-option-detail{font-size:12px;color:var(--muted);margin-top:2px}
+    .modal-title{font-size:18px;font-weight:800;margin-bottom:16px}
+    .modal-cancel{width:100%;background:rgba(255,255,255,0.06);border:none;
+      border-radius:12px;padding:12px;color:var(--muted);font-size:14px;
+      cursor:pointer;font-family:inherit;margin-top:4px}
+    .extend-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;
+      align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;
+      transition:opacity .2s;padding:20px}
+    .extend-modal.active{opacity:1;pointer-events:auto}
+    .extend-sheet{background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:360px}
+    .extend-input{width:100%;background:var(--bg);border:1px solid var(--border);
+      border-radius:10px;padding:10px 14px;color:var(--text);font-size:16px;
+      text-align:center;font-weight:700;font-family:inherit;outline:none;margin:12px 0}
+    .btn-confirm{background:var(--gold);color:#0F0E17;font-weight:700;font-size:14px;
+      border:none;border-radius:12px;padding:12px;width:100%;cursor:pointer;font-family:inherit}
+    .msg{position:fixed;top:20px;left:50%;transform:translateX(-50%);
+      background:var(--green);color:#fff;padding:10px 20px;border-radius:10px;
+      font-size:13px;font-weight:600;z-index:200;opacity:0;transition:opacity .3s;
+      pointer-events:none;white-space:nowrap}
+    .msg.show{opacity:1}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div style="flex:1">
+    <div class="header-title">Great<span>Guest</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px">Super Admin</div>
+  </div>
+  <div class="badge">OWNER</div>
+</div>
+
+<div id="root"><div class="loading">Загрузка…</div></div>
+
+<!-- Plan change modal -->
+<div class="plan-modal" id="plan-modal">
+  <div class="plan-sheet">
+    <div class="modal-title">Сменить тариф</div>
+    <div id="plan-options"></div>
+    <button class="modal-cancel" onclick="closePlanModal()">Отмена</button>
+  </div>
+</div>
+
+<!-- Extend sub modal -->
+<div class="extend-modal" id="extend-modal">
+  <div class="extend-sheet">
+    <div class="modal-title">Продлить подписку</div>
+    <div style="font-size:13px;color:var(--muted)" id="extend-sub-hint">Введите количество дней</div>
+    <input class="extend-input" id="extend-days" type="number" min="1" max="365" value="30">
+    <button class="btn-confirm" onclick="confirmExtend()">Продлить</button>
+    <button class="modal-cancel" style="margin-top:8px" onclick="closeExtendModal()">Отмена</button>
+  </div>
+</div>
+
+<div class="msg" id="msg"></div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.expand(); tg.setHeaderColor('#0F0E17'); }
+
+let allOrgs = [];
+let actionTargetId = '';
+let actionTargetPlan = '';
+
+function showMsg(text, isError) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.style.background = isError ? 'var(--red)' : 'var(--green)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function expiryClass(iso) {
+  if (!iso) return 'bad';
+  const diff = new Date(iso) - Date.now();
+  if (diff < 0) return 'bad';
+  if (diff < 7 * 86400000) return 'warn';
+  return 'ok';
+}
+
+function statusText(sub) {
+  if (sub.subscription_status === 'trial') return 'Пробный';
+  if (sub.subscription_status === 'active') return 'Активен';
+  return sub.subscription_status || '—';
+}
+
+function planClass(sub) {
+  const exp = sub.subscription_expires_at ? new Date(sub.subscription_expires_at) : null;
+  if (!exp || exp < new Date()) return 'expired';
+  if (sub.subscription_status === 'active') return 'active';
+  return '';
+}
+
+function renderOrgs(list) {
+  const root = document.getElementById('root');
+  if (!list.length) {
+    root.innerHTML = '<div class="loading">Нет организаторов</div>';
+    return;
+  }
+  root.innerHTML = `
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="search-bar">
+      <input class="search-input" id="search" placeholder="🔍 Поиск по ID…" oninput="filterOrgs()">
+    </div>
+    <div class="section-title">Организаторы (${list.length})</div>
+    <div class="org-list" id="org-list"></div>
+  `;
+  renderOrgList(list);
+}
+
+function renderOrgList(list) {
+  document.getElementById('org-list').innerHTML = list.map(o => {
+    const exp = o.subscription_expires_at;
+    const ec = expiryClass(exp);
+    return `<div class="org-card">
+      <div class="org-top">
+        <div class="org-id">${o.telegram_id}</div>
+        <div class="org-plan ${planClass(o)}">${o.plan_label} · ${statusText(o)}</div>
+      </div>
+      <div class="org-stats">
+        <span>🏠 ${o.venue_count} вен.</span>
+        <span>👥 ${o.referral_rewarded_count || 0} рефер.</span>
+      </div>
+      <div class="org-expires ${ec}">
+        Действует до: ${fmtDate(exp)}
+      </div>
+      <div class="org-actions">
+        <button class="btn btn-extend" onclick="openExtend('${o.telegram_id}', '${exp || ''}')">+30 дней</button>
+        <button class="btn btn-plan" onclick="openPlanModal('${o.telegram_id}', '${o.plan}')">Тариф</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterOrgs() {
+  const q = (document.getElementById('search')?.value || '').toLowerCase().trim();
+  const filtered = q ? allOrgs.filter(o => o.telegram_id.includes(q)) : allOrgs;
+  renderOrgList(filtered);
+}
+
+function fillStats(stats) {
+  const grid = document.getElementById('stats-grid');
+  if (!grid) return;
+  grid.innerHTML = [
+    { v: stats.total_organizers, l: 'Организаторов' },
+    { v: stats.total_guests,     l: 'Гостей' },
+    { v: stats.total_venues,     l: 'Заведений' },
+    { v: stats.total_visits,     l: 'Визитов' },
+  ].map(s => `<div class="stat-card"><div class="stat-value">${s.v}</div><div class="stat-label">${s.l}</div></div>`).join('');
+}
+
+// Plan modal
+const PLANS = {
+  trial:   { label: 'Старт',    detail: 'Бесплатно · 1 заведение' },
+  basic:   { label: 'Базовый',  detail: '2 990 ₽/мес · 1 заведение' },
+  network: { label: 'Сеть',     detail: '7 990 ₽/мес · 5 заведений' },
+  empire:  { label: 'Империя',  detail: '19 990 ₽/мес · безлимит' },
+};
+
+function openPlanModal(id, currentPlan) {
+  actionTargetId   = id;
+  actionTargetPlan = currentPlan;
+  document.getElementById('plan-options').innerHTML = Object.entries(PLANS).map(([key, p]) =>
+    `<div class="plan-option ${key === currentPlan ? 'current' : ''}" onclick="selectPlan('${key}')">
+      <div class="plan-option-name">${p.label}</div>
+      <div class="plan-option-detail">${p.detail}</div>
+    </div>`
+  ).join('');
+  document.getElementById('plan-modal').classList.add('active');
+}
+function closePlanModal() { document.getElementById('plan-modal').classList.remove('active'); }
+
+async function selectPlan(plan) {
+  closePlanModal();
+  try {
+    const r = await callApi({ action: 'change_plan', targetId: actionTargetId, plan });
+    if (r.success) {
+      const org = allOrgs.find(o => o.telegram_id === actionTargetId);
+      if (org) {
+        org.plan = plan;
+        org.plan_label = PLANS[plan]?.label || plan;
+      }
+      renderOrgList(allOrgs);
+      showMsg('Тариф изменён');
+    } else showMsg(r.error || 'Ошибка', true);
+  } catch { showMsg('Ошибка сети', true); }
+}
+
+// Extend modal
+function openExtend(id, currentExpiry) {
+  actionTargetId = id;
+  document.getElementById('extend-days').value = 30;
+  document.getElementById('extend-sub-hint').textContent =
+    'Действует до: ' + (currentExpiry ? fmtDate(currentExpiry) : 'нет');
+  document.getElementById('extend-modal').classList.add('active');
+}
+function closeExtendModal() { document.getElementById('extend-modal').classList.remove('active'); }
+
+async function confirmExtend() {
+  const days = parseInt(document.getElementById('extend-days').value) || 30;
+  closeExtendModal();
+  try {
+    const r = await callApi({ action: 'extend_sub', targetId: actionTargetId, days });
+    if (r.success) {
+      const org = allOrgs.find(o => o.telegram_id === actionTargetId);
+      if (org) org.subscription_expires_at = r.new_expiry;
+      renderOrgList(allOrgs);
+      showMsg(`+${days} дней добавлено`);
+    } else showMsg(r.error || 'Ошибка', true);
+  } catch { showMsg('Ошибка сети', true); }
+}
+
+async function callApi(body) {
+  const initData = tg?.initData || '';
+  const r = await fetch('/api/superadmin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData, ...body }),
+  });
+  return r.json();
+}
+
+async function load() {
+  try {
+    const data = await callApi({});
+    if (data.error) {
+      document.getElementById('root').innerHTML =
+        `<div class="error-box">⛔ ${data.error}</div>`;
+      return;
+    }
+    allOrgs = data.organizers || [];
+    renderOrgs(allOrgs);
+    fillStats(data.stats || {});
+  } catch (e) {
+    document.getElementById('root').innerHTML =
+      `<div class="error-box">Ошибка загрузки: ${e.message}</div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

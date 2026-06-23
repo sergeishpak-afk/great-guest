@@ -531,16 +531,35 @@ async function sendQrForVenue(ctx, u, venueId) {
 
   const { data: venue } = await supabase
     .from('restaurants')
-    .select('id, name, event_type, event_date, city')
+    .select('id, name, event_type, event_date, city, classification_mode')
     .eq('id', venueId)
     .single();
 
   if (!venue) return ctx.reply('Мероприятие не найдено — возможно, оно было удалено.');
 
+  // Guestlist mode: guest must have confirmed RSVP via invite link
+  if (venue.classification_mode === 'guestlist') {
+    const { data: rsvpRow } = await supabase
+      .from('rsvp')
+      .select('id')
+      .eq('venue_id', venueId)
+      .eq('telegram_id', telegramId)
+      .maybeSingle();
+
+    if (!rsvpRow) {
+      return ctx.replyWithMarkdown(
+        `⛔ *Вход только для приглашённых*\n\n` +
+        `*${esc(venue.name)}* — закрытое мероприятие.\n` +
+        `Вы не найдены в списке гостей.\n\n` +
+        `Запросите персональную ссылку у организатора и подтвердите участие — тогда QR-код станет доступен.`
+      );
+    }
+  }
+
   const token     = uuidv4();
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
   const { error } = await supabase.from('pending_visits').insert({
-    token, telegram_id: telegramId, expires_at: expiresAt,
+    token, telegram_id: telegramId, expires_at: expiresAt, restaurant_id: venueId,
   });
   if (error) return ctx.reply('Не удалось создать QR-код. Попробуйте ещё раз.');
 

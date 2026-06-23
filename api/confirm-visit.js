@@ -59,17 +59,34 @@ module.exports = async (req, res) => {
 
   const pending = claimedVisit;
 
-  // Fetch guest name + restaurant name in parallel
+  // Fetch guest name + restaurant info in parallel
   const [guestResult, restResult] = await Promise.all([
     supabase.from('guests').select('first_name, last_name').eq('telegram_id', pending.telegram_id).single(),
     restaurantId && UUID_RE.test(restaurantId)
-      ? supabase.from('restaurants').select('name, owner_telegram_id').eq('id', restaurantId).single()
+      ? supabase.from('restaurants').select('name, owner_telegram_id, classification_mode').eq('id', restaurantId).single()
       : Promise.resolve({ data: null }),
   ]);
 
   if (!guestResult.data) return res.status(404).json({ error: 'Гость не найден' });
   if (restaurantId && !UUID_RE.test(restaurantId)) return res.status(400).json({ error: 'invalid restaurantId' });
   if (restaurantId && !restResult.data) return res.status(404).json({ error: 'Ресторан не найден' });
+
+  // Guestlist mode: deny entry if guest never confirmed RSVP
+  if (restResult.data?.classification_mode === 'guestlist' && restaurantId) {
+    const { data: rsvpRow } = await supabase
+      .from('rsvp')
+      .select('id')
+      .eq('venue_id', restaurantId)
+      .eq('telegram_id', pending.telegram_id)
+      .maybeSingle();
+
+    if (!rsvpRow) {
+      return res.status(403).json({
+        error: 'not_on_guestlist',
+        message: 'Гость не в списке приглашённых',
+      });
+    }
+  }
 
   const guest = guestResult.data;
   const restaurantName = restResult.data?.name || 'ресторан-партнёр';
