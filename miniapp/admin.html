@@ -1017,7 +1017,15 @@ async function init() {
   allOffers = data.offers || [];
   venueGuestIds = data.venueGuestIds || {};
 
-  renderNetwork();
+  // Populate venuesMap before any navigation
+  venuesData.forEach(v => venuesMap.set(v.id, v));
+
+  // Single venue: go straight to dashboard, skip network screen
+  if (venuesData.length === 1) {
+    openVenue(venuesData[0]);
+  } else {
+    renderNetwork();
+  }
 }
 
 // ─ Network screen ────────────────────────────────────────────────────────────
