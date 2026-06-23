@@ -922,6 +922,7 @@ let venuesData = [];          // all venues
 let currentVenue = null;      // selected venue object
 let globalGuests = [];        // all guests across network
 let allOffers = [];           // all offers across network
+let venueGuestIds = {};       // map: venue_id → [telegram_id, ...]
 let venueType = 'restaurant'; // for new venue registration
 let venueEventType = '';      // pre-filled event type from type chooser
 let classMode = 'loyalty';   // classification mode for new venue
@@ -1014,6 +1015,7 @@ async function init() {
   venuesData = data.venues || [];
   globalGuests = data.globalGuests || [];
   allOffers = data.offers || [];
+  venueGuestIds = data.venueGuestIds || {};
 
   renderNetwork();
 }
@@ -1693,6 +1695,9 @@ function renderDashboard() {
   const tabKeys = ['guests', 'info', 'history', 'ai'];
 
   const venueOffers = allOffers.filter(o => o.restaurant_id === v.id);
+  const venueGuestList = venueGuestIds[v.id]
+    ? globalGuests.filter(g => venueGuestIds[v.id].includes(String(g.telegram_id)))
+    : globalGuests;
 
   const qrSvg = `<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
     <rect x="1" y="1" width="6" height="6" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
@@ -1761,16 +1766,16 @@ function renderDashboard() {
     </div>
 
     <div class="tab-pane active" id="tab-guests">
-      ${renderGuestsPane(globalGuests, owner, isEvent)}
+      ${renderGuestsPane(venueGuestList, owner, isEvent)}
     </div>
     <div class="tab-pane" id="tab-info">
       ${isEvent ? renderEventPane(v) : renderStatsPane(v)}
     </div>
     <div class="tab-pane" id="tab-history">
-      ${renderHistoryPane(venueOffers, globalGuests, isEvent)}
+      ${renderHistoryPane(venueOffers, venueGuestList, isEvent)}
     </div>
     <div class="tab-pane" id="tab-ai">
-      ${renderAIPane(v, globalGuests, isEvent)}
+      ${renderAIPane(v, venueGuestList, isEvent)}
     </div>
   `;
 

@@ -487,7 +487,24 @@ module.exports = async (req, res) => {
   // 8. Build targeted IDs set from all offers
   const targetedIds = new Set((offers || []).map(o => o.guest_telegram_id));
 
-  // 9. Return response
+  // 9. Build per-venue guest map (for filtering in s-dash)
+  let venueGuestIds = {};
+  if (venueIds.length > 0) {
+    const { data: venueVisits } = await db
+      .from('visits')
+      .select('telegram_id, restaurant_id')
+      .in('restaurant_id', venueIds);
+    if (venueVisits) {
+      venueVisits.forEach(({ telegram_id, restaurant_id }) => {
+        if (!venueGuestIds[restaurant_id]) venueGuestIds[restaurant_id] = [];
+        if (!venueGuestIds[restaurant_id].includes(String(telegram_id))) {
+          venueGuestIds[restaurant_id].push(String(telegram_id));
+        }
+      });
+    }
+  }
+
+  // 10. Return response
   return res.status(200).json({
     owner: ownerInfo,
     venues: venuesWithStats,
@@ -496,5 +513,6 @@ module.exports = async (req, res) => {
       alreadyTargeted: targetedIds.has(g.telegram_id),
     })),
     offers: offers || [],
+    venueGuestIds,
   });
 };
