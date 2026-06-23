@@ -8,8 +8,22 @@
  */
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
+const { Telegraf } = require('telegraf');
+const { formatStatus } = require('../src/status');
 
-const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const db  = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const bot = new Telegraf(process.env.BOT_TOKEN);
+
+// Rate limit for bonus visits: 10 per owner per minute
+const BONUS_RL = new Map();
+function checkBonusLimit(ownerId) {
+  const now = Date.now();
+  const e = BONUS_RL.get(ownerId) || { count: 0, start: now };
+  if (now - e.start > 60_000) { e.count = 0; e.start = now; }
+  e.count++;
+  BONUS_RL.set(ownerId, e);
+  return e.count <= 10;
+}
 
 const PLANS = {
   trial:   { label: 'Старт',   max_venues: 1,   price: 0,     price_label: 'Бесплатно 14 дней' },
@@ -93,6 +107,50 @@ module.exports = async (req, res) => {
     );
     if (error) return res.status(400).json({ error: error.message });
     return res.status(200).json({ success: true });
+  }
+
+  // ── action: bonus_visit — award a bonus visit to a guest ──────────────────
+  if ((req.body || {}).action === 'bonus_visit') {
+    const { guestTelegramId, restaurantId: rid, reason } = req.body;
+    if (!guestTelegramId) return res.status(400).json({ error: 'guestTelegramId required' });
+    if (rid && !UUID_RE.test(rid)) return res.status(400).json({ error: 'invalid restaurantId' });
+    if (!checkBonusLimit(ownerId)) return res.status(429).json({ error: 'too_many_requests' });
+
+    const { data: ownerSub } = await db.from('owner_subscriptions').select('subscription_status,subscription_expires_at').eq('telegram_id', ownerId).single();
+    const expires = ownerSub?.subscription_expires_at ? new Date(ownerSub.subscription_expires_at) : null;
+    const isActive = ownerSub && (ownerSub.subscription_status === 'trial' || ownerSub.subscription_status === 'active') && expires && expires > new Date();
+    if (!isActive) return res.status(403).json({ error: 'subscription_expired' });
+
+    let venueQ = db.from('restaurants').select('*').eq('owner_telegram_id', ownerId);
+    if (rid) venueQ = venueQ.eq('id', rid);
+    const { data: restaurant } = await venueQ.single();
+    if (!restaurant) return res.status(403).json({ error: 'venue_not_found' });
+
+    const { data: guest } = await db.from('guests').select('*').eq('telegram_id', guestTelegramId).single();
+    if (!guest) return res.status(404).json({ error: 'guest_not_found' });
+
+    const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+    const { data: recentBonus } = await db.from('visits').select('id')
+      .eq('telegram_id', guestTelegramId).eq('restaurant_id', restaurant.id)
+      .eq('visit_type', 'bonus').gte('created_at', oneHourAgo).limit(1);
+    if (recentBonus && recentBonus.length > 0)
+      return res.status(429).json({ error: 'Бонус этому гостю уже начислен в последний час' });
+
+    const newCount = guest.visit_count + 1;
+    await Promise.all([
+      db.from('visits').insert({ telegram_id: guestTelegramId, restaurant_id: restaurant.id, visit_type: 'bonus', visit_token: null }),
+      db.from('guests').update({ visit_count: newCount }).eq('telegram_id', guestTelegramId),
+    ]);
+
+    const bonusNote = reason ? `\n💬 _${reason}_` : '';
+    try {
+      await bot.telegram.sendMessage(guestTelegramId,
+        `🎁 *Бонус-визит начислен!*\n\n📍 ${restaurant.name}${bonusNote}\n\n${formatStatus(newCount)}`,
+        { parse_mode: 'Markdown' });
+    } catch (e) { console.error('Bonus notify error:', e.message); }
+
+    return res.status(200).json({ success: true, newVisitCount: newCount,
+      guest: { name: `${guest.first_name} ${guest.last_name || ''}`.trim(), visits: newCount } });
   }
 
   // ── action: update_cover ────────────────────────────────────────────────────
