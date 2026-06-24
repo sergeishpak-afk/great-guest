@@ -560,6 +560,21 @@
       padding:4px 11px; border-radius:4px;
     }
 
+    /* ── Bento grid (Features) ─── */
+    .bento-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .bento-wide { grid-column:1 / span 2; }
+    .bento-tall { grid-column:3; grid-row:1 / span 2; }
+    @media(max-width:768px) {
+      .bento-grid { grid-template-columns:1fr; }
+      .bento-wide { grid-column:1; }
+      .bento-tall { grid-column:1; grid-row:auto; }
+      .feat { padding:28px 22px; }
+    }
+    /* ── Closed-access grid ─── */
+    .closed-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:48px; }
+    @media(max-width:640px) {
+      .closed-grid { grid-template-columns:1fr; }
+    }
     /* ── Numbers ─────────── */
     #numbers {
       padding:90px 48px;
@@ -1431,7 +1446,7 @@
     </p>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:48px">
+  <div class="closed-grid">
 
     <div class="feat reveal rd1" style="grid-column:1/-1;display:flex;align-items:center;gap:32px;flex-wrap:wrap">
       <div style="flex:1;min-width:240px">
@@ -1597,31 +1612,83 @@
     <div class="sec-lbl">Возможности</div>
     <h2 class="sec-title">Всё что нужно — <em>ничего лишнего</em></h2>
   </div>
-  <div class="feat-grid" style="margin-top:48px">
-    <div class="feat reveal rd1">
-      <div class="feat-icon"><i class="ph ph-qr-code"></i></div>
-      <h3 class="feat-title">QR-чек-ин</h3>
-      <p class="feat-desc">Гость показывает QR, ты сканируешь — мгновенно видишь имя, статус, историю. Работает с любого браузера.</p>
-      <div class="feat-tag">Без приложения</div>
+  <div class="bento-grid" style="margin-top:48px">
+
+    <!-- QR: wide card, row 1, cols 1-2 -->
+    <div class="feat bento-wide reveal rd1" style="display:flex;gap:28px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:190px">
+        <div class="feat-icon"><i class="ph ph-qr-code"></i></div>
+        <h3 class="feat-title">QR-чек-ин</h3>
+        <p class="feat-desc">Гость показывает QR, ты сканируешь — мгновенно видишь имя, статус, историю. Работает с любого браузера.</p>
+        <div class="feat-tag">Без приложения</div>
+      </div>
+      <div style="flex:0 0 auto;background:rgba(201,169,110,0.05);border:1px solid rgba(201,169,110,0.15);border-radius:14px;padding:20px 24px;text-align:center;min-width:130px">
+        <div style="width:72px;height:72px;margin:0 auto 12px;background:var(--goldDim);border-radius:10px;display:flex;align-items:center;justify-content:center">
+          <i class="ph ph-qr-code" style="font-size:36px;color:var(--gold)"></i>
+        </div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold);font-weight:500;line-height:1">0.3 с</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">мгновенный скан</div>
+      </div>
     </div>
-    <div class="feat reveal rd2">
+
+    <!-- Loyalty: tall card, rows 1-2, col 3 -->
+    <div class="feat bento-tall reveal rd2">
+      <div class="feat-icon"><i class="ph ph-crown"></i></div>
+      <h3 class="feat-title">Статусы лояльности</h3>
+      <p class="feat-desc">Bronze → Silver → Gold → Platinum. Растут автоматически — никакой ручной работы. Гость видит прогресс в своей карте.</p>
+      <div class="feat-tag" style="margin-bottom:24px">Gamification</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;color:var(--text)">
+            <span>🥉 Bronze</span><span style="color:var(--muted)">1–5 визитов</span>
+          </div>
+          <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px">
+            <div style="height:5px;width:28%;background:#C47A3D;border-radius:3px"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;color:var(--text)">
+            <span>🥈 Silver</span><span style="color:var(--muted)">6–14</span>
+          </div>
+          <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px">
+            <div style="height:5px;width:52%;background:#8A9BB0;border-radius:3px"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;color:var(--text)">
+            <span>🥇 Gold</span><span style="color:var(--muted)">15–29</span>
+          </div>
+          <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px">
+            <div style="height:5px;width:76%;background:var(--gold);border-radius:3px"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;color:var(--text)">
+            <span>💎 Platinum</span><span style="color:var(--muted)">30+</span>
+          </div>
+          <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px">
+            <div style="height:5px;width:100%;background:linear-gradient(90deg,#7C3AED,#A78BFA);border-radius:3px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guest DB: row 2, col 1 -->
+    <div class="feat reveal rd3">
       <div class="feat-icon"><i class="ph ph-users"></i></div>
       <h3 class="feat-title">База гостей</h3>
       <p class="feat-desc">Имя, статус, дата первого и последнего визита, количество чек-инов. Экспорт в CSV одним кликом.</p>
       <div class="feat-tag">CRM</div>
     </div>
-    <div class="feat reveal rd3">
-      <div class="feat-icon"><i class="ph ph-crown"></i></div>
-      <h3 class="feat-title">Статусы лояльности</h3>
-      <p class="feat-desc">Bronze → Silver → Gold → Platinum. Растут автоматически — никакой ручной работы. Гость видит прогресс в своей карте.</p>
-      <div class="feat-tag">Gamification</div>
-    </div>
+
+    <!-- Broadcasts: row 2, col 2 -->
     <div class="feat reveal rd4">
       <div class="feat-icon"><i class="ph ph-bell"></i></div>
       <h3 class="feat-title">Рассылки в Telegram</h3>
-      <p class="feat-desc">Отправь приглашение, анонс или спецпредложение всем участникам или отдельному сегменту — прямо из панели.</p>
+      <p class="feat-desc">Анонс, спецпредложение или приглашение — всем или нужному сегменту прямо из панели.</p>
       <div class="feat-tag">Engagement</div>
     </div>
+
   </div>
 </section>
 

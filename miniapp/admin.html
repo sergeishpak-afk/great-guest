@@ -1669,14 +1669,28 @@ async function register() {
 
 // ─ Open venue ────────────────────────────────────────────────────────────────
 function openVenueById(id) {
-  openVenue(venuesMap.get(id));
+  const sid = String(id);
+  const venue = venuesMap.get(sid) || venuesMap.get(id)
+    || venuesData.find(v => String(v.id) === sid);
+  if (!venue) {
+    console.error('[GG] openVenueById: venue not found for id', id,
+      'map size:', venuesMap.size, 'keys:', [...venuesMap.keys()]);
+    return;
+  }
+  openVenue(venue);
 }
 
 function openVenue(venue) {
+  if (!venue) return;
   currentVenue = venue;
   activeFilter = 'all';
   evEditMode = false;
-  renderDashboard();
+  try {
+    renderDashboard();
+  } catch (e) {
+    console.error('[GG] renderDashboard error:', e);
+    showErr('Ошибка загрузки кабинета: ' + e.message);
+  }
 }
 
 // ─ Dashboard (single venue) ──────────────────────────────────────────────────
