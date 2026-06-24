@@ -1333,28 +1333,50 @@
     <div class="sec-lbl">Как это работает</div>
     <h2 class="sec-title">Три шага — <em>и всё работает</em></h2>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px" class="reveal">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 24px">
+  <div class="how-grid reveal">
+    <div class="how-card">
       <div style="font-size:32px;margin-bottom:16px">💬</div>
       <div style="font-size:11px;font-weight:600;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Шаг 1</div>
       <h3 style="font-size:17px;font-weight:700;margin-bottom:10px">Открой бота</h3>
       <p style="font-size:13px;color:var(--muted);line-height:1.6">Напиши /start в @great_guest_bot и назови своё мероприятие или клуб. Никаких форм и регистраций.</p>
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 24px">
+    <div class="how-card">
       <div style="font-size:32px;margin-bottom:16px">📲</div>
       <div style="font-size:11px;font-weight:600;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Шаг 2</div>
       <h3 style="font-size:17px;font-weight:700;margin-bottom:10px">Гости получают QR</h3>
       <p style="font-size:13px;color:var(--muted);line-height:1.6">Поделись ссылкой — гость пишет боту и сразу получает персональный QR-код. Telegram уже установлен, скачивать ничего не нужно.</p>
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 24px">
+    <div class="how-card">
       <div style="font-size:32px;margin-bottom:16px">✅</div>
       <div style="font-size:11px;font-weight:600;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Шаг 3</div>
       <h3 style="font-size:17px;font-weight:700;margin-bottom:10px">Сканируй на входе</h3>
       <p style="font-size:13px;color:var(--muted);line-height:1.6">Открываешь панель, сканируешь QR — видишь имя, сколько раз был, статус. База обновляется сама.</p>
     </div>
   </div>
-  <style>@media(max-width:640px){#how .reveal > div{grid-template-columns:1fr !important}}</style>
 </section>
+<style>
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 48px;
+  }
+  .how-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+  }
+  @media (max-width: 768px) {
+    #how { padding: 56px 16px !important; }
+    .how-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .how-card { padding: 24px 20px; }
+  }
+</style>
 
 <!-- VERTICALS -->
 <section id="verticals" style="padding:80px 24px;max-width:960px;margin:0 auto">
