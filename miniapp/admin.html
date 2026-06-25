@@ -324,6 +324,21 @@
     .lvl-Silver{background:rgba(180,180,200,.1);color:#9CA3AF}
     .lvl-Gold{background:rgba(201,169,110,.12);color:var(--gold)}
     .lvl-Platinum{background:rgba(96,165,250,.1);color:var(--blue)}
+    .lvl-VIP{background:rgba(168,85,247,.15);color:#C084FC}
+    .lvl-manual{outline:1px solid currentColor;outline-offset:-1px}
+    .override-btn{background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);
+      padding:0 2px;line-height:1;opacity:.6;transition:opacity .15s}
+    .override-btn:hover{opacity:1}
+    .override-dropdown{position:absolute;right:0;top:100%;z-index:50;
+      background:var(--card);border:1px solid var(--border);border-radius:10px;
+      padding:4px;display:none;min-width:130px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+    .override-dropdown.open{display:block}
+    .override-opt{display:block;width:100%;text-align:left;background:none;border:none;
+      cursor:pointer;color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;
+      white-space:nowrap}
+    .override-opt:hover{background:rgba(255,255,255,.07)}
+    .override-opt.active{color:var(--gold)}
+    .override-wrap{position:relative;display:inline-flex;align-items:center;gap:2px}
 
     .action-btn{flex-shrink:0;background:rgba(201,169,110,0.1);
       border:1px solid rgba(201,169,110,0.25);border-radius:10px;
@@ -941,12 +956,20 @@ const venuesMap = new Map();
 
 // ─ Levels ────────────────────────────────────────────────────────────────────
 const LEVELS = [
-  { name:'Bronze',  emoji:'🥉', min:0  },
+  { name:'Bronze',  emoji:'🥉', min:1  },
   { name:'Silver',  emoji:'🥈', min:5  },
   { name:'Gold',    emoji:'🥇', min:15 },
   { name:'Platinum',emoji:'💎', min:30 },
+  { name:'VIP',     emoji:'👑', min:0  },
 ];
-const getLevel = n => [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0];
+const LEVEL_MAP = Object.fromEntries(LEVELS.map(l => [l.name, l]));
+const LEVEL_NONE = { name: '', emoji: '—', min: 0 };
+// Auto level from visit count only (no override)
+const getAutoLevel = n => n === 0 ? null : [...LEVELS.slice(0,4)].reverse().find(l => n >= l.min) || LEVELS[0];
+// Effective level: override wins over auto
+const getLevel = (n, override) => override ? (LEVEL_MAP[override] || getAutoLevel(n)) : getAutoLevel(n);
+// Shorthand for guest object — never returns null
+const guestLevel = g => getLevel(g.visit_count || 0, g.status_override) || LEVEL_NONE;
 
 // ─ Plans ─────────────────────────────────────────────────────────────────────
 const UPGRADE_PLANS = [
@@ -1163,13 +1186,15 @@ function renderNetwork() {
   } else {
     // Level summary cards
     const levels = [
-      { key:'Bronze',   emoji:'🥉', min:1,  max:4  },
-      { key:'Silver',   emoji:'🥈', min:5,  max:14 },
-      { key:'Gold',     emoji:'🥇', min:15, max:29 },
-      { key:'Platinum', emoji:'💎', min:30, max:Infinity },
+      { key:'Bronze',   emoji:'🥉' },
+      { key:'Silver',   emoji:'🥈' },
+      { key:'Gold',     emoji:'🥇' },
+      { key:'Platinum', emoji:'💎' },
+      { key:'VIP',      emoji:'👑' },
     ];
     const counts = {};
-    levels.forEach(l => { counts[l.key] = globalGuests.filter(g => { const v=g.visit_count||0; return v>=l.min && v<=l.max; }).length; });
+    levels.forEach(l => { counts[l.key] = 0; });
+    globalGuests.forEach(g => { const n = guestLevel(g)?.name; if (n && counts[n] !== undefined) counts[n]++; });
 
     content += `<div class="ngb-summary">`;
     levels.forEach(l => {
@@ -1224,12 +1249,9 @@ function ngbRender() {
   const totalEl = document.getElementById('ngb-total');
   if (!listEl) return;
   const search = (document.getElementById('ngb-search')?.value || '').toLowerCase().trim();
-  const LEVEL_RANGES = { Bronze:[1,4], Silver:[5,14], Gold:[15,29], Platinum:[30,Infinity] };
-
   let list = globalGuests.slice();
   if (ngbFilter !== 'all') {
-    const [mn, mx] = LEVEL_RANGES[ngbFilter] || [0, Infinity];
-    list = list.filter(g => { const v=g.visit_count||0; return v>=mn && v<=mx; });
+    list = list.filter(g => guestLevel(g)?.name === ngbFilter);
   }
   if (search) {
     list = list.filter(g => {
@@ -1247,7 +1269,7 @@ function ngbRender() {
 
   const LEVELS = { Bronze:'🥉', Silver:'🥈', Gold:'🥇', Platinum:'💎' };
   listEl.innerHTML = list.map(g => {
-    const lvl  = getLevel(g.visit_count || 0);
+    const lvl  = guestLevel(g);
     const name = [g.first_name, g.last_name].filter(Boolean).join(' ') || 'Гость';
     const sub  = [g.username ? '@'+g.username : '', g.last_visit_at ? new Date(g.last_visit_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) : ''].filter(Boolean).join(' · ');
     return `<div class="ngb-row">
@@ -1890,7 +1912,7 @@ function renderGuestCards(guests, isEvent) {
   if (activeFilter === 'all') {
     filtered = guests;
   } else if (mode === 'loyalty') {
-    filtered = guests.filter(g => getLevel(g.visit_count).name === activeFilter);
+    filtered = guests.filter(g => guestLevel(g)?.name === activeFilter);
   } else if (mode === 'guestlist') {
     filtered = activeFilter === 'attended'
       ? guests.filter(g => (g.visit_count || 0) > 0)
@@ -1907,7 +1929,7 @@ function renderGuestCards(guests, isEvent) {
 
   return filtered.map(g => {
     const alreadyTargeted = targetedIds.has(String(g.telegram_id));
-    const lvl      = getLevel(g.visit_count);
+    const lvl      = guestLevel(g);
     const initial  = (g.first_name || '?')[0].toUpperCase();
     const fullName = [g.first_name, g.last_name].filter(Boolean).join(' ');
     const visits   = g.visit_count || 0;
@@ -1919,8 +1941,10 @@ function renderGuestCards(guests, isEvent) {
       lastV ? `последний ${lastV}` : null,
     ].filter(Boolean).join(' · ');
 
+    const autoLvlName = getAutoLevel(visits)?.name || '—';
+    const tid = String(g.telegram_id);
     const badgeHtml = mode === 'loyalty'
-      ? `<span class="level-badge lvl-${lvl.name}">${lvl.emoji} ${lvl.name}</span>`
+      ? `<span class="override-wrap"><span class="level-badge lvl-${lvl.name}${g.status_override?' lvl-manual':''}">${lvl.emoji} ${lvl.name}${g.status_override?' ✨':''}</span><button class="override-btn" onclick="toggleOverrideDropdown(event,'${tid}')" title="Изменить статус" aria-label="Изменить статус">✏️</button><div class="override-dropdown" id="ovrd-${tid}"><button class="override-opt${!g.status_override?' active':''}" onclick="setStatusOverride('${tid}',null)">🔄 Авто (${autoLvlName})</button><button class="override-opt${g.status_override==='Bronze'?' active':''}" onclick="setStatusOverride('${tid}','Bronze')">🥉 Bronze</button><button class="override-opt${g.status_override==='Silver'?' active':''}" onclick="setStatusOverride('${tid}','Silver')">🥈 Silver</button><button class="override-opt${g.status_override==='Gold'?' active':''}" onclick="setStatusOverride('${tid}','Gold')">🥇 Gold</button><button class="override-opt${g.status_override==='Platinum'?' active':''}" onclick="setStatusOverride('${tid}','Platinum')">💎 Platinum</button><button class="override-opt${g.status_override==='VIP'?' active':''}" onclick="setStatusOverride('${tid}','VIP')">👑 VIP</button></div></span>`
       : mode === 'guestlist'
       ? `<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;
           background:${visits>0?'rgba(74,222,128,0.12)':'rgba(255,255,255,0.06)'};
@@ -2122,7 +2146,7 @@ function infoRow(label, value) {
 function renderLevelChart(guests) {
   if (!guests || !guests.length) return '';
   const counts = { Bronze:0, Silver:0, Gold:0, Platinum:0 };
-  guests.forEach(g => { const n = getLevel(g.visit_count).name; counts[n]++; });
+  guests.forEach(g => { const n = guestLevel(g)?.name; counts[n]++; });
   const total = guests.length;
   const levels = [
     { name:'Bronze',   emoji:'🥉', color:'#C47A3D' },
@@ -2282,7 +2306,7 @@ function renderHistoryPane(offers, guests, isEvent) {
   return offers.map(o => {
     const g    = guestMap[String(o.guest_telegram_id)];
     const name = g ? esc(g.first_name) : 'Гость';
-    const lvl  = g ? getLevel(g.visit_count) : LEVELS[0];
+    const lvl  = g ? guestLevel(g) : LEVELS[0];
     const date = new Date(o.created_at).toLocaleDateString('ru-RU', {day:'numeric',month:'short'});
     const statusCls = o.status === 'accepted' ? 'status-accepted' : o.status === 'declined' ? 'status-declined' : 'status-sent';
     const statusTxt = o.status === 'accepted' ? '✓ Принято' : o.status === 'declined' ? '✗ Отклонено' : '• Отправлено';
@@ -2305,8 +2329,8 @@ function renderAIPane(v, guests, isEvent) {
   const venueOffers  = allOffers.filter(o => o.restaurant_id === v.id);
   const targetedIds  = new Set(venueOffers.map(o => String(o.guest_telegram_id)));
   const totalGuests  = guests.length;
-  const platinum     = guests.filter(g => getLevel(g.visit_count).name === 'Platinum').length;
-  const gold         = guests.filter(g => getLevel(g.visit_count).name === 'Gold').length;
+  const platinum     = guests.filter(g => guestLevel(g)?.name === 'Platinum').length;
+  const gold         = guests.filter(g => guestLevel(g)?.name === 'Gold').length;
   const untargeted   = guests.filter(g => !targetedIds.has(String(g.telegram_id))).length;
 
   const noGuests = !ownerData?.is_active || !totalGuests;
@@ -2418,7 +2442,7 @@ function renderDiscoverySection(v, guests, targetedIds) {
         <strong>${untargetedGuests.length}</strong> гостей сети, которые ещё не получили предложение от этого заведения
       </div>
       ${topUntargeted.map(g => {
-        const lvl = getLevel(g.visit_count);
+        const lvl = guestLevel(g);
         const fullName = [g.first_name, g.last_name].filter(Boolean).join(' ');
         return `
           <div style="display:flex;align-items:center;justify-content:space-between;
@@ -2579,7 +2603,7 @@ function updateBroadcastCount() {
   if (filter === 'all') {
     count = globalGuests.length;
   } else {
-    count = globalGuests.filter(g => getLevel(g.visit_count || 0).name === filter).length;
+    count = globalGuests.filter(g => guestLevel(g)?.name === filter).length;
   }
   const decl = count === 1 ? 'ь' : count < 5 ? 'я' : 'ей';
   document.getElementById('broadcast-count').textContent = `${count} получател${decl}`;
@@ -2778,7 +2802,7 @@ function renderGuestBaseList() {
   let guests = globalGuests.slice();
 
   if (gbActiveFilter !== 'all') {
-    guests = guests.filter(g => getLevel(g.visit_count || 0).name === gbActiveFilter);
+    guests = guests.filter(g => guestLevel(g)?.name === gbActiveFilter);
   }
   if (search) {
     guests = guests.filter(g => {
@@ -2796,7 +2820,7 @@ function renderGuestBaseList() {
   }
 
   document.getElementById('gb-list').innerHTML = guests.map(g => {
-    const lvl  = getLevel(g.visit_count || 0);
+    const lvl  = guestLevel(g);
     const name = [g.first_name, g.last_name].filter(Boolean).join(' ') || 'Гость';
     const uname = g.username ? `@${g.username}` : '';
     const last = g.last_visit_at
@@ -2827,7 +2851,7 @@ function exportGuestBaseCSV() {
   const BOM = '﻿';
   const header = 'Имя,Фамилия,Username,Статус,Визитов (сеть),Визитов (у вас),RSVP,Последняя активность\n';
   const rows = guests.map(g => {
-    const lvl = getLevel(g.visit_count || 0).name;
+    const lvl = guestLevel(g)?.name;
     const last = g.last_visit_at ? new Date(g.last_visit_at).toLocaleDateString('ru-RU') : '';
     return [
       g.first_name || '',
@@ -2888,6 +2912,44 @@ function setFilter(f) {
     list.innerHTML = renderGuestCards(globalGuests, isEvent);
   }
 }
+
+// ─ Status override ───────────────────────────────────────────────────────────
+function toggleOverrideDropdown(event, guestId) {
+  event.stopPropagation();
+  const dd = document.getElementById('ovrd-' + guestId);
+  if (!dd) return;
+  document.querySelectorAll('.override-dropdown.open').forEach(el => { if (el !== dd) el.classList.remove('open'); });
+  dd.classList.toggle('open');
+}
+
+async function setStatusOverride(guestId, override) {
+  document.querySelectorAll('.override-dropdown.open').forEach(el => el.classList.remove('open'));
+
+  const g = globalGuests.find(x => String(x.telegram_id) === String(guestId));
+  if (!g) return;
+  const prev = g.status_override;
+  g.status_override = override || null;
+
+  const isEvent = currentVenue?.venue_type === 'event';
+  function rerender() {
+    const listEl = document.getElementById('guest-list');
+    if (listEl) listEl.innerHTML = renderGuestCards(globalGuests, isEvent);
+    const ngbEl = document.getElementById('ngb-guest-list');
+    if (ngbEl) ngbEl.innerHTML = renderGuestCards(globalGuests, isEvent);
+  }
+  rerender();
+
+  const r = await apiFetch('/api/restaurant-dashboard', { initData, action: 'set_status_override', guestId, override: override || null });
+  if (!r.ok) {
+    g.status_override = prev;
+    rerender();
+    showToast('Не удалось сохранить статус', 'error');
+  }
+}
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.override-dropdown.open').forEach(el => el.classList.remove('open'));
+});
 
 // ─ Offer / Invite modal ──────────────────────────────────────────────────────
 async function openOfferModal(btn) {

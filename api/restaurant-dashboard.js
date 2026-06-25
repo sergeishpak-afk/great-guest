@@ -183,6 +183,22 @@ module.exports = async (req, res) => {
     return res.status(200).json({ success: true, url: publicUrl });
   }
 
+  // ── action: set_status_override — manually pin a guest's status ─────────────
+  if ((req.body || {}).action === 'set_status_override') {
+    const { guestId, override } = req.body || {};
+    if (!guestId) return res.status(400).json({ error: 'guestId required' });
+    const VALID = ['Bronze', 'Silver', 'Gold', 'Platinum', 'VIP', null];
+    if (!VALID.includes(override === undefined ? null : override))
+      return res.status(400).json({ error: 'invalid override value' });
+    const { error: dbErr } = await db
+      .from('organizer_contacts')
+      .update({ status_override: override || null })
+      .eq('organizer_id', ownerId)
+      .eq('guest_id', String(guestId));
+    if (dbErr) return res.status(500).json({ error: 'DB error' });
+    return res.status(200).json({ success: true });
+  }
+
   // ── action: export_csv — generate guest list CSV and send via bot ──────────
   if ((req.body || {}).action === 'export_csv') {
     const { data: contacts } = await db
@@ -404,7 +420,7 @@ module.exports = async (req, res) => {
     const [contactsResult, offersResult] = await Promise.all([
       db
         .from('organizer_contacts')
-        .select('guest_id, first_name, last_name, username, total_visits, rsvp_count, last_seen_at')
+        .select('guest_id, first_name, last_name, username, total_visits, rsvp_count, last_seen_at, status_override')
         .eq('organizer_id', ownerId)
         .order('last_seen_at', { ascending: false })
         .limit(500),
@@ -473,14 +489,15 @@ module.exports = async (req, res) => {
     }
 
     globalGuests = contactRows.map(c => ({
-      telegram_id:   c.guest_id,
-      first_name:    nameMap[c.guest_id]?.first_name  || c.first_name  || '',
-      last_name:     nameMap[c.guest_id]?.last_name   || c.last_name   || '',
-      username:      nameMap[c.guest_id]?.username    || c.username    || '',
-      visit_count:   statsMap[c.guest_id]?.visit_count  || 0,
-      last_visit_at: statsMap[c.guest_id]?.last_visit_at || c.last_seen_at,
-      org_visits:    c.total_visits,
-      rsvp_count:    c.rsvp_count,
+      telegram_id:     c.guest_id,
+      first_name:      nameMap[c.guest_id]?.first_name  || c.first_name  || '',
+      last_name:       nameMap[c.guest_id]?.last_name   || c.last_name   || '',
+      username:        nameMap[c.guest_id]?.username    || c.username    || '',
+      visit_count:     statsMap[c.guest_id]?.visit_count  || 0,
+      last_visit_at:   statsMap[c.guest_id]?.last_visit_at || c.last_seen_at,
+      org_visits:      c.total_visits,
+      rsvp_count:      c.rsvp_count,
+      status_override: c.status_override || null,
     })).sort((a, b) => (b.visit_count || 0) - (a.visit_count || 0));
   }
 

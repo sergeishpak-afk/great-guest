@@ -19,13 +19,8 @@ const ADMIN_APP = `${APP_URL}/admin.html?v=20260624`;
 
 const CONSENT_VERSION = '1.0';
 
-// ─── Levels ──────────────────────────────────────────────────────────────────
-const LEVELS = [
-  { name: 'Bronze',   emoji: '🥉', min: 1,  reward: 'Добро пожаловать в программу' },
-  { name: 'Silver',   emoji: '🥈', min: 5,  reward: 'Скидка 5% + приоритетная бронь' },
-  { name: 'Gold',     emoji: '🥇', min: 15, reward: 'Скидка 10% + комплимент от шефа' },
-  { name: 'Platinum', emoji: '💎', min: 30, reward: 'Скидка 15% + VIP-обслуживание' },
-];
+// ─── Levels (canonical source: src/status.js) ────────────────────────────────
+const { getEffectiveStatus, getNextLevel } = require('../src/status');
 const PLANS = {
   trial:   { label: 'Старт (пробный)',  emoji: '🆓' },
   basic:   { label: 'Базовый',          emoji: '🔑' },
@@ -33,11 +28,6 @@ const PLANS = {
   empire:  { label: 'Империя',          emoji: '👑' },
 };
 
-function getLevel(n) {
-  if (n === 0) return null; // No level at zero visits
-  return [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0];
-}
-function getNext(n) { return LEVELS.find(l => l.min > n); }
 function decl(n) {
   if (n % 10 === 1 && n % 100 !== 11) return '';
   if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'а';
@@ -50,10 +40,10 @@ function fmtStatus(count) {
   if (count === 0) {
     return `🎉 *Добро пожаловать!*\n_Получи QR-код и зарегистрируй первое посещение — твой статус гостя начнётся с первого визита._`;
   }
-  const lvl  = getLevel(count);
-  const next = getNext(count);
+  const lvl  = getEffectiveStatus(count);
+  const next = getNextLevel(count);
   let s = `${lvl.emoji} *${lvl.name}* — ${count} визит${decl(count)}\n_${lvl.reward}_`;
-  if (next) s += `\n\nДо *${next.name}*: ещё ${next.min - count} визит${decl(next.min - count)}`;
+  if (next) s += `\n\nДо *${next.name}*: ещё ${next.minVisits - count} визит${decl(next.minVisits - count)}`;
   else      s += '\n\n🏆 Максимальный статус достигнут!';
   return s;
 }
@@ -225,12 +215,12 @@ async function recordVenueCheckin(ctx, venue) {
     }).then().catch(() => {});
   }
 
-  const lvl  = getLevel(newCount);
-  const next = getNext(newCount);
+  const lvl  = getEffectiveStatus(newCount);
+  const next = getNextLevel(newCount);
   const lvlLine = lvl
     ? `${lvl.emoji} *${lvl.name}* — ${newCount} визит${decl(newCount)}\n_${lvl.reward}_`
     : `🥉 Первый визит — начало пути!`;
-  const nextLine = next ? `\nДо *${next.name}*: ещё ${next.min - newCount} визит${decl(next.min - newCount)}` : '';
+  const nextLine = next ? `\nДо *${next.name}*: ещё ${next.minVisits - newCount} визит${decl(next.minVisits - newCount)}` : '';
 
   await ctx.replyWithMarkdown(
     `✅ *Чек-ин подтверждён!*\n\n📍 ${esc(venue.name)}\n\n${lvlLine}${nextLine}`,
