@@ -1074,6 +1074,13 @@ bot.hears('📋 История визитов', async (ctx) => {
 // ─── Vercel handler ───────────────────────────────────────────────────────────
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
+
+  const webhookSecret = process.env.WEBHOOK_SECRET;
+  if (webhookSecret) {
+    const incoming = req.headers['x-telegram-bot-api-secret-token'] || '';
+    if (incoming !== webhookSecret) return res.status(401).end('Unauthorized');
+  }
+
   try {
     await bot.handleUpdate(req.body);
     res.status(200).end();

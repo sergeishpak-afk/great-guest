@@ -73,7 +73,7 @@ async function insertChunked(rows) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://great-guest.vercel.app');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 

@@ -9,6 +9,28 @@ const { createClient } = require('@supabase/supabase-js');
 const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const APP_URL = (process.env.APP_URL || 'https://great-guest.vercel.app').replace(/\/$/, '');
+const ORIGIN  = 'https://great-guest.vercel.app';
+
+// Broadcast rate limit: 1 per owner per venue per 5 minutes
+const BROADCAST_RL = new Map();
+function checkBroadcastRL(key) {
+  const now = Date.now();
+  const last = BROADCAST_RL.get(key) || 0;
+  if (now - last < 5 * 60 * 1000) return false;
+  BROADCAST_RL.set(key, now);
+  return true;
+}
+
+// Merge rate limit: max 5 merges per organizer per hour
+const MERGE_RL = new Map();
+function checkMergeRL(ownerId) {
+  const now = Date.now();
+  const e = MERGE_RL.get(ownerId) || { count: 0, reset: now + 3600000 };
+  if (now > e.reset) { e.count = 0; e.reset = now + 3600000; }
+  e.count++;
+  MERGE_RL.set(ownerId, e);
+  return e.count > 5;
+}
 
 const EV_ICONS = { 'Вечеринка':'🎉','Корпоратив':'💼','Конференция':'🎓','Спорт':'🏅','Гала-ужин':'🍷','Концерт':'🎵','Другое':'✨' };
 
@@ -173,7 +195,7 @@ function validateInitData(initData, token) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -228,6 +250,9 @@ module.exports = async (req, res) => {
 
     // ── action: merge_guest — перенос истории на новый аккаунт ───────────────
     if (action === 'merge_guest') {
+      if (checkMergeRL(ownerId))
+        return res.status(429).json({ error: 'too_many_requests', message: 'Максимум 5 слияний в час' });
+
       const oldId = String(req.body.old_telegram_id || '').trim();
       const newId = String(req.body.new_telegram_id || '').trim();
       if (!/^\d+$/.test(oldId) || !/^\d+$/.test(newId))
@@ -282,7 +307,7 @@ module.exports = async (req, res) => {
       if (req.body.invite_message !== undefined) updates.invite_message = String(req.body.invite_message || '').trim().slice(0, 1000);
 
       const { error: upErr } = await db.from('restaurants').update(updates).eq('id', venueId);
-      if (upErr) return res.status(500).json({ error: 'Update failed', detail: upErr.message });
+      if (upErr) return res.status(500).json({ error: 'Update failed' });
       return res.status(200).json({ success: true, venue: { ...venue, ...updates } });
     }
 
@@ -299,6 +324,9 @@ module.exports = async (req, res) => {
         && ownerSub.subscription_expires_at
         && new Date(ownerSub.subscription_expires_at) > new Date();
       if (!subActive) return res.status(403).json({ error: 'subscription_required', message: 'Рассылки доступны только на активном тарифе.' });
+
+      if (!checkBroadcastRL(`${ownerId}:${venueId}`))
+        return res.status(429).json({ error: 'too_many_requests', message: 'Подождите 5 минут между рассылками' });
 
       const levelFilter = String(filter || 'all');
       const msgText     = String(customMessage || '').trim().slice(0, 1000);
@@ -369,7 +397,7 @@ module.exports = async (req, res) => {
       .update({ invite_message: msg })
       .eq('id', venueId);
 
-    if (updErr) return res.status(500).json({ error: 'Update failed', detail: updErr.message });
+    if (updErr) return res.status(500).json({ error: 'Update failed' });
     return res.status(200).json({ success: true, invite_message: msg });
   }
 

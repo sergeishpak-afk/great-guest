@@ -49,7 +49,7 @@ function validateInitData(initData, token) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://great-guest.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -175,11 +175,11 @@ module.exports = async (req, res) => {
     const storagePath = `${ownerId}/${venueId}_${Date.now()}.${ext}`;
     const { error: upErr } = await db.storage
       .from(BUCKET).upload(storagePath, buf, { contentType: mimeType || 'image/jpeg', upsert: false });
-    if (upErr) return res.status(500).json({ error: 'Upload failed', detail: upErr.message });
+    if (upErr) return res.status(500).json({ error: 'Upload failed' });
 
     const { data: { publicUrl } } = db.storage.from(BUCKET).getPublicUrl(storagePath);
     const { error: dbErr } = await db.from('restaurants').update({ cover_image_url: publicUrl }).eq('id', venueId);
-    if (dbErr) return res.status(500).json({ error: 'DB update failed', detail: dbErr.message });
+    if (dbErr) return res.status(500).json({ error: 'DB update failed' });
     return res.status(200).json({ success: true, url: publicUrl });
   }
 
@@ -223,7 +223,7 @@ module.exports = async (req, res) => {
     );
     if (!tgRes.ok) {
       const err = await tgRes.json().catch(() => ({}));
-      return res.status(500).json({ error: 'Telegram send failed', detail: err.description });
+      return res.status(500).json({ error: 'Telegram send failed' });
     }
     return res.status(200).json({ success: true, count: (contacts || []).length });
   }
@@ -274,7 +274,7 @@ module.exports = async (req, res) => {
     const avatarPath = `${ownerId}/avatar_${Date.now()}.${avatarExt}`;
     const { error: avErr } = await db.storage
       .from(AVATAR_BUCKET).upload(avatarPath, avatarBuf, { contentType: avatarMime || 'image/jpeg', upsert: false });
-    if (avErr) return res.status(500).json({ error: 'Upload failed', detail: avErr.message });
+    if (avErr) return res.status(500).json({ error: 'Upload failed' });
 
     const { data: { publicUrl: avatarUrl } } = db.storage.from(AVATAR_BUCKET).getPublicUrl(avatarPath);
     await db.from('owner_subscriptions').update({ profile_photo_url: avatarUrl }).eq('telegram_id', ownerId);
@@ -298,7 +298,7 @@ module.exports = async (req, res) => {
 
   if (venuesError) {
     console.error('restaurants select error:', venuesError);
-    return res.status(500).json({ error: 'DB error', detail: venuesError.message });
+    return res.status(500).json({ error: 'DB error' });
   }
 
   const venuesList = venues || [];
@@ -326,7 +326,7 @@ module.exports = async (req, res) => {
 
     if (insertError) {
       console.error('owner_subscriptions insert error:', insertError);
-      return res.status(500).json({ error: 'DB error', detail: insertError.message });
+      return res.status(500).json({ error: 'DB error' });
     }
     ownerSub = newSub;
   }

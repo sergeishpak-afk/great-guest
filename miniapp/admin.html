@@ -2999,6 +2999,15 @@ async function sendOffer() {
     created_at: new Date().toISOString(),
   });
 
+  const histPane = document.getElementById('tab-history');
+  if (histPane && currentVenue) {
+    const venueOffers = allOffers.filter(o => o.restaurant_id === currentVenue.id);
+    const venueGuestList = venueGuestIds[currentVenue.id]
+      ? globalGuests.filter(g => venueGuestIds[currentVenue.id].includes(String(g.telegram_id)))
+      : globalGuests;
+    histPane.innerHTML = renderHistoryPane(venueOffers, venueGuestList, currentVenue.venue_type === 'event');
+  }
+
   // Update all buttons for this guest (may appear in multiple places)
   document.querySelectorAll(`.action-btn[data-guest-id="${currentGuestId}"]`).forEach(sentBtn => {
     sentBtn.textContent = '✓ Отправлено';

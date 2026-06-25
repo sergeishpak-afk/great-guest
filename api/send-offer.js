@@ -9,6 +9,9 @@ const crypto = require('crypto');
 const { Telegraf } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 
+const ORIGIN  = 'https://great-guest.vercel.app';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 // In-memory rate limit: max 20 send-offer requests per owner per minute
 const RL_MAP = new Map();
 function checkRateLimit(ownerId) {
@@ -107,13 +110,15 @@ function generateOffers(guest, restaurant) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', ORIGIN);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const { initData, guestTelegramId, offerText, restaurantId } = req.body || {};
   if (!initData || !guestTelegramId)
     return res.status(400).json({ error: 'initData and guestTelegramId required' });
+  if (restaurantId && !UUID_RE.test(restaurantId))
+    return res.status(400).json({ error: 'invalid restaurantId' });
   if (!validateInitData(initData, process.env.BOT_TOKEN))
     return res.status(401).json({ error: 'Invalid signature' });
 
@@ -208,7 +213,7 @@ module.exports = async (req, res) => {
   try {
     await bot.telegram.sendMessage(guestTelegramId, msg, { parse_mode: 'Markdown' });
   } catch (e) {
-    return res.status(500).json({ error: 'telegram_send_failed', detail: e.message });
+    return res.status(500).json({ error: 'telegram_send_failed' });
   }
 
   await db.from('offers').insert({

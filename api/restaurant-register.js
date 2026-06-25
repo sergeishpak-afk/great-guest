@@ -47,7 +47,7 @@ function validateInitData(initData, token) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://great-guest.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -75,7 +75,7 @@ module.exports = async (req, res) => {
     await db.from('visits').delete().eq('restaurant_id', venueId);
     await db.from('pending_visits').delete().eq('restaurant_id', venueId);
     const { error: delErr } = await db.from('restaurants').delete().eq('id', venueId);
-    if (delErr) return res.status(500).json({ error: 'Delete failed', detail: delErr.message });
+    if (delErr) return res.status(500).json({ error: 'Delete failed' });
     return res.status(200).json({ success: true, deleted: venue.name });
   }
 
@@ -121,12 +121,12 @@ module.exports = async (req, res) => {
 
     if (insertError) {
       console.error('owner_subscriptions insert error:', insertError);
-      return res.status(500).json({ error: 'DB error', detail: insertError.message });
+      return res.status(500).json({ error: 'DB error' });
     }
     ownerSub = newSub;
   } else if (subError) {
     console.error('owner_subscriptions select error:', subError);
-    return res.status(500).json({ error: 'DB error', detail: subError.message });
+    return res.status(500).json({ error: 'DB error' });
   }
 
   // 2. Check if subscription is active
@@ -150,7 +150,7 @@ module.exports = async (req, res) => {
 
   if (countError) {
     console.error('restaurants count error:', countError);
-    return res.status(500).json({ error: 'DB error', detail: countError.message });
+    return res.status(500).json({ error: 'DB error' });
   }
 
   const currentCount = venueCount || 0;
@@ -194,7 +194,7 @@ module.exports = async (req, res) => {
 
   if (insertError) {
     console.error('restaurants insert error:', insertError);
-    return res.status(500).json({ error: 'DB error', detail: insertError.message });
+    return res.status(500).json({ error: 'DB error' });
   }
 
   // Credit referrer +30 days when a brand new organizer completes first registration

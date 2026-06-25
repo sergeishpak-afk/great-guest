@@ -2,9 +2,23 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ORIGIN  = 'https://great-guest.vercel.app';
+
+const RL_MAP = new Map();
+function checkRL(ip) {
+  const now = Date.now();
+  const e = RL_MAP.get(ip) || { count: 0, reset: now + 60000 };
+  if (now > e.reset) { e.count = 0; e.reset = now + 60000; }
+  e.count++;
+  RL_MAP.set(ip, e);
+  if (RL_MAP.size > 5000) { for (const [k, v] of RL_MAP) if (v.reset < now) RL_MAP.delete(k); }
+  return e.count > 30;
+}
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', ORIGIN);
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+  if (checkRL(ip)) return res.status(429).json({ error: 'Too many requests' });
   const token = req.query.token || req.url.split('/').pop();
 
   if (!token || !UUID_RE.test(token))
