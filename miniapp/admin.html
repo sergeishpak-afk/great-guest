@@ -113,9 +113,9 @@
       display:flex;align-items:center;justify-content:center;cursor:pointer;
       font-size:20px;color:var(--gold)}
 
-    .venues-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:20px}
+    .venues-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:20px}
     .venue-card{background:var(--card);border:1px solid var(--border);border-radius:18px;
-      padding:18px 14px;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;text-align:center}
+      padding:18px 14px;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;text-align:left}
     .venue-card:hover{border-color:var(--gold-border);transform:translateY(-3px);
       box-shadow:0 8px 24px rgba(0,0,0,0.3)}
     .venue-card:active{transform:scale(.98)}
@@ -1126,24 +1126,20 @@ function renderNetwork() {
       content += `
         <div class="venue-card" onclick="openVenueById('${v.id}')">
           ${coverHtml}
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-            <div>
-              <div class="venue-name">${esc(v.name)}</div>
-              <div class="venue-loc">${esc(location)}</div>
-            </div>
-            <button onclick="event.stopPropagation();openVenueById('${v.id}')"
-              style="flex-shrink:0;background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.25);
-                border-radius:8px;padding:5px 10px;color:var(--gold);font-size:12px;font-weight:600;
-                cursor:pointer;white-space:nowrap;font-family:inherit">
-              ⚙️ Управлять
-            </button>
-          </div>
+          <div class="venue-name">${esc(v.name)}</div>
+          <div class="venue-loc">${esc(location)}</div>
           <div class="venue-stats">
             <div class="venue-stat"><span class="venue-stat-n">${v.stats.visits30d}</span><span class="venue-stat-l">30д</span></div>
             <div class="venue-stat"><span class="venue-stat-n">${v.stats.totalVisits}</span><span class="venue-stat-l">всего</span></div>
             <div class="venue-stat"><span class="venue-stat-n">${v.stats.rsvpCount}</span><span class="venue-stat-l">RSVP</span></div>
           </div>
           ${rsvpBtn}
+          <button onclick="event.stopPropagation();openVenueById('${v.id}')"
+            style="width:100%;margin-top:12px;background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.25);
+              border-radius:10px;padding:9px 14px;color:var(--gold);font-size:13px;font-weight:600;
+              cursor:pointer;font-family:inherit;text-align:center">
+            ⚙️ Управлять
+          </button>
         </div>`;
     });
     content += `</div>`;
