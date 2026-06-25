@@ -1283,7 +1283,7 @@ function ngbRender() {
         <div class="ngb-visits">${g.visit_count||0}</div>
         <span class="override-wrap">
           <div class="ngb-visits-l">${lvl.name||'—'}${g.status_override?' ✨':''}</div>
-          <button class="override-btn" onclick="toggleOverrideDropdown(event,'${tid}')" title="Изменить статус" aria-label="Изменить статус">✏️</button>
+          <button class="override-btn" onclick="toggleOverrideDropdown(event)" title="Изменить статус" aria-label="Изменить статус">✏️</button>
           <div class="override-dropdown" id="ovrd-${tid}"><button class="override-opt${!g.status_override?' active':''}" onclick="setStatusOverride('${tid}',null)">🔄 Авто (${autoLvlName})</button><button class="override-opt${g.status_override==='Bronze'?' active':''}" onclick="setStatusOverride('${tid}','Bronze')">🥉 Bronze</button><button class="override-opt${g.status_override==='Silver'?' active':''}" onclick="setStatusOverride('${tid}','Silver')">🥈 Silver</button><button class="override-opt${g.status_override==='Gold'?' active':''}" onclick="setStatusOverride('${tid}','Gold')">🥇 Gold</button><button class="override-opt${g.status_override==='Platinum'?' active':''}" onclick="setStatusOverride('${tid}','Platinum')">💎 Platinum</button><button class="override-opt${g.status_override==='VIP'?' active':''}" onclick="setStatusOverride('${tid}','VIP')">👑 VIP</button></div>
         </span>
       </div>
@@ -1948,7 +1948,7 @@ function renderGuestCards(guests, isEvent) {
     const autoLvlName = getAutoLevel(visits)?.name || '—';
     const tid = String(g.telegram_id);
     const badgeHtml = mode === 'loyalty'
-      ? `<span class="override-wrap"><span class="level-badge lvl-${lvl.name}${g.status_override?' lvl-manual':''}">${lvl.emoji} ${lvl.name}${g.status_override?' ✨':''}</span><button class="override-btn" onclick="toggleOverrideDropdown(event,'${tid}')" title="Изменить статус" aria-label="Изменить статус">✏️</button><div class="override-dropdown" id="ovrd-${tid}"><button class="override-opt${!g.status_override?' active':''}" onclick="setStatusOverride('${tid}',null)">🔄 Авто (${autoLvlName})</button><button class="override-opt${g.status_override==='Bronze'?' active':''}" onclick="setStatusOverride('${tid}','Bronze')">🥉 Bronze</button><button class="override-opt${g.status_override==='Silver'?' active':''}" onclick="setStatusOverride('${tid}','Silver')">🥈 Silver</button><button class="override-opt${g.status_override==='Gold'?' active':''}" onclick="setStatusOverride('${tid}','Gold')">🥇 Gold</button><button class="override-opt${g.status_override==='Platinum'?' active':''}" onclick="setStatusOverride('${tid}','Platinum')">💎 Platinum</button><button class="override-opt${g.status_override==='VIP'?' active':''}" onclick="setStatusOverride('${tid}','VIP')">👑 VIP</button></div></span>`
+      ? `<span class="override-wrap"><span class="level-badge lvl-${lvl.name}${g.status_override?' lvl-manual':''}">${lvl.emoji} ${lvl.name}${g.status_override?' ✨':''}</span><button class="override-btn" onclick="toggleOverrideDropdown(event)" title="Изменить статус" aria-label="Изменить статус">✏️</button><div class="override-dropdown" id="ovrd-${tid}"><button class="override-opt${!g.status_override?' active':''}" onclick="setStatusOverride('${tid}',null)">🔄 Авто (${autoLvlName})</button><button class="override-opt${g.status_override==='Bronze'?' active':''}" onclick="setStatusOverride('${tid}','Bronze')">🥉 Bronze</button><button class="override-opt${g.status_override==='Silver'?' active':''}" onclick="setStatusOverride('${tid}','Silver')">🥈 Silver</button><button class="override-opt${g.status_override==='Gold'?' active':''}" onclick="setStatusOverride('${tid}','Gold')">🥇 Gold</button><button class="override-opt${g.status_override==='Platinum'?' active':''}" onclick="setStatusOverride('${tid}','Platinum')">💎 Platinum</button><button class="override-opt${g.status_override==='VIP'?' active':''}" onclick="setStatusOverride('${tid}','VIP')">👑 VIP</button></div></span>`
       : mode === 'guestlist'
       ? `<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;
           background:${visits>0?'rgba(74,222,128,0.12)':'rgba(255,255,255,0.06)'};
@@ -2918,10 +2918,10 @@ function setFilter(f) {
 }
 
 // ─ Status override ───────────────────────────────────────────────────────────
-function toggleOverrideDropdown(event, guestId) {
+function toggleOverrideDropdown(event) {
   event.stopPropagation();
-  const dd = document.getElementById('ovrd-' + guestId);
-  if (!dd) return;
+  const dd = event.currentTarget.nextElementSibling;
+  if (!dd || !dd.classList.contains('override-dropdown')) return;
   document.querySelectorAll('.override-dropdown.open').forEach(el => { if (el !== dd) el.classList.remove('open'); });
   dd.classList.toggle('open');
 }
