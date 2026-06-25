@@ -2506,7 +2506,8 @@ async function saveInviteMessage() {
 function confirmDeleteVenue() {
   const v = currentVenue;
   if (!v) return;
-  const ok = confirm(`Удалить событие «${v.name}»?\n\nВсе данные гостей и статистика будут удалены безвозвратно.`);
+  const label = v.venue_type === 'event' ? 'событие' : 'заведение';
+  const ok = confirm(`Удалить ${label} «${v.name}»?\n\nБудет удалено: визиты, офферы и RSVP этого ${label === 'событие' ? 'события' : 'заведения'}.\n\n✅ Гости остаются в вашей базе — они накапливаются по всем событиям и не теряются.`);
   if (ok) deleteVenue(v.id);
 }
 
