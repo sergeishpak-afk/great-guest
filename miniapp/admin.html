@@ -1267,11 +1267,12 @@ function ngbRender() {
     return;
   }
 
-  const LEVELS = { Bronze:'🥉', Silver:'🥈', Gold:'🥇', Platinum:'💎' };
   listEl.innerHTML = list.map(g => {
     const lvl  = guestLevel(g);
     const name = [g.first_name, g.last_name].filter(Boolean).join(' ') || 'Гость';
     const sub  = [g.username ? '@'+g.username : '', g.last_visit_at ? new Date(g.last_visit_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) : ''].filter(Boolean).join(' · ');
+    const tid  = String(g.telegram_id);
+    const autoLvlName = getAutoLevel(g.visit_count||0)?.name || '—';
     return `<div class="ngb-row">
       <div class="ngb-avatar">${lvl.emoji}</div>
       <div style="flex:1;min-width:0">
@@ -1280,9 +1281,12 @@ function ngbRender() {
       </div>
       <div class="ngb-right">
         <div class="ngb-visits">${g.visit_count||0}</div>
-        <div class="ngb-visits-l">${lvl.name}</div>
+        <span class="override-wrap">
+          <div class="ngb-visits-l">${lvl.name||'—'}${g.status_override?' ✨':''}</div>
+          <button class="override-btn" onclick="toggleOverrideDropdown(event,'${tid}')" title="Изменить статус" aria-label="Изменить статус">✏️</button>
+          <div class="override-dropdown" id="ovrd-${tid}"><button class="override-opt${!g.status_override?' active':''}" onclick="setStatusOverride('${tid}',null)">🔄 Авто (${autoLvlName})</button><button class="override-opt${g.status_override==='Bronze'?' active':''}" onclick="setStatusOverride('${tid}','Bronze')">🥉 Bronze</button><button class="override-opt${g.status_override==='Silver'?' active':''}" onclick="setStatusOverride('${tid}','Silver')">🥈 Silver</button><button class="override-opt${g.status_override==='Gold'?' active':''}" onclick="setStatusOverride('${tid}','Gold')">🥇 Gold</button><button class="override-opt${g.status_override==='Platinum'?' active':''}" onclick="setStatusOverride('${tid}','Platinum')">💎 Platinum</button><button class="override-opt${g.status_override==='VIP'?' active':''}" onclick="setStatusOverride('${tid}','VIP')">👑 VIP</button></div>
+        </span>
       </div>
-      <button class="ngb-merge-btn" onclick="openMergeModal('${g.telegram_id}','${esc(name)}')" title="Перенести аккаунт">🔄</button>
     </div>`;
   }).join('');
 }
@@ -2934,8 +2938,7 @@ async function setStatusOverride(guestId, override) {
   function rerender() {
     const listEl = document.getElementById('guest-list');
     if (listEl) listEl.innerHTML = renderGuestCards(globalGuests, isEvent);
-    const ngbEl = document.getElementById('ngb-guest-list');
-    if (ngbEl) ngbEl.innerHTML = renderGuestCards(globalGuests, isEvent);
+    ngbRender();
   }
   rerender();
 
