@@ -22,7 +22,7 @@ fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`, {
 })
   .then(r => r.json())
   .then(d => {
-    if (d.ok) { console.log(`[webhook] ✅ Registered: ${webhookUrl}`); }
-    else      { console.error(`[webhook] ❌ Failed: ${d.description}`); process.exit(1); }
+    if (d.ok) console.log(`[webhook] ✅ Registered: ${webhookUrl}`);
+    else      console.warn(`[webhook] ⚠️ Failed (non-fatal): ${d.description}`);
   })
-  .catch(e => { console.error('[webhook] Error:', e.message); process.exit(1); });
+  .catch(e => console.warn(`[webhook] ⚠️ Error (non-fatal): ${e.message}`));
