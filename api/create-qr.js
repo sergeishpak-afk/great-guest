@@ -52,15 +52,28 @@ module.exports = async (req, res) => {
 
     if (!existing) return res.status(403).json({ error: 'consent_required' });
 
-    const { data: guest, error } = await supabase
-      .from('guests')
-      .update({ first_name: tgUser.first_name || '', last_name: tgUser.last_name || '', username: tgUser.username || '' })
-      .eq('telegram_id', telegramId)
-      .select()
-      .single();
+    const [{ data: guest, error }, { data: overrides }] = await Promise.all([
+      supabase
+        .from('guests')
+        .update({ first_name: tgUser.first_name || '', last_name: tgUser.last_name || '', username: tgUser.username || '' })
+        .eq('telegram_id', telegramId)
+        .select()
+        .single(),
+      supabase
+        .from('organizer_contacts')
+        .select('status_override')
+        .eq('guest_id', telegramId)
+        .not('status_override', 'is', null),
+    ]);
 
     if (error) return res.status(500).json({ error: 'DB error' });
-    return res.status(200).json({ guest });
+
+    const RANK = { VIP: 5, Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
+    const bestOverride = (overrides || [])
+      .map(r => r.status_override).filter(Boolean)
+      .sort((a, b) => (RANK[b] || 0) - (RANK[a] || 0))[0] || null;
+
+    return res.status(200).json({ guest: { ...guest, status_override: bestOverride } });
   }
 
   // ── Default: create QR token ──────────────────────────────────────────────────

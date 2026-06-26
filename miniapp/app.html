@@ -242,14 +242,20 @@ const db  = supabase.createClient(SUPA_URL, SUPA_KEY);
 const tg  = window.Telegram && window.Telegram.WebApp;
 
 const LEVELS = [
-  { name:'Bronze',   emoji:'🥉', min:0,  max:4,        reward:'Добро пожаловать в программу' },
-  { name:'Silver',   emoji:'🥈', min:5,  max:14,       reward:'Скидка 5% + приоритетная бронь' },
-  { name:'Gold',     emoji:'🥇', min:15, max:29,       reward:'Скидка 10% + комплимент от шефа' },
-  { name:'Platinum', emoji:'💎', min:30, max:Infinity, reward:'Скидка 15% + VIP-обслуживание' },
+  { name:'Bronze',   emoji:'🥉', min:1,  reward:'Добро пожаловать в программу' },
+  { name:'Silver',   emoji:'🥈', min:5,  reward:'Скидка 5% + приоритетная бронь' },
+  { name:'Gold',     emoji:'🥇', min:15, reward:'Скидка 10% + комплимент от шефа' },
+  { name:'Platinum', emoji:'💎', min:30, reward:'Скидка 15% + VIP-обслуживание' },
 ];
+const VIP_LEVEL = { name:'VIP', emoji:'👑', min:0, reward:'Особый гость' };
+const LEVEL_MAP = { Bronze:LEVELS[0], Silver:LEVELS[1], Gold:LEVELS[2], Platinum:LEVELS[3], VIP:VIP_LEVEL };
 
-function getLevel(n) { return [...LEVELS].reverse().find(function(l){ return n >= l.min; }) || LEVELS[0]; }
+function getLevel(n) { return [...LEVELS].reverse().find(function(l){ return n >= l.min; }) || null; }
 function getNext(n)  { return LEVELS.find(function(l){ return l.min > n; }); }
+function getEffectiveLvl(n, override) {
+  if (override && LEVEL_MAP[override]) return LEVEL_MAP[override];
+  return getLevel(n);
+}
 function decl(n) {
   if (n % 10 === 1 && n % 100 !== 11) return 'визит';
   if ([2,3,4].indexOf(n % 10) > -1 && [12,13,14].indexOf(n % 100) === -1) return 'визита';
@@ -314,7 +320,7 @@ async function init() {
 
   var g = data.guest;
   document.getElementById('greet').textContent = 'Привет, ' + g.first_name + '! 👋';
-  renderStatus(g.visit_count);
+  renderStatus(g.visit_count, g.status_override || null);
   renderCabinet(g);
 
   await Promise.all([ renderHistory(g.telegram_id), renderOffers(initData), checkOwner(g.telegram_id) ]);
@@ -325,8 +331,8 @@ async function init() {
 }
 
 // ── Status ────────────────────────────────────────────────────
-function renderStatus(count) {
-  if (count === 0) {
+function renderStatus(count, override) {
+  if (count === 0 && !override) {
     document.getElementById('s-emoji').textContent   = '🎉';
     document.getElementById('s-name').textContent    = 'Добро пожаловать!';
     document.getElementById('s-visits').textContent  = 'Получите QR и отметьтесь — первый визит откроет карту лояльности';
@@ -334,10 +340,10 @@ function renderStatus(count) {
     document.getElementById('prog-wrap').style.display = 'none';
     return;
   }
-  var lvl  = getLevel(count);
-  var next = getNext(count);
+  var lvl  = getEffectiveLvl(count, override);
+  var next = override ? null : getNext(count);
   document.getElementById('s-emoji').textContent    = lvl.emoji;
-  document.getElementById('s-name').textContent     = lvl.name;
+  document.getElementById('s-name').textContent     = lvl.name + (override ? ' ✨' : '');
   document.getElementById('s-visits').textContent   = count + ' ' + decl(count);
   document.getElementById('s-reward').textContent   = lvl.reward;
   document.getElementById('s-reward').style.display  = 'inline-block';
@@ -352,24 +358,25 @@ function renderStatus(count) {
 
 // ── Cabinet ───────────────────────────────────────────────────
 function renderCabinet(g) {
-  var count = g.visit_count;
-  var lvl   = getLevel(count);
-  var next  = getNext(count);
-  var av    = document.getElementById('cab-avatar');
+  var count    = g.visit_count;
+  var override = g.status_override || null;
+  var lvl      = getEffectiveLvl(count, override);
+  var next     = override ? null : getNext(count);
+  var av       = document.getElementById('cab-avatar');
   if (g.photo_url) { av.innerHTML = '<img src="' + esc(g.photo_url) + '" alt="" />'; }
   else { av.textContent = (g.first_name || '?')[0].toUpperCase(); }
   document.getElementById('cab-name').textContent  = [g.first_name, g.last_name].filter(Boolean).join(' ');
   document.getElementById('cab-since').textContent = g.created_at
     ? 'Участник с ' + new Date(g.created_at).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})
     : 'Участник клуба';
-  document.getElementById('cab-badge').textContent  = lvl.emoji + ' ' + lvl.name;
+  document.getElementById('cab-badge').textContent  = lvl.emoji + ' ' + lvl.name + (override ? ' ✨' : '');
   document.getElementById('cab-total').textContent  = count;
   if (next) {
     document.getElementById('cab-next').textContent     = next.min - count;
     document.getElementById('cab-next-lbl').textContent = 'до ' + next.emoji + ' ' + next.name;
   } else {
-    document.getElementById('cab-next').textContent     = '💎';
-    document.getElementById('cab-next-lbl').textContent = 'максимальный уровень';
+    document.getElementById('cab-next').textContent     = override ? '✨' : '💎';
+    document.getElementById('cab-next-lbl').textContent = override ? 'статус присвоен организатором' : 'максимальный уровень';
   }
 }
 

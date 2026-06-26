@@ -3,6 +3,8 @@ const { Telegraf } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 const { formatStatus } = require('../src/status');
 
+const OVERRIDE_RANK = { VIP: 5, Platinum: 4, Gold: 3, Silver: 2, Bronze: 1 };
+
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -113,6 +115,18 @@ module.exports = async (req, res) => {
 
   await supabase.from('visits').insert({ telegram_id: pending.telegram_id, restaurant_id: effectiveRestaurantId || null, visit_token: token });
 
+  // Fetch status_override for this organizer's guest (for correct status in notification)
+  let statusOverride = null;
+  if (effectiveRestaurantId && restResult.data?.owner_telegram_id) {
+    const { data: contact } = await supabase
+      .from('organizer_contacts')
+      .select('status_override')
+      .eq('organizer_id', restResult.data.owner_telegram_id)
+      .eq('guest_id', pending.telegram_id)
+      .maybeSingle();
+    statusOverride = contact?.status_override || null;
+  }
+
   // Update persistent organizer contact base (fire-and-forget)
   if (effectiveRestaurantId && restResult.data?.owner_telegram_id) {
     supabase.rpc('upsert_organizer_contact', {
@@ -126,7 +140,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    await bot.telegram.sendMessage(pending.telegram_id, `✅ *Визит подтверждён!*\n\n📍 ${restaurantName}\n\n${formatStatus(newCount)}`, { parse_mode: 'Markdown' });
+    await bot.telegram.sendMessage(pending.telegram_id, `✅ *Визит подтверждён!*\n\n📍 ${restaurantName}\n\n${formatStatus(newCount, statusOverride)}`, { parse_mode: 'Markdown' });
   } catch (e) { console.error('Telegram notify error:', e.message); }
 
   return res.status(200).json({ success: true, guest: { name: `${guest.first_name} ${guest.last_name}`.trim(), visits: newCount } });
