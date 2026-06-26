@@ -1960,8 +1960,11 @@ function renderGuestCards(guests, isEvent) {
       <div class="guest-card">
         <div class="guest-left">
           <div class="guest-avatar">${initial}</div>
-          <div>
-            <div class="guest-name">${esc(fullName)} ${badgeHtml}</div>
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:4px;min-width:0">
+              <div class="guest-name" style="min-width:0">${esc(fullName)}</div>
+              ${badgeHtml}
+            </div>
             <div class="guest-meta">${metaParts || (mode==='guestlist'&&visits===0?'Ещё не пришёл':'')}</div>
           </div>
         </div>
