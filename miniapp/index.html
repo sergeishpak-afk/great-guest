@@ -1185,8 +1185,8 @@
     }
     #pricing .sec-hdr { margin-bottom:56px; }
     .pr-grid {
-      display:grid; grid-template-columns:repeat(4,1fr);
-      gap:20px; max-width:1100px; margin:0 auto;
+      display:grid; grid-template-columns:repeat(5,1fr);
+      gap:20px; max-width:1300px; margin:0 auto;
       text-align:left;
     }
     .pr-card {
@@ -1250,6 +1250,9 @@
       box-shadow:0 4px 14px rgba(201,169,110,0.25);
     }
     .pr-cta-gold:hover { background:var(--gold2); }
+    @media(max-width:1100px) {
+      .pr-grid { grid-template-columns:repeat(3,1fr); }
+    }
     @media(max-width:900px) {
       #pricing { padding:72px 20px; }
       .pr-grid { grid-template-columns:repeat(2,1fr); }
@@ -1702,6 +1705,22 @@
 
     <div class="pr-card pr-pop">
       <div class="pr-badge">Популярный</div>
+      <div class="pr-name">Событие</div>
+      <div class="pr-price">490<sup>₽</sup></div>
+      <div class="pr-period">разово · 30 дней</div>
+      <hr class="pr-divider"/>
+      <ul class="pr-features">
+        <li>1 мероприятие</li>
+        <li>QR-чек-ин</li>
+        <li>База участников</li>
+        <li>Панель управления</li>
+        <li>Рассылки участникам</li>
+        <li class="pr-miss">Аналитика</li>
+      </ul>
+      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-gold">Начать за 490₽</a>
+    </div>
+
+    <div class="pr-card">
       <div class="pr-name">Базовый</div>
       <div class="pr-price">2 990<sup>₽</sup></div>
       <div class="pr-period">в месяц</div>
@@ -1714,7 +1733,7 @@
         <li>Рассылки участникам</li>
         <li>Базовая аналитика</li>
       </ul>
-      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-gold">Начать за 2 990₽</a>
+      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-outline">Выбрать тариф</a>
     </div>
 
     <div class="pr-card">

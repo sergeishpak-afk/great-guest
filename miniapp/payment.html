@@ -234,8 +234,9 @@ const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
 const PLANS = {
+  event:   { label: 'Событие',  emoji: '🎟', price: 490,  max_venues: 1,   features: ['1 мероприятие', 'QR-чек-ин', 'База участников', 'Панель управления'], popular: true, oneTime: true },
   basic:   { label: 'Базовый',  emoji: '🔑', price: 2990, max_venues: 1,   features: ['1 заведение', 'До 1 000 гостей', 'Сканер QR', 'База гостей'] },
-  network: { label: 'Сеть',     emoji: '🏢', price: 7990, max_venues: 5,   features: ['До 5 заведений', 'Неограниченно гостей', 'Рассылки', 'RSVP-листы'], popular: true },
+  network: { label: 'Сеть',     emoji: '🏢', price: 7990, max_venues: 5,   features: ['До 5 заведений', 'Неограниченно гостей', 'Рассылки', 'RSVP-листы'] },
   empire:  { label: 'Империя',  emoji: '👑', price:19990, max_venues: 999, features: ['Неограниченно заведений', 'Белый лейбл', 'Приоритет поддержки', 'Всё из Сети'] },
 };
 const DURATIONS = [
@@ -245,7 +246,7 @@ const DURATIONS = [
   { months: 12, label: '12 мес', discount: 0.20 },
 ];
 
-let selectedPlan    = 'network';
+let selectedPlan    = 'event';
 let selectedMonths  = 1;
 
 function buildDurTabs() {
@@ -269,10 +270,10 @@ function buildPlanList() {
   const c   = document.getElementById('plan-list');
   c.innerHTML = '';
   Object.entries(PLANS).forEach(([key, p]) => {
-    const fullPrice    = p.price * selectedMonths;
-    const finalPrice   = calcPrice(p.price, selectedMonths, dur.discount);
-    const monthlyPrice = Math.round(finalPrice / selectedMonths);
     const isActive     = key === selectedPlan;
+    const finalPrice   = p.oneTime ? p.price : calcPrice(p.price, selectedMonths, dur.discount);
+    const fullPrice    = p.oneTime ? p.price : p.price * selectedMonths;
+    const priceLabel   = p.oneTime ? 'разово · 30 дней' : (selectedMonths === 1 ? 'мес' : `${selectedMonths} мес`);
 
     const card = document.createElement('div');
     card.className = 'plan-card' + (isActive ? ' active' : '');
@@ -285,10 +286,10 @@ function buildPlanList() {
       </div>
       <div class="plan-price">
         ${finalPrice.toLocaleString('ru-RU')} ₽
-        <span>/ ${selectedMonths === 1 ? 'мес' : `${selectedMonths} мес`}</span>
+        <span>/ ${priceLabel}</span>
       </div>
       <div class="plan-old-price">
-        ${dur.discount ? `${fullPrice.toLocaleString('ru-RU')} ₽ без скидки` : '&nbsp;'}
+        ${!p.oneTime && dur.discount ? `${fullPrice.toLocaleString('ru-RU')} ₽ без скидки` : '&nbsp;'}
       </div>
       <div class="plan-features">
         ${p.features.map(f => `<div class="feature"><span class="feature-dot">•</span>${f}</div>`).join('')}
@@ -299,11 +300,13 @@ function buildPlanList() {
 }
 
 function buildTotalLine() {
-  const dur  = DURATIONS.find(d => d.months === selectedMonths) || DURATIONS[0];
-  const p    = PLANS[selectedPlan];
-  const total = calcPrice(p.price, selectedMonths, dur.discount);
-  document.getElementById('total-line').innerHTML =
-    `<strong>${p.label}</strong> × ${selectedMonths} мес — <strong>${total.toLocaleString('ru-RU')} ₽</strong>`;
+  const dur   = DURATIONS.find(d => d.months === selectedMonths) || DURATIONS[0];
+  const p     = PLANS[selectedPlan];
+  const total = p.oneTime ? p.price : calcPrice(p.price, selectedMonths, dur.discount);
+  const label = p.oneTime
+    ? `<strong>${p.label}</strong> · 30 дней — <strong>${total.toLocaleString('ru-RU')} ₽</strong>`
+    : `<strong>${p.label}</strong> × ${selectedMonths} мес — <strong>${total.toLocaleString('ru-RU')} ₽</strong>`;
+  document.getElementById('total-line').innerHTML = label;
 }
 
 function build() {
