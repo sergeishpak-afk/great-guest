@@ -973,7 +973,7 @@ const guestLevel = g => getLevel(g.visit_count || 0, g.status_override) || LEVEL
 
 // ─ Plans ─────────────────────────────────────────────────────────────────────
 const UPGRADE_PLANS = [
-  { key:'event',   label:'Событие', max_venues:1,   price:'490 ₽',       badge:'разово' },
+  { key:'event',   label:'Разовый', max_venues:1,   price:'490 ₽',       badge:'разово' },
   { key:'basic',   label:'Базовый', max_venues:1,   price:'2 990 ₽/мес' },
   { key:'network', label:'Сеть',    max_venues:5,   price:'7 990 ₽/мес' },
   { key:'empire',  label:'Империя', max_venues:'∞', price:'19 990 ₽/мес' },
@@ -1062,7 +1062,7 @@ function renderNetwork() {
   const owner  = ownerData;
   const venues = venuesData;
 
-  const planLabel = { trial:'Пробный', event:'Событие', basic:'Базовый', network:'Сеть', empire:'Империя' }[owner.plan] || owner.plan;
+  const planLabel = { trial:'Пробный', event:'Разовый', basic:'Базовый', network:'Сеть', empire:'Империя' }[owner.plan] || owner.plan;
   const badgeClass = owner.subscription_status === 'trial' ? 'net-trial' : owner.is_active ? 'net-active' : 'net-expired';
   const badgeText  = owner.subscription_status === 'trial' ? `⏳ ${owner.days_left} дн.` : owner.is_active ? `✅ Активна` : `⛔ Истекла`;
   const subStatus  = owner.subscription_status === 'trial'
@@ -3299,7 +3299,7 @@ function showSubscriptionModal() {
   const owner = ownerData;
   if (!owner) return;
 
-  const PLAN_LABELS = { trial:'Пробный', event:'Событие', basic:'Базовый', network:'Сеть', empire:'Империя' };
+  const PLAN_LABELS = { trial:'Пробный', event:'Разовый', basic:'Базовый', network:'Сеть', empire:'Империя' };
   const PLAN_PRICES = { trial:'Бесплатно 14 дней', basic:'2 990 ₽/мес', network:'7 990 ₽/мес', empire:'19 990 ₽/мес' };
   const planLabel = PLAN_LABELS[owner.plan] || owner.plan;
   const planPrice = PLAN_PRICES[owner.plan] || '';

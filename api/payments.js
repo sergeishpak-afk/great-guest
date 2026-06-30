@@ -14,7 +14,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const APP_URL = (process.env.APP_URL || 'https://great-guest.vercel.app').replace(/\/$/, '');
 
 const PLANS = {
-  event:   { label: 'Событие',  price: 49000,   max_venues: 1,   oneTime: true  }, // 490 ₽ разово, 30 дней
+  event:   { label: 'Разовый',  price: 49000,   max_venues: 1,   oneTime: true  }, // 490 ₽ разово, 30 дней
   basic:   { label: 'Базовый',  price: 299000,  max_venues: 1   }, // 2 990 ₽ × 100
   network: { label: 'Сеть',     price: 799000,  max_venues: 5   }, // 7 990 ₽ × 100
   empire:  { label: 'Империя',  price: 1999000, max_venues: 999 }, // 19 990 ₽ × 100

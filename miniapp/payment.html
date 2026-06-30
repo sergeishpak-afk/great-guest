@@ -234,7 +234,7 @@ const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
 const PLANS = {
-  event:   { label: 'Событие',  emoji: '🎟', price: 490,  max_venues: 1,   features: ['1 мероприятие', 'QR-чек-ин', 'База участников', 'Панель управления'], popular: true, oneTime: true },
+  event:   { label: 'Разовый',  emoji: '🎟', price: 490,  max_venues: 1,   features: ['1 мероприятие', 'QR-чек-ин', 'База участников', 'Панель управления'], popular: true, oneTime: true },
   basic:   { label: 'Базовый',  emoji: '🔑', price: 2990, max_venues: 1,   features: ['1 заведение', 'До 1 000 гостей', 'Сканер QR', 'База гостей'] },
   network: { label: 'Сеть',     emoji: '🏢', price: 7990, max_venues: 5,   features: ['До 5 заведений', 'Неограниченно гостей', 'Рассылки', 'RSVP-листы'] },
   empire:  { label: 'Империя',  emoji: '👑', price:19990, max_venues: 999, features: ['Неограниченно заведений', 'Белый лейбл', 'Приоритет поддержки', 'Всё из Сети'] },
