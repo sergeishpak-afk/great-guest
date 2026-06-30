@@ -26,10 +26,11 @@ function checkBonusLimit(ownerId) {
 }
 
 const PLANS = {
-  trial:   { label: 'Старт',   max_venues: 1,   price: 0,     price_label: 'Бесплатно 14 дней' },
-  basic:   { label: 'Базовый', max_venues: 1,   price: 2990,  price_label: '2 990 ₽/мес' },
-  network: { label: 'Сеть',    max_venues: 5,   price: 7990,  price_label: '7 990 ₽/мес' },
-  empire:  { label: 'Империя', max_venues: 999, price: 19990, price_label: '19 990 ₽/мес' },
+  trial:   { label: 'Старт',    max_venues: 1,   price: 0,     price_label: 'Бесплатно 14 дней' },
+  event:   { label: 'Событие',  max_venues: 1,   price: 490,   price_label: '490 ₽ разово'      },
+  basic:   { label: 'Базовый',  max_venues: 1,   price: 2990,  price_label: '2 990 ₽/мес'       },
+  network: { label: 'Сеть',     max_venues: 5,   price: 7990,  price_label: '7 990 ₽/мес'       },
+  empire:  { label: 'Империя',  max_venues: 999, price: 19990, price_label: '19 990 ₽/мес'      },
 };
 
 function validateInitData(initData, token) {

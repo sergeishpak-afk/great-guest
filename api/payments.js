@@ -14,12 +14,13 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const APP_URL = (process.env.APP_URL || 'https://great-guest.vercel.app').replace(/\/$/, '');
 
 const PLANS = {
+  event:   { label: 'Событие',  price: 49000,   max_venues: 1,   oneTime: true  }, // 490 ₽ разово, 30 дней
   basic:   { label: 'Базовый',  price: 299000,  max_venues: 1   }, // 2 990 ₽ × 100
   network: { label: 'Сеть',     price: 799000,  max_venues: 5   }, // 7 990 ₽ × 100
   empire:  { label: 'Империя',  price: 1999000, max_venues: 999 }, // 19 990 ₽ × 100
 };
 
-// Duration discounts
+// Duration discounts (не применяются к разовым тарифам)
 const DISCOUNTS = { 1: 0, 3: 0.10, 6: 0.15, 12: 0.20 };
 
 function validateInitData(initData, token) {
@@ -124,17 +125,20 @@ module.exports = async (req, res) => {
 
   const telegramId = String(tgUser.id);
   const plan       = body.plan;
-  const months     = Math.min(Math.max(parseInt(body.months) || 1, 1), 12);
 
   if (!PLANS[plan]) return res.status(400).json({ error: 'Invalid plan' });
 
-  const discount   = DISCOUNTS[months] || 0;
+  const isOneTime  = !!PLANS[plan].oneTime;
+  const months     = isOneTime ? 1 : Math.min(Math.max(parseInt(body.months) || 1, 1), 12);
+  const discount   = isOneTime ? 0 : (DISCOUNTS[months] || 0);
   const basePrice  = PLANS[plan].price * months;
   const amount     = Math.round(basePrice * (1 - discount));
 
   const ykPayment  = await createYooKassaPayment({
     amount,
-    description: `Great Guest — ${PLANS[plan].label} × ${months} мес.`,
+    description: isOneTime
+      ? `Great Guest — ${PLANS[plan].label} (30 дней)`
+      : `Great Guest — ${PLANS[plan].label} × ${months} мес.`,
     metadata:    { telegram_id: telegramId, plan, months: String(months) },
   });
 
