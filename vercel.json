@@ -5,8 +5,9 @@
   "buildCommand": "node scripts/register-webhook.js",
   "rewrites": [
     { "source": "/api/guest-preview/:token", "destination": "/api/guest-preview?token=:token" },
-    { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/terms",   "destination": "/terms.html" }
+    { "source": "/privacy",   "destination": "/privacy.html" },
+    { "source": "/terms",     "destination": "/terms.html" },
+    { "source": "/agreement", "destination": "/agreement.html" }
   ],
   "headers": [
     {
