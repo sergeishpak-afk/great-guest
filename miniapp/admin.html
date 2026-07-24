@@ -2207,6 +2207,16 @@ function renderEventPane(v) {
           <label>Сообщение для гостей (в ссылке-приглашении)</label>
           <textarea id="ef-msg" maxlength="1000" placeholder="Дресс-код, условия входа, пожелания…">${esc(v.invite_message||'')}</textarea>
         </div>
+        <div class="ef-field" style="padding:14px;background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.2);border-radius:12px">
+          <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+            <input type="checkbox" id="ef-closed" ${v.classification_mode === 'guestlist' ? 'checked' : ''}
+              style="width:20px;height:20px;margin-top:2px;cursor:pointer;accent-color:#C9A96E;flex-shrink:0">
+            <div>
+              <div style="font-weight:700;font-size:14px">🔒 Закрытое мероприятие</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">Гости подают заявку через инвайт-ссылку — вы одобряете или отклоняете каждую. При сканировании QR проверяется статус заявки.</div>
+            </div>
+          </label>
+        </div>
       </div>
       <button class="ef-btn-save" id="ef-save-btn" onclick="saveEventInfo('${v.id}')" style="width:100%;margin-bottom:24px">
         💾 Сохранить изменения
@@ -2231,6 +2241,7 @@ function renderEventPane(v) {
       ${v.address ? infoRow('Площадка', v.address) : ''}
       ${v.city ? infoRow('Город', v.city) : ''}
       ${v.invite_message ? infoRow('Сообщение', v.invite_message.slice(0,60) + (v.invite_message.length>60?'…':'')) : ''}
+      ${infoRow('Режим', v.classification_mode === 'guestlist' ? '🔒 Закрытое (нужна заявка)' : '🔓 Открытое')}
     </div>
     <div class="section-title" style="margin-top:20px">Статистика</div>
     <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
@@ -2348,7 +2359,8 @@ async function saveEventInfo(venueId) {
     event_date:     document.getElementById('ef-date')?.value || null,
     address:        document.getElementById('ef-addr')?.value.trim() || '',
     city:           document.getElementById('ef-city')?.value.trim() || '',
-    invite_message: document.getElementById('ef-msg')?.value.trim() || '',
+    invite_message:      document.getElementById('ef-msg')?.value.trim() || '',
+    classification_mode: document.getElementById('ef-closed')?.checked ? 'guestlist' : 'loyalty',
   });
 
   if (r && r.success) {

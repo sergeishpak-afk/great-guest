@@ -438,7 +438,7 @@ async function getQR() {
     var data = await res.json();
     if (!res.ok || !data.visitUrl) { alert2(data.error || 'Ошибка создания QR'); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита'; return; }
     var img = document.getElementById('qr-img');
-    img.src = 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=' + encodeURIComponent(data.visitUrl) + '&choe=UTF-8';
+    img.src = data.qrDataUrl;
     document.getElementById('qr-display').style.display = 'block';
     btn.disabled = true; btn.textContent = '✓ QR активен';
     setTimeout(function() { btn.disabled = false; btn.textContent = '🎫 Получить QR для визита'; }, 55 * 60 * 1000);

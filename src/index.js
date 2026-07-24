@@ -15,7 +15,10 @@ const MINI_APP_URL = 'https://great-guest.vercel.app/app.html';
 const mainKeyboard = Markup.keyboard([
   ['🎫 Получить QR для визита'],
   ['⭐ Мой статус', '📋 История визитов'],
+  ['💬 Поддержка'],
 ]).resize();
+
+const pendingSupport = new Set();
 
 const appInlineBtn = Markup.inlineKeyboard([
   [Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP_URL)]
@@ -317,19 +320,44 @@ bot.command('myid', async (ctx) => {
   await ctx.reply(`Ваш Telegram ID: \`${ctx.from.id}\``, { parse_mode: 'Markdown' });
 });
 
-// ВА-5: Catch-all для любых сообщений (должен быть последним перед launch)
+bot.hears('💬 Поддержка', async (ctx) => {
+  pendingSupport.add(String(ctx.from.id));
+  await ctx.reply(
+    'Опишите вашу проблему — мы ответим в течение 24 часов.\nНапишите сообщение прямо сейчас 👇',
+    Markup.keyboard([['❌ Отмена']]).resize().oneTime()
+  );
+});
+
+bot.hears('❌ Отмена', async (ctx) => {
+  pendingSupport.delete(String(ctx.from.id));
+  await ctx.reply('Хорошо, возвращаемся в меню.', mainKeyboard);
+});
+
+// Catch-all — последний перед launch
 bot.on('message', async (ctx) => {
+  const userId = String(ctx.from.id);
+
+  // Перехватываем сообщение поддержки
+  if (pendingSupport.has(userId) && ctx.message?.text) {
+    pendingSupport.delete(userId);
+    const guestName = [ctx.from.first_name, ctx.from.last_name].filter(Boolean).join(' ') || 'Гость';
+    const guestLabel = guestName + (ctx.from.username ? ` (@${ctx.from.username})` : '') + ` [${userId}]`;
+    const supportId = process.env.SUPPORT_TELEGRAM_ID;
+    if (supportId) {
+      try {
+        await bot.telegram.sendMessage(
+          supportId,
+          `🆘 *Обращение в поддержку*\n\n👤 ${guestLabel}\n\n💬 ${ctx.message.text}`,
+          { parse_mode: 'Markdown' }
+        );
+      } catch (e) { console.error('Support forward error:', e.message); }
+    }
+    await ctx.reply('✅ Сообщение отправлено! Ответим здесь в течение 24 часов.', mainKeyboard);
+    return;
+  }
+
   try {
-    await ctx.reply('Используйте меню ниже', {
-      reply_markup: {
-        keyboard: [
-          [{ text: '🎫 Получить QR для визита' }],
-          [{ text: '⭐ Мой статус' }, { text: '📋 История визитов' }],
-          [{ text: 'Открыть кабинет', web_app: { url: 'https://great-guest.vercel.app/app.html' } }]
-        ],
-        resize_keyboard: true
-      }
-    });
+    await ctx.reply('Используйте меню ниже 👇', mainKeyboard);
   } catch (e) { console.error('[bot catch-all]', e); }
 });
 

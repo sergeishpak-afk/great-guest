@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const { v4: uuidv4 } = require('uuid');
+const QRCode = require('qrcode');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -90,5 +91,7 @@ module.exports = async (req, res) => {
   if (error) return res.status(500).json({ error: 'DB error' });
 
   const appUrl = process.env.APP_URL || 'https://great-guest.vercel.app';
-  return res.status(200).json({ token, visitUrl: `${appUrl}/restaurant.html?token=${token}` });
+  const visitUrl = `${appUrl}/restaurant.html?token=${token}`;
+  const qrDataUrl = await QRCode.toDataURL(visitUrl, { errorCorrectionLevel: 'H', width: 300, margin: 2 });
+  return res.status(200).json({ token, visitUrl, qrDataUrl });
 };
