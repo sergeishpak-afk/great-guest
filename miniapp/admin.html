@@ -1884,7 +1884,7 @@ function renderGuestsPane(guests, owner, isEvent) {
         color:#0D0C12;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none">
         💳 Продлить подписку
       </a><br><br>
-      Или напишите нам: <a href="https://t.me/shpaksergey" style="color:var(--gold)">@shpaksergey</a>
+      Или напишите нам: <button onclick="openTgLink('https://t.me/shpaksergey')" style="background:none;border:none;color:var(--gold);font-size:inherit;cursor:pointer;padding:0;font-family:inherit">@shpaksergey</button>
     </div>`;
   }
   const scanBtn = `
@@ -3191,8 +3191,16 @@ document.getElementById('upgrade-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeUpgradeModal();
 });
 
+function openTgLink(url) {
+  if (window.Telegram?.WebApp?.openTelegramLink) {
+    window.Telegram.WebApp.openTelegramLink(url);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
 function contactSupport() {
-  window.open('https://t.me/shpaksergey', '_blank');
+  openTgLink('https://t.me/shpaksergey');
 }
 
 // ─ Bonus visit ───────────────────────────────────────────────────────────────
@@ -3381,26 +3389,26 @@ function showSubscriptionModal() {
         <div style="font-size:12px;color:var(--muted)">Событий: ${venuesData.length} из ${owner.max_venues}</div>
       </div>
 
-      <a href="https://t.me/shpaksergey" target="_blank"
+      <button onclick="openTgLink('https://t.me/shpaksergey')"
         style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
           padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#E8C97E);
-          color:#0D0C12;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px">
+          color:#0D0C12;font-size:15px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px">
         💬 Написать менеджеру
-      </a>
-      <a href="https://t.me/+5iAU_mY-AJ42ZGYy" target="_blank"
+      </button>
+      <button onclick="openTgLink('https://t.me/+5iAU_mY-AJ42ZGYy')"
         style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
           padding:14px;border-radius:12px;border:1px solid rgba(201,169,110,0.35);
-          color:var(--gold);font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px;
+          color:var(--gold);font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;
           background:rgba(201,169,110,0.06)">
         👥 Сообщество партнёров
-      </a>
-      <a href="faq.html" target="_blank"
+      </button>
+      <button onclick="location.href='faq.html'"
         style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
           padding:14px;border-radius:12px;border:1px solid var(--border);
-          color:var(--muted);font-size:15px;font-weight:600;text-decoration:none;margin-bottom:20px;
+          color:var(--muted);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:20px;
           background:var(--card2)">
         ❓ Частые вопросы
-      </a>
+      </button>
 
       <!-- Divider -->
       <div style="height:1px;background:var(--border);margin-bottom:20px"></div>

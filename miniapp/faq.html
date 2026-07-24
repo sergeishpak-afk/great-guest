@@ -207,9 +207,9 @@
   <!-- Блок поддержки -->
   <div class="support-block">
     <p>Не нашёл ответ? Напиши напрямую — отвечаем быстро.</p>
-    <a class="support-btn" href="https://t.me/shpaksergey" target="_blank">
+    <button class="support-btn" onclick="(window.Telegram?.WebApp?.openTelegramLink || window.open.bind(window))('https://t.me/shpaksergey', '_blank')" style="border:none;cursor:pointer">
       💬 Написать в поддержку
-    </a>
+    </button>
   </div>
 </div>
 
