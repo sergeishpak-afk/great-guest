@@ -45,21 +45,37 @@ async function createYooKassaPayment({ amount, description, metadata }) {
   const secretKey = process.env.YOOKASSA_SECRET_KEY;
   const idempKey  = crypto.randomUUID();
 
-  const resp = await fetch('https://api.yookassa.ru/v3/payments', {
-    method: 'POST',
-    headers: {
-      'Content-Type':    'application/json',
-      'Idempotence-Key': idempKey,
-      'Authorization':   'Basic ' + Buffer.from(`${shopId}:${secretKey}`).toString('base64'),
-    },
-    body: JSON.stringify({
-      amount:       { value: (amount / 100).toFixed(2), currency: 'RUB' },
-      confirmation: { type: 'redirect', return_url: `${APP_URL}/payment.html?status=success` },
-      capture:      true,
-      description,
-      metadata,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  let resp;
+  try {
+    resp = await fetch('https://api.yookassa.ru/v3/payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type':    'application/json',
+        'Idempotence-Key': idempKey,
+        'Authorization':   'Basic ' + Buffer.from(`${shopId}:${secretKey}`).toString('base64'),
+      },
+      body: JSON.stringify({
+        amount:       { value: (amount / 100).toFixed(2), currency: 'RUB' },
+        confirmation: { type: 'redirect', return_url: `${APP_URL}/payment.html?status=success` },
+        capture:      true,
+        description,
+        metadata,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+  } catch (e) {
+    clearTimeout(timeoutId);
+    if (e.name === 'AbortError') {
+      const err = new Error('payment_timeout');
+      err.isTimeout = true;
+      throw err;
+    }
+    throw e;
+  }
 
   if (!resp.ok) {
     const errText = await resp.text();
@@ -147,13 +163,22 @@ module.exports = async (req, res) => {
   const basePrice  = PLANS[plan].price * months;
   const amount     = Math.round(basePrice * (1 - discount));
 
-  const ykPayment  = await createYooKassaPayment({
-    amount,
-    description: isOneTime
-      ? `Great Guest — ${PLANS[plan].label} (30 дней)`
-      : `Great Guest — ${PLANS[plan].label} × ${months} мес.`,
-    metadata:    { telegram_id: telegramId, plan, months: String(months) },
-  });
+  let ykPayment;
+  try {
+    ykPayment = await createYooKassaPayment({
+      amount,
+      description: isOneTime
+        ? `Great Guest — ${PLANS[plan].label} (30 дней)`
+        : `Great Guest — ${PLANS[plan].label} × ${months} мес.`,
+      metadata:    { telegram_id: telegramId, plan, months: String(months) },
+    });
+  } catch (e) {
+    if (e.isTimeout) {
+      return res.status(503).json({ error: 'payment_timeout' });
+    }
+    console.error('ЮKassa error:', e.message);
+    return res.status(500).json({ error: 'Ошибка создания платежа' });
+  }
 
   if (ykPayment.type === 'error' || !ykPayment.id) {
     console.error('ЮKassa error:', JSON.stringify(ykPayment));

@@ -32,7 +32,7 @@ bot.start(async (ctx) => {
       reply_markup: {
         inline_keyboard: [[{
           text: 'Открыть',
-          web_app: { url: `https://great-guest.vercel.app/miniapp/app.html?venue=${venueId}` }
+          web_app: { url: `https://great-guest.vercel.app/app.html?venue=${venueId}` }
         }]]
       }
     });
@@ -44,10 +44,73 @@ bot.start(async (ctx) => {
       reply_markup: {
         inline_keyboard: [[{
           text: 'Открыть кабинет',
-          web_app: { url: `https://great-guest.vercel.app/miniapp/app.html` }
+          web_app: { url: `https://great-guest.vercel.app/app.html` }
         }]]
       }
     });
+  }
+
+  if (payload.startsWith('rsvp_')) {
+    const venueId = payload.slice(5);
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(venueId)) return ctx.reply('Недействительная ссылка приглашения.');
+
+    const { data: venue } = await supabase
+      .from('restaurants')
+      .select('name, owner_telegram_id, classification_mode')
+      .eq('id', venueId)
+      .single();
+
+    if (!venue || venue.classification_mode !== 'guestlist') {
+      return ctx.reply('Мероприятие не найдено или уже не принимает заявки.');
+    }
+
+    await supabase.from('guests').upsert({
+      telegram_id: String(tgUser.id),
+      first_name: tgUser.first_name || '',
+      last_name: tgUser.last_name || '',
+      username: tgUser.username || '',
+    }, { onConflict: 'telegram_id' });
+
+    const { data: existing } = await supabase
+      .from('rsvp')
+      .select('status')
+      .eq('venue_id', venueId)
+      .eq('telegram_id', String(tgUser.id))
+      .maybeSingle();
+
+    if (existing?.status === 'approved') {
+      return ctx.replyWithMarkdown(`✅ Ваша заявка на *${venue.name}* уже одобрена! Вы в списке гостей.`);
+    }
+    if (existing?.status === 'pending') {
+      return ctx.replyWithMarkdown(`⏳ Ваша заявка на *${venue.name}* уже отправлена и ожидает одобрения организатора.`);
+    }
+
+    const { error: rsvpError } = await supabase.from('rsvp').upsert({
+      venue_id: venueId,
+      telegram_id: String(tgUser.id),
+      first_name: tgUser.first_name || '',
+      last_name: tgUser.last_name || '',
+      username: tgUser.username || '',
+      status: 'pending',
+    }, { onConflict: 'venue_id,telegram_id' });
+
+    if (rsvpError) return ctx.reply('Ошибка при отправке заявки. Попробуй ещё раз.');
+
+    await ctx.replyWithMarkdown(
+      `📋 *Заявка отправлена!*\n\n📍 *${venue.name}*\n\nОрганизатор рассмотрит вашу заявку и сообщит о решении.`
+    );
+
+    const guestName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Гость';
+    const guestLabel = guestName + (tgUser.username ? ` (@${tgUser.username})` : '');
+    try {
+      await bot.telegram.sendMessage(
+        venue.owner_telegram_id,
+        `🔔 *Новая заявка на участие*\n\n📍 ${venue.name}\n👤 ${guestLabel}\n🆔 \`${tgUser.id}\`\n\nОткройте кабинет → Гостевой список для одобрения.`,
+        { parse_mode: 'Markdown' }
+      );
+    } catch (e) { console.error('Organizer notify error:', e.message); }
+    return;
   }
 
   // ref_ — реферальный код, продолжаем стандартный /start
@@ -257,13 +320,14 @@ bot.on('message', async (ctx) => {
     await ctx.reply('Используйте меню ниже', {
       reply_markup: {
         keyboard: [
-          [{ text: 'Получить QR' }, { text: 'Мои визиты' }],
-          [{ text: 'Открыть кабинет', web_app: { url: 'https://great-guest.vercel.app/miniapp/app.html' } }]
+          [{ text: '🎫 Получить QR для визита' }],
+          [{ text: '⭐ Мой статус' }, { text: '📋 История визитов' }],
+          [{ text: 'Открыть кабинет', web_app: { url: 'https://great-guest.vercel.app/app.html' } }]
         ],
         resize_keyboard: true
       }
     });
-  } catch (e) {}
+  } catch (e) { console.error('[bot catch-all]', e); }
 });
 
 // ─── Start both ───────────────────────────────────────────────────────────────

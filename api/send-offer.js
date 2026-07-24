@@ -197,9 +197,7 @@ module.exports = async (req, res) => {
   const isEvent    = restaurant.venue_type === 'event';
   const typeLabel  = isEvent ? 'Приглашение' : 'Персональное предложение';
   const senderName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Организатор';
-  const footer     = isEvent
-    ? `_${senderName} · ${restaurant.name} ${lvl.emoji}_`
-    : `_${senderName} · ${restaurant.name} ${lvl.emoji}_`;
+  const footer     = `_${senderName} · ${restaurant.name} ${lvl.emoji}_`;
 
   const msg = [
     `🎁 *${typeLabel} от «${restaurant.name}»*`,

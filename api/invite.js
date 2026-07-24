@@ -331,15 +331,18 @@ module.exports = async (req, res) => {
       const levelFilter = String(filter || 'all');
       const msgText     = String(customMessage || '').trim().slice(0, 1000);
 
-      // Load organizer contacts
-      const { data: contacts } = await db
+      // Load organizer contacts (capped at 200 per broadcast)
+      const { data: allContacts } = await db
         .from('organizer_contacts')
         .select('guest_id, first_name')
-        .eq('organizer_id', ownerId)
-        .limit(200);
+        .eq('organizer_id', ownerId);
+
+      const totalContacts = (allContacts || []).length;
+      const contacts = (allContacts || []).slice(0, 200);
+      const capped = totalContacts > 200;
 
       if (!contacts || contacts.length === 0)
-        return res.status(200).json({ sent: 0, failed: 0, total: 0 });
+        return res.status(200).json({ sent: 0, failed: 0, total: 0, capped: false });
 
       // Enrich with global visit_count for level filtering
       const guestIds = contacts.map(c => c.guest_id);
@@ -387,7 +390,7 @@ module.exports = async (req, res) => {
         });
       }
 
-      return res.status(200).json({ success: true, sent, failed, total: targets.length });
+      return res.status(200).json({ success: true, sent, failed, total: targets.length, capped });
     }
 
     // ── action: update invite_message (default) ────────────────────────────────

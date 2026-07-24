@@ -76,7 +76,7 @@ module.exports = async (req, res) => {
     if (ven.owner_telegram_id !== ownerId) return res.status(403).json({ error: 'Not your venue' });
     const { data: rsvps } = await db
       .from('rsvp')
-      .select('telegram_id, first_name, last_name, username, created_at')
+      .select('telegram_id, first_name, last_name, username, created_at, status')
       .eq('venue_id', venueId)
       .order('created_at', { ascending: false });
     return res.status(200).json({ rsvps: rsvps || [] });
@@ -103,10 +103,52 @@ module.exports = async (req, res) => {
     if (!ven) return res.status(404).json({ error: 'Venue not found' });
     if (ven.owner_telegram_id !== ownerId) return res.status(403).json({ error: 'Not your venue' });
     const { error } = await db.from('rsvp').upsert(
-      { venue_id: venueId, telegram_id: telegramId },
+      { venue_id: venueId, telegram_id: telegramId, status: 'approved' },
       { onConflict: 'venue_id,telegram_id' }
     );
     if (error) return res.status(400).json({ error: error.message });
+    return res.status(200).json({ success: true });
+  }
+
+  // ── action: approve_rsvp — approve a pending RSVP request ────────────────────
+  if ((req.body || {}).action === 'approve_rsvp') {
+    const { venueId, telegramId } = req.body;
+    if (!venueId || !UUID_RE.test(venueId)) return res.status(400).json({ error: 'invalid venueId' });
+    if (!telegramId || !/^\d+$/.test(telegramId)) return res.status(400).json({ error: 'invalid telegramId' });
+    const { data: ven } = await db.from('restaurants').select('id, owner_telegram_id, name').eq('id', venueId).single();
+    if (!ven) return res.status(404).json({ error: 'Venue not found' });
+    if (ven.owner_telegram_id !== ownerId) return res.status(403).json({ error: 'Not your venue' });
+    const { data: sub } = await db.from('owner_subscriptions').select('subscription_status, subscription_expires_at').eq('telegram_id', ownerId).single();
+    const subExpires = sub?.subscription_expires_at ? new Date(sub.subscription_expires_at) : null;
+    if (!sub || sub.subscription_status !== 'active' || !subExpires || subExpires <= new Date())
+      return res.status(403).json({ error: 'Управление заявками доступно только на платном тарифе' });
+    await db.from('rsvp').update({ status: 'approved' }).eq('venue_id', venueId).eq('telegram_id', telegramId);
+    try {
+      await bot.telegram.sendMessage(telegramId,
+        `✅ *Заявка одобрена!*\n\n📍 *${ven.name}*\n\nВы в списке гостей. Получите QR-код для входа в боте.`,
+        { parse_mode: 'Markdown' });
+    } catch (e) { console.error('Approve notify error:', e.message); }
+    return res.status(200).json({ success: true });
+  }
+
+  // ── action: reject_rsvp — reject a pending RSVP request ─────────────────────
+  if ((req.body || {}).action === 'reject_rsvp') {
+    const { venueId, telegramId } = req.body;
+    if (!venueId || !UUID_RE.test(venueId)) return res.status(400).json({ error: 'invalid venueId' });
+    if (!telegramId || !/^\d+$/.test(telegramId)) return res.status(400).json({ error: 'invalid telegramId' });
+    const { data: ven } = await db.from('restaurants').select('id, owner_telegram_id, name').eq('id', venueId).single();
+    if (!ven) return res.status(404).json({ error: 'Venue not found' });
+    if (ven.owner_telegram_id !== ownerId) return res.status(403).json({ error: 'Not your venue' });
+    const { data: sub } = await db.from('owner_subscriptions').select('subscription_status, subscription_expires_at').eq('telegram_id', ownerId).single();
+    const subExpires = sub?.subscription_expires_at ? new Date(sub.subscription_expires_at) : null;
+    if (!sub || sub.subscription_status !== 'active' || !subExpires || subExpires <= new Date())
+      return res.status(403).json({ error: 'Управление заявками доступно только на платном тарифе' });
+    await db.from('rsvp').update({ status: 'rejected' }).eq('venue_id', venueId).eq('telegram_id', telegramId);
+    try {
+      await bot.telegram.sendMessage(telegramId,
+        `❌ *Заявка отклонена*\n\n📍 *${ven.name}*\n\nК сожалению, организатор не смог подтвердить вашу заявку.`,
+        { parse_mode: 'Markdown' });
+    } catch (e) { console.error('Reject notify error:', e.message); }
     return res.status(200).json({ success: true });
   }
 
@@ -137,11 +179,16 @@ module.exports = async (req, res) => {
     if (recentBonus && recentBonus.length > 0)
       return res.status(429).json({ error: 'Бонус этому гостю уже начислен в последний час' });
 
-    const newCount = guest.visit_count + 1;
-    await Promise.all([
-      db.from('visits').insert({ telegram_id: guestTelegramId, restaurant_id: restaurant.id, visit_type: 'bonus', visit_token: null }),
-      db.from('guests').update({ visit_count: newCount }).eq('telegram_id', guestTelegramId),
-    ]);
+    // Atomic visit_count increment (prevents race condition on simultaneous bonuses)
+    const { data: newCount, error: rpcError } = await db
+      .rpc('increment_guest_visits', { p_telegram_id: guestTelegramId });
+
+    if (rpcError || newCount === null) {
+      console.error('increment_guest_visits error:', rpcError?.message);
+      return res.status(500).json({ error: 'Ошибка обновления счётчика' });
+    }
+
+    await db.from('visits').insert({ telegram_id: guestTelegramId, restaurant_id: restaurant.id, visit_type: 'bonus', visit_token: null });
 
     const bonusNote = reason ? `\n💬 _${reason}_` : '';
     try {

@@ -203,6 +203,12 @@
     .rsvp-remove-btn{background:rgba(239,83,80,0.12);border:none;border-radius:8px;
       padding:5px 10px;color:var(--error,#ef5350);font-size:12px;cursor:pointer;
       font-family:inherit;white-space:nowrap}
+    .rsvp-section-label{font-size:11px;font-weight:700;text-transform:uppercase;
+      letter-spacing:.08em;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+    .rsvp-action-btn{border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;
+      font-family:inherit;font-weight:600;white-space:nowrap}
+    .rsvp-approve-btn{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.4);color:#4ADE80}
+    .rsvp-reject-btn{background:rgba(239,83,80,0.08);border:1px solid rgba(239,83,80,0.3);color:#EF5350}
     .ngb-avatar{width:38px;height:38px;border-radius:50%;background:var(--card2);
       display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
     .ngb-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -970,6 +976,7 @@ let venueEventType = '';      // pre-filled event type from type chooser
 let classMode = 'loyalty';   // classification mode for new venue
 let activeFilter = 'all';     // guest filter
 let evEditMode = false;       // event info tab edit toggle
+let guestsTruncated = false;  // true when API capped guests at 500
 
 let currentGuestId = null;
 let currentGuestName = null;
@@ -1065,6 +1072,7 @@ async function init() {
   ownerData = data.owner;
   venuesData = data.venues || [];
   globalGuests = data.globalGuests || [];
+  guestsTruncated = data.guests_truncated || false;
   allOffers = data.offers || [];
   venueGuestIds = data.venueGuestIds || {};
 
@@ -1325,12 +1333,12 @@ function openRsvpPanel(venueId, venueName) {
   document.getElementById('rsvp-modal-title').textContent = '📋 ' + venueName;
   document.getElementById('rsvp-add-id').value = '';
   document.getElementById('rsvp-msg').textContent = '';
-  document.getElementById('rsvp-modal').classList.add('active');
+  document.getElementById('rsvp-modal').classList.add('open');
   loadRsvpList(venueId);
 }
 
 function closeRsvpPanel() {
-  document.getElementById('rsvp-modal').classList.remove('active');
+  document.getElementById('rsvp-modal').classList.remove('open');
 }
 
 async function loadRsvpList(venueId) {
@@ -1349,20 +1357,44 @@ async function loadRsvpList(venueId) {
       el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Список пуст.<br>Гости добавляются при подтверждении по инвайт-ссылке.</div>';
       return;
     }
-    el.innerHTML = list.map(g => {
+    const pending  = list.filter(g => g.status === 'pending');
+    const approved = list.filter(g => g.status === 'approved' || !g.status);
+    const rejected = list.filter(g => g.status === 'rejected');
+    function renderRsvpGuest(g, type) {
       const name = [g.first_name, g.last_name].filter(Boolean).join(' ') || 'Гость';
       const sub  = [g.username ? '@'+g.username : '', g.telegram_id].filter(Boolean).join(' · ');
       const date = g.created_at ? new Date(g.created_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) : '';
+      const actions = type === 'pending'
+        ? `<div style="display:flex;gap:6px">
+            <button class="rsvp-action-btn rsvp-approve-btn" onclick="rsvpApproveGuest('${g.telegram_id}')">✓ Одобрить</button>
+            <button class="rsvp-action-btn rsvp-reject-btn" onclick="rsvpRejectGuest('${g.telegram_id}')">✗</button>
+          </div>`
+        : `<button class="rsvp-remove-btn" onclick="rsvpRemoveGuest('${g.telegram_id}')">Удалить</button>`;
       return `<div class="rsvp-guest-row">
         <div style="flex:1;min-width:0">
           <div class="rsvp-guest-name">${esc(name)}</div>
           <div class="rsvp-guest-sub">${sub}${date?' · '+date:''}</div>
         </div>
-        <button class="rsvp-remove-btn" onclick="rsvpRemoveGuest('${g.telegram_id}')">Удалить</button>
+        ${actions}
       </div>`;
-    }).join('');
+    }
+    let html = '';
+    if (pending.length) {
+      html += `<div class="rsvp-section-label" style="color:#FBB924">⏳ Ожидают одобрения · ${pending.length}</div>`;
+      html += pending.map(g => renderRsvpGuest(g, 'pending')).join('');
+    }
+    if (approved.length) {
+      html += `<div class="rsvp-section-label" style="color:var(--muted)">✅ Одобрены · ${approved.length}</div>`;
+      html += approved.map(g => renderRsvpGuest(g, 'approved')).join('');
+    }
+    if (rejected.length) {
+      html += `<div class="rsvp-section-label" style="color:var(--muted)">❌ Отклонены · ${rejected.length}</div>`;
+      html += rejected.map(g => renderRsvpGuest(g, 'rejected')).join('');
+    }
+    el.innerHTML = html;
+    const pendingCount = pending.length;
     document.getElementById('rsvp-modal-sub').textContent =
-      `${list.length} гост${list.length===1?'ь':list.length<5?'я':'ей'} в списке`;
+      `${list.length} гост${list.length===1?'ь':list.length<5?'я':'ей'} в списке${pendingCount ? ' · '+pendingCount+' ожидают одобрения' : ''}`;
   } catch {
     el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Ошибка загрузки</div>';
   }
@@ -1423,6 +1455,54 @@ async function rsvpAddGuest() {
   }
 }
 
+async function rsvpApproveGuest(telegramId) {
+  const msgEl = document.getElementById('rsvp-msg');
+  try {
+    const initData = window.Telegram?.WebApp?.initData || '';
+    const resp = await fetch('/api/restaurant-dashboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData, action: 'approve_rsvp', venueId: rsvpCurrentVenueId, telegramId }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      msgEl.style.color = 'var(--green, #66bb6a)';
+      msgEl.textContent = 'Заявка одобрена — гость получил уведомление';
+      loadRsvpList(rsvpCurrentVenueId);
+    } else {
+      msgEl.style.color = 'var(--error, #e57373)';
+      msgEl.textContent = data.error || 'Ошибка';
+    }
+  } catch {
+    msgEl.style.color = 'var(--error, #e57373)';
+    msgEl.textContent = 'Ошибка сети';
+  }
+}
+
+async function rsvpRejectGuest(telegramId) {
+  const msgEl = document.getElementById('rsvp-msg');
+  try {
+    const initData = window.Telegram?.WebApp?.initData || '';
+    const resp = await fetch('/api/restaurant-dashboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData, action: 'reject_rsvp', venueId: rsvpCurrentVenueId, telegramId }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      msgEl.style.color = 'var(--muted)';
+      msgEl.textContent = 'Заявка отклонена';
+      loadRsvpList(rsvpCurrentVenueId);
+    } else {
+      msgEl.style.color = 'var(--error, #e57373)';
+      msgEl.textContent = data.error || 'Ошибка';
+    }
+  } catch {
+    msgEl.style.color = 'var(--error, #e57373)';
+    msgEl.textContent = 'Ошибка сети';
+  }
+}
+
 // ─ Merge guest modal ──────────────────────────────────────────────────────────
 function openMergeModal(telegramId, name) {
   document.getElementById('merge-old-id').value = telegramId;
@@ -1431,11 +1511,11 @@ function openMergeModal(telegramId, name) {
   document.getElementById('merge-modal-sub').textContent = `Перенос истории: ${name}`;
   document.getElementById('merge-confirm-btn').disabled = false;
   document.getElementById('merge-confirm-btn').textContent = 'Перенести';
-  document.getElementById('merge-modal').classList.add('active');
+  document.getElementById('merge-modal').classList.add('open');
 }
 
 function closeMergeModal() {
-  document.getElementById('merge-modal').classList.remove('active');
+  document.getElementById('merge-modal').classList.remove('open');
 }
 
 async function confirmMerge() {
@@ -1651,7 +1731,7 @@ function renderRegistrationForm() {
 // ─ Register ──────────────────────────────────────────────────────────────────
 async function register() {
   const name = (document.getElementById('r-name')?.value || '').trim();
-  if (!name) { alert('Введите название'); return; }
+  if (!name) { showToast('Введите название', 'error'); return; }
 
   const btn = document.getElementById('reg-btn');
   btn.disabled = true;
@@ -1699,7 +1779,7 @@ async function register() {
     btn.textContent = venueType === 'event'
       ? 'Создать кабинет мероприятия →'
       : 'Добавить событие →';
-    alert('Ошибка: ' + data.error);
+    showToast('Ошибка: ' + data.error, 'error');
     return;
   }
 
@@ -1793,7 +1873,7 @@ function renderDashboard() {
     <div class="event-hero" style="background-image:url('${esc(v.cover_image_url)}')">
       <div class="event-hero-overlay"></div>
       <div class="event-hero-top">
-        <div class="hero-back-btn" onclick="show('s-network')">←</div>
+        <div class="hero-back-btn" onclick="renderNetwork()">←</div>
         <div style="display:flex;gap:8px">
           <button onclick="showInviteLink()" aria-label="Ссылка-приглашение" class="hero-icon-btn">🔗</button>
           <button onclick="showVenueQR()" aria-label="QR входа" class="hero-icon-btn"
@@ -1808,7 +1888,7 @@ function renderDashboard() {
   ` : `
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-back" onclick="show('s-network')">←</div>
+        <div class="topbar-back" onclick="renderNetwork()">←</div>
         <div style="min-width:0">
           <div class="rest-name">${esc(v.name)}</div>
           <div class="rest-sub">${esc(isEvent ? (v.event_type || 'Мероприятие') : (v.cuisine || 'Ресторан'))}${v.city ? ' · ' + esc(v.city) : ''}</div>
@@ -1909,6 +1989,7 @@ function renderGuestsPane(guests, owner, isEvent) {
     : [{k:'all',l:'Все'}];
 
   return scanBtn + `
+    ${guestsTruncated ? `<div style="background:rgba(201,169,110,0.12);border:1px solid rgba(201,169,110,0.3);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--gold);margin-bottom:10px">⚠️ Отображается первые 500 гостей. Используйте CSV-экспорт для полной базы.</div>` : ''}
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
       <div style="font-size:12px;color:var(--muted);flex:1">
         <span style="font-weight:700;color:var(--text)">${guests.length}</span> в базе сети
@@ -2251,7 +2332,7 @@ function toggleEventEdit() {
 
 async function saveEventInfo(venueId) {
   const name = (document.getElementById('ef-name')?.value || '').trim();
-  if (!name) { alert('Введите название'); return; }
+  if (!name) { showToast('Введите название', 'error'); return; }
 
   const btn = document.getElementById('ef-save-btn');
   if (btn) { btn.textContent = '⏳ Сохранение…'; btn.disabled = true; }
@@ -2284,7 +2365,7 @@ async function saveEventInfo(venueId) {
     if (pane) pane.innerHTML = renderEventPane(currentVenue);
   } else {
     if (btn) { btn.textContent = '💾 Сохранить изменения'; btn.disabled = false; }
-    alert('Ошибка: ' + ((r && r.error) || 'попробуйте снова'));
+    showToast('Ошибка: ' + ((r && r.error) || 'попробуйте снова'), 'error');
   }
 }
 
@@ -2296,10 +2377,10 @@ function uploadCover(venueId) {
   inp.onchange = () => {
     const file = inp.files[0];
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { alert('Файл слишком большой (макс. 8 МБ)'); return; }
+    if (file.size > 8 * 1024 * 1024) { showToast('Файл слишком большой (макс. 8 МБ)', 'error'); return; }
     const objUrl = URL.createObjectURL(file);
     const img = new Image();
-    img.onerror = () => { URL.revokeObjectURL(objUrl); alert('Не удалось прочитать изображение'); };
+    img.onerror = () => { URL.revokeObjectURL(objUrl); showToast('Не удалось прочитать изображение', 'error'); };
     img.onload = async () => {
       const MAX_W = 1200, MAX_H = 630;
       let w = img.width, h = img.height;
@@ -2323,7 +2404,7 @@ function uploadCover(venueId) {
         renderDashboard();
         switchTab('info');
       } else {
-        alert('Ошибка загрузки: ' + ((r && r.error) || 'попробуйте снова'));
+        showToast('Ошибка загрузки: ' + ((r && r.error) || 'попробуйте снова'), 'error');
       }
     };
     img.src = objUrl;
@@ -2566,7 +2647,7 @@ async function saveInviteMessage() {
     setTimeout(() => { btn.textContent = 'Сохранить текст'; }, 2000);
   } else {
     btn.textContent = 'Сохранить текст';
-    alert('Ошибка: ' + (data.error || 'неизвестная ошибка'));
+    showToast('Ошибка: ' + (data.error || 'неизвестная ошибка'), 'error');
   }
 }
 
@@ -2598,13 +2679,13 @@ async function deleteVenue(venueId) {
     }
     renderNetwork();
   } catch (e) {
-    alert('Не удалось удалить: ' + e.message);
+    showToast('Не удалось удалить: ' + e.message, 'error');
   }
 }
 
 // ─ Broadcast ─────────────────────────────────────────────────────────────────
 async function downloadAnalytics() {
-  if (!globalGuests || !globalGuests.length) { alert('Нет данных для экспорта'); return; }
+  if (!globalGuests || !globalGuests.length) { showToast('Нет данных для экспорта', 'error'); return; }
 
   // In Telegram WebView file downloads via <a> are blocked — send via bot instead
   const btn = document.querySelector('[onclick="downloadAnalytics()"]');
@@ -2621,7 +2702,7 @@ async function downloadAnalytics() {
   if (r && r.success) {
     showToast('📊 CSV отправлен в ваш Telegram чат');
   } else {
-    alert('Ошибка экспорта: ' + ((r && r.error) || 'попробуйте снова'));
+    showToast('Ошибка экспорта: ' + ((r && r.error) || 'попробуйте снова'), 'error');
   }
 }
 
@@ -2680,7 +2761,7 @@ async function sendBroadcast() {
       setTimeout(() => { closeBroadcastModal(); btn.textContent = 'Отправить'; }, 3000);
     } else {
       btn.textContent = 'Отправить';
-      alert('Ошибка: ' + (data.error || 'попробуйте позже'));
+      showToast('Ошибка: ' + (data.error || 'попробуйте позже'), 'error');
     }
   });
 }
@@ -2719,7 +2800,7 @@ async function openQRScanner() {
         return false;
       });
     } else {
-      alert('Нет доступа к камере. Разрешите камеру в настройках.');
+      showToast('Нет доступа к камере. Разрешите камеру в настройках.', 'error');
     }
   }
 }
@@ -2892,7 +2973,7 @@ function renderGuestBaseList() {
 
 function exportGuestBaseCSV() {
   const guests = globalGuests;
-  if (!guests.length) { alert('База пустая'); return; }
+  if (!guests.length) { showToast('База пустая', 'error'); return; }
   const BOM = '﻿';
   const header = 'Имя,Фамилия,Username,Статус,Визитов (сеть),Визитов (у вас),RSVP,Последняя активность\n';
   const rows = guests.map(g => {
@@ -3090,7 +3171,7 @@ async function sendOffer() {
   if (data.error) {
     btn.disabled    = false;
     btn.textContent = 'Отправить';
-    alert('Ошибка: ' + data.error);
+    showToast('Ошибка: ' + data.error, 'error');
     return;
   }
 
@@ -3345,7 +3426,7 @@ function showSubscriptionModal() {
   if (!owner) return;
 
   const PLAN_LABELS = { trial:'Пробный', event:'Разовый', basic:'Базовый', network:'Сеть', empire:'Империя' };
-  const PLAN_PRICES = { trial:'Бесплатно 14 дней', basic:'2 990 ₽/мес', network:'7 990 ₽/мес', empire:'19 990 ₽/мес' };
+  const PLAN_PRICES = { trial:'Бесплатно 14 дней', event:'490 ₽ разово', basic:'2 990 ₽/мес', network:'7 990 ₽/мес', empire:'19 990 ₽/мес' };
   const planLabel = PLAN_LABELS[owner.plan] || owner.plan;
   const planPrice = PLAN_PRICES[owner.plan] || '';
   const isActive  = owner.is_active;

@@ -95,15 +95,15 @@ module.exports = async (req, res) => {
     }
     const { data: rsvpRow } = await supabase
       .from('rsvp')
-      .select('id')
+      .select('status')
       .eq('venue_id', claimedVisit.restaurant_id)
       .eq('telegram_id', pending.telegram_id)
       .maybeSingle();
 
-    if (!rsvpRow) {
+    if (!rsvpRow || rsvpRow.status !== 'approved') {
       return res.status(403).json({
-        error: 'not_on_guestlist',
-        message: 'Гость не в списке приглашённых',
+        error: rsvpRow ? 'rsvp_not_approved' : 'not_on_guestlist',
+        message: rsvpRow ? 'Заявка ещё не одобрена организатором' : 'Гость не в списке приглашённых',
       });
     }
   }

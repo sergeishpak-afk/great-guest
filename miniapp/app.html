@@ -327,7 +327,7 @@ async function init() {
   if (data.error === 'consent_required') {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error').style.display = 'block';
-    document.getElementById('err-msg').innerHTML = 'Для начала запустите бота: нажмите кнопку ниже и отправьте /start<br><br><a href="https://t.me/great_guest_bot" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#C9A96E;color:#0D0C12;border-radius:12px;text-decoration:none;font-weight:600">Открыть @great_guest_bot</a>';
+    document.getElementById('err-msg').innerHTML = 'Для начала запустите бота: нажмите кнопку ниже и отправьте /start<br><br><button onclick="window.Telegram?.WebApp?.openTelegramLink(\'https://t.me/great_guest_bot\')" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#C9A96E;color:#0D0C12;border-radius:12px;font-weight:600;border:none;cursor:pointer;font-size:inherit;font-family:inherit">Открыть @great_guest_bot</button>';
     return;
   }
 
@@ -441,6 +441,7 @@ async function getQR() {
     img.src = 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=' + encodeURIComponent(data.visitUrl) + '&choe=UTF-8';
     document.getElementById('qr-display').style.display = 'block';
     btn.disabled = true; btn.textContent = '✓ QR активен';
+    setTimeout(function() { btn.disabled = false; btn.textContent = '🎫 Получить QR для визита'; }, 55 * 60 * 1000);
   } catch(e) { alert2('Ошибка: ' + e.message); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита'; }
 }
 

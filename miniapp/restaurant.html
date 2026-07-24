@@ -333,7 +333,7 @@ async function confirmVisit() {
       body: JSON.stringify({ token: currentToken, restaurantId }),
     });
     const data = await res.json();
-    if (!res.ok) return showError(data.error || 'Ошибка подтверждения');
+    if (!res.ok) return showError(data.message || data.error || 'Ошибка подтверждения');
     showSuccess(data.guest);
   } catch {
     showError('Ошибка соединения');
@@ -392,7 +392,7 @@ async function startScanner() {
 
   // Check support
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert('Камера недоступна. Введите токен вручную.');
+    showError('Камера недоступна. Введите токен вручную.');
     return;
   }
 
