@@ -1479,7 +1479,10 @@ async function rsvpApproveGuest(telegramId) {
   }
 }
 
-async function rsvpRejectGuest(telegramId) {
+function rsvpRejectGuest(telegramId) {
+  showConfirmModal('Отклонить заявку? Гость получит уведомление об отказе.', () => _doRejectGuest(telegramId));
+}
+async function _doRejectGuest(telegramId) {
   const msgEl = document.getElementById('rsvp-msg');
   try {
     const initData = window.Telegram?.WebApp?.initData || '';
@@ -2758,6 +2761,7 @@ async function sendBroadcast() {
     btn.disabled = false;
     if (data.success !== undefined || data.sent !== undefined) {
       btn.textContent = `✅ Отправлено ${data.sent || 0}`;
+      if (data.capped) showToast(`Охвачено 200 из ${data.totalContacts} контактов — лимит рассылки`, 'warning');
       setTimeout(() => { closeBroadcastModal(); btn.textContent = 'Отправить'; }, 3000);
     } else {
       btn.textContent = 'Отправить';

@@ -110,6 +110,9 @@ bot.start(async (ctx) => {
         { parse_mode: 'Markdown' }
       );
     } catch (e) { console.error('Organizer notify error:', e.message); }
+
+    // Показываем главное меню — на случай если пользователь новый и пришёл только через инвайт
+    await ctx.reply(`Нажми «🎫 Получить QR для визита» когда придёшь в заведение.`, mainKeyboard);
     return;
   }
 

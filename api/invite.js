@@ -390,7 +390,7 @@ module.exports = async (req, res) => {
         });
       }
 
-      return res.status(200).json({ success: true, sent, failed, total: targets.length, capped });
+      return res.status(200).json({ success: true, sent, failed, total: targets.length, totalContacts, capped });
     }
 
     // ── action: update invite_message (default) ────────────────────────────────
