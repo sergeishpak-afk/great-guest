@@ -37,26 +37,33 @@ module.exports = async (req, res) => {
   const { token, restaurantId } = req.body || {};
   if (!token || !UUID_RE.test(token)) return res.status(400).json({ error: 'token required' });
 
-  // Atomically claim the pending visit to prevent race conditions
+  // Atomic: only mark used if not expired
   const { data: claimedVisit, error: claimError } = await supabase
     .from('pending_visits')
     .update({ used: true })
     .eq('token', token)
-    .eq('used', false)  // atomic check
+    .eq('used', false)
+    .gt('expires_at', new Date().toISOString())
     .select()
     .single();
 
   if (claimError || !claimedVisit) {
-    return res.status(409).json({ error: 'QR уже использован или не существует' });
-  }
+    // Check if QR exists but is expired or already used
+    const { data: existingVisit } = await supabase
+      .from('pending_visits')
+      .select('used, expires_at')
+      .eq('token', token)
+      .single();
 
-  // QR TTL: expire after 60 minutes (replay-attack + stale QR protection)
-  const createdAt = claimedVisit.expires_at
-    ? new Date(claimedVisit.expires_at)
-    : new Date(claimedVisit.created_at ? new Date(claimedVisit.created_at).getTime() + 3600000 : 0);
-  if (Date.now() > createdAt.getTime()) {
-    // Already marked as used above, just return error
-    return res.status(410).json({ error: 'QR-код истёк. Гость должен сгенерировать новый.' });
+    if (existingVisit) {
+      if (existingVisit.used) {
+        return res.status(409).json({ error: 'QR уже использован или не существует' });
+      }
+      if (existingVisit.expires_at && new Date(existingVisit.expires_at) < new Date()) {
+        return res.status(410).json({ error: 'qr_expired_or_used' });
+      }
+    }
+    return res.status(409).json({ error: 'QR уже использован или не существует' });
   }
 
   const pending = claimedVisit;

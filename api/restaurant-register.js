@@ -213,19 +213,25 @@ module.exports = async (req, res) => {
           : Date.now();
         const newExpiry = new Date(base + 30 * 24 * 60 * 60 * 1000);
 
-        await db.from('owner_subscriptions').update({
+        const updateData = {
           subscription_expires_at: newExpiry.toISOString(),
-          subscription_status: 'active',
           referral_rewarded_count: (referrerSub.referral_rewarded_count || 0) + 1,
-        }).eq('telegram_id', ownerSub.referred_by);
+        };
+        // Only set status to active if referrer is already active (don't break trial)
+        if (referrerSub.subscription_status === 'active') {
+          updateData.subscription_status = 'active';
+        }
+        await db.from('owner_subscriptions').update(updateData).eq('telegram_id', ownerSub.referred_by);
 
-        // Notify referrer via bot (fire-and-forget)
-        const { Telegraf } = require('telegraf');
-        const botInst = new Telegraf(process.env.BOT_TOKEN);
-        botInst.telegram.sendMessage(
-          ownerSub.referred_by,
-          `🎉 *+1 месяц бесплатно!*\n\nВаш друг зарегистрировался в Great Guest по вашей реферальной ссылке.\n\nПодписка продлена до *${newExpiry.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}*.`,
-          { parse_mode: 'Markdown' }
+        // Notify referrer via bot (fire-and-forget) — use direct fetch instead of Telegraf instance
+        const notifyText = `🎉 *+1 месяц бесплатно!*\n\nВаш друг зарегистрировался в Great Guest по вашей реферальной ссылке.\n\nПодписка продлена до *${newExpiry.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}*.`;
+        fetch(
+          `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: ownerSub.referred_by, text: notifyText, parse_mode: 'Markdown' })
+          }
         ).catch(() => {});
       }
     } catch { /* non-critical — don't fail registration */ }

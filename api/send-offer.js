@@ -210,18 +210,30 @@ module.exports = async (req, res) => {
     `\n${footer}`,
   ].filter(Boolean).join('\n');
 
-  try {
-    await bot.telegram.sendMessage(guestTelegramId, msg, { parse_mode: 'Markdown' });
-  } catch (e) {
-    return res.status(500).json({ error: 'telegram_send_failed' });
-  }
-
-  await db.from('offers').insert({
+  // Insert offer with pending status first
+  const { data: insertedOffer, error: insertError } = await db.from('offers').insert({
     restaurant_id:     restaurant.id,
     guest_telegram_id: guestTelegramId,
     offer_text:        offerText,
-    status:            'sent',
-  });
+    status:            'pending',
+  }).select('id').single();
+
+  if (insertError) {
+    console.error('Offer insert error:', insertError);
+    return res.status(500).json({ error: 'db_insert_failed' });
+  }
+
+  // Try to send via Telegram
+  try {
+    await bot.telegram.sendMessage(guestTelegramId, msg, { parse_mode: 'Markdown' });
+    // Update status to sent
+    await db.from('offers').update({ status: 'sent' }).eq('id', insertedOffer.id);
+  } catch (e) {
+    // Update status to failed, but don't return 500 — offer is saved and can be retried
+    console.error('Telegram send error:', e.message);
+    await db.from('offers').update({ status: 'failed' }).eq('id', insertedOffer.id);
+    return res.status(200).json({ success: false, error: 'telegram_send_failed', offer_saved: true });
+  }
 
   return res.status(200).json({ success: true });
 };

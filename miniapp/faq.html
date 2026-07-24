@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>Great Guest — Частые вопросы</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --gold:#C9A96E;--gold2:#E8C97E;
+      --bg:#0D0C12;--card:#161520;--card2:#1E1D2A;
+      --border:rgba(255,255,255,0.08);
+      --text:#F0EBE0;--muted:rgba(240,235,224,0.45);
+      --green:#4ADE80;--green-bg:rgba(74,222,128,0.1);
+    }
+    body.light{
+      --bg:#F2EFE9;--card:#FFFFFF;--card2:#EAE7E0;
+      --border:rgba(0,0,0,0.08);--text:#1A1825;--muted:rgba(26,24,37,0.5);
+      --green:#16A34A;--green-bg:rgba(22,163,74,0.1);
+    }
+    html,body{background:var(--bg);color:var(--text);
+      font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      min-height:100%}
+
+    .page{padding:24px 20px 52px;max-width:500px;margin:0 auto}
+
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+    .back-btn{background:var(--card);border:1px solid var(--border);
+      border-radius:10px;width:36px;height:36px;display:flex;align-items:center;
+      justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0}
+    .header h1{font-size:18px;font-weight:700}
+
+    .section-label{font-size:11px;font-weight:600;text-transform:uppercase;
+      letter-spacing:0.08em;color:var(--gold);margin-bottom:10px;margin-top:24px}
+    .section-label:first-of-type{margin-top:0}
+
+    .faq-item{background:var(--card);border:1px solid var(--border);
+      border-radius:14px;margin-bottom:8px;overflow:hidden}
+    .faq-q{width:100%;text-align:left;background:none;border:none;cursor:pointer;
+      padding:16px;font-family:inherit;font-size:14px;font-weight:600;
+      color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:12px;
+      line-height:1.4}
+    .faq-q .chevron{font-size:12px;color:var(--muted);transition:transform .2s;flex-shrink:0}
+    .faq-item.open .chevron{transform:rotate(180deg)}
+    .faq-a{display:none;padding:0 16px 16px;font-size:13px;color:var(--muted);
+      line-height:1.65;border-top:1px solid var(--border);padding-top:12px}
+    .faq-item.open .faq-a{display:block}
+    .faq-a code{background:var(--card2);border-radius:4px;padding:1px 5px;
+      font-family:monospace;font-size:12px;color:var(--gold)}
+    .faq-a ol,.faq-a ul{padding-left:16px;margin-top:6px;display:flex;flex-direction:column;gap:4px}
+    .faq-a strong{color:var(--text)}
+
+    .support-block{background:linear-gradient(135deg,rgba(201,169,110,0.12),rgba(232,201,126,0.06));
+      border:1px solid rgba(201,169,110,0.2);border-radius:16px;padding:20px;
+      text-align:center;margin-top:28px}
+    .support-block p{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+    .support-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      width:100%;padding:14px;border-radius:12px;
+      background:linear-gradient(135deg,var(--gold),var(--gold2));
+      color:#0D0C12;font-size:15px;font-weight:700;text-decoration:none}
+  </style>
+</head>
+<body>
+<script>
+  try {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      if (tg.colorScheme === 'light') document.body.classList.add('light');
+    }
+  } catch(e) {}
+</script>
+
+<div class="page">
+  <div class="header">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1>Частые вопросы</h1>
+  </div>
+
+  <!-- Начало работы -->
+  <div class="section-label">Начало работы</div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggle(this)">
+      Как подключить свой ресторан?
+      <span class="chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      <ol>
+        <li>Открой Great Guest в Telegram — нажми кнопку «Открыть приложение»</li>
+        <li>Выбери тип заведения и заполни название</li>
+        <li>Нажми «Создать» — ресторан появится в твоём кабинете</li>
+      </ol>
+      <br>Если это первый ресторан — автоматически активируется <strong>14 дней бесплатного периода</strong>.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggle(this)">
+      Как гость узнаёт о программе лояльности?
+      <span class="chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      Гость запускает бота <code>@great_guest_bot</code> в Telegram. После этого он:
+      <ul>
+        <li>Получает QR-код для каждого визита</li>
+        <li>Видит свой статус и историю посещений</li>
+        <li>Получает уведомления после подтверждённого визита</li>
+      </ul>
+      <br>Размести QR-код бота на столах или на стойке — гости смогут присоединиться сами.
+    </div>
+  </div>
+
+  <!-- QR и визиты -->
+  <div class="section-label">QR-коды и визиты</div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggle(this)">
+      QR-код не сканируется — что делать?
+      <span class="chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      Проверь по порядку:
+      <ol>
+        <li><strong>Свет</strong> — убедись что экран гостя достаточно яркий</li>
+        <li><strong>Расстояние</strong> — держи камеру на 15–20 см от экрана</li>
+        <li><strong>Код свежий?</strong> — каждый QR действует для одного визита. Если гость уже использовал этот код — попроси его получить новый в боте</li>
+        <li><strong>Интернет</strong> — проверь что есть соединение на телефоне</li>
+      </ol>
+      <br>Если ничего не помогло — напиши в поддержку, разберёмся.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggle(this)">
+      Гость пришёл но забыл получить QR — можно засчитать визит?
+      <span class="chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      Да. Попроси гостя прямо сейчас открыть бота и нажать <strong>«Получить QR для визита»</strong> — это занимает 5 секунд. Затем сканируй как обычно.
+    </div>
+  </div>
+
+  <!-- Подписка -->
+  <div class="section-label">Подписка и оплата</div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggle(this)">
+      Сколько длится бесплатный период?
+      <span class="chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      <strong>14 дней</strong> с момента регистрации первого ресторана. После окончания нужно выбрать тариф — иначе доступ к кабинету будет ограничен.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggle(this)">
+      Какой тариф выбрать?
+      <span class="chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      <ul>
+        <li><strong>Базовый (2 990 ₽/мес)</strong> — 1 заведение. Для одного ресторана или кафе</li>
+        <li><strong>Сеть (7 990 ₽/мес)</strong> — до 5 заведений. Для небольшой сети</li>
+        <li><strong>Империя (19 990 ₽/мес)</strong> — без ограничений. Для крупных сетей</li>
+      </ul>
+      <br>Есть скидки при оплате на 3, 6 и 12 месяцев вперёд.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggle(this)">
+      Что будет если подписка закончится?
+      <span class="chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      Данные сохраняются. Гости не смогут сканировать QR до тех пор пока ты не продлишь подписку. После продления всё возобновляется автоматически.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggle(this)">
+      Как оплатить? Есть ли счёт для бухгалтерии?
+      <span class="chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      Оплата картой через защищённую систему ЮKassa. Если нужен счёт или договор для бухгалтерии — напиши в поддержку, оформим.
+    </div>
+  </div>
+
+  <!-- Реферальная программа -->
+  <div class="section-label">Реферальная программа</div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggle(this)">
+      Как получить +1 месяц бесплатно?
+      <span class="chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      Реферальная ссылка находится в разделе настроек кабинета владельца (вкладка "Аккаунт" или "Подписка"). Поделитесь ей с коллегой-ресторатором — когда он зарегистрируется по вашей ссылке, +1 месяц придёт автоматически.
+    </div>
+  </div>
+
+  <!-- Блок поддержки -->
+  <div class="support-block">
+    <p>Не нашёл ответ? Напиши напрямую — отвечаем быстро.</p>
+    <a class="support-btn" href="https://t.me/shpaksergey" target="_blank">
+      💬 Написать в поддержку
+    </a>
+  </div>
+</div>
+
+<script>
+  function toggle(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+</script>
+</body>
+</html>

@@ -551,6 +551,8 @@
     <a href="privacy.html" style="color:var(--muted);text-decoration:none;margin:0 8px">Политика конфиденциальности</a>
     <span style="color:var(--border)">·</span>
     <a href="terms.html" style="color:var(--muted);text-decoration:none;margin:0 8px">Условия использования</a>
+    <span style="color:var(--border)">·</span>
+    <a href="faq.html" style="color:var(--muted);text-decoration:none;margin:0 8px">Частые вопросы</a>
   </div>
 </div>
 
@@ -928,6 +930,29 @@ function toggleTheme() {
 }
 initTheme();
 
+// ─ Custom Confirm Modal ──────────────────────────────────────────────────────
+function showConfirmModal(message, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML = `
+    <div style="background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px;margin:0 auto">
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)">Подтверждение</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:24px;white-space:pre-line;line-height:1.5">${message}</div>
+      <button data-action="confirm"
+        style="width:100%;padding:14px;background:#FF3B30;border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;font-family:inherit">
+        Удалить
+      </button>
+      <button data-action="cancel"
+        style="width:100%;padding:14px;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">
+        Отмена
+      </button>
+    </div>`;
+  overlay.querySelector('[data-action="confirm"]').onclick = () => { overlay.remove(); onConfirm(); };
+  overlay.querySelector('[data-action="cancel"]').onclick = () => overlay.remove();
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
 // ─ Global state ──────────────────────────────────────────────────────────────
 const tg = window.Telegram?.WebApp;
 const initData = tg?.initData || '';
@@ -1109,10 +1134,10 @@ function renderNetwork() {
         </div>
       </div>
       <div class="net-tabs">
-        <button class="net-tab${netActiveTab==='events'?' active':''}" onclick="switchNetTab('events')">
+        <button class="net-tab${netActiveTab==='events'?' active':''}" onclick="switchNetTab(event, 'events')">
           📅 События${venues.length>0?` (${venues.length})`:''}
         </button>
-        <button class="net-tab${netActiveTab==='guests'?' active':''}" onclick="switchNetTab('guests')">
+        <button class="net-tab${netActiveTab==='guests'?' active':''}" onclick="switchNetTab(event, 'guests')">
           👥 Гости${gc>0?` (${gc})`:''}
         </button>
       </div>
@@ -1229,10 +1254,10 @@ function renderNetwork() {
   if (netActiveTab === 'guests' && gc > 0) ngbRender();
 }
 
-function switchNetTab(tab) {
+function switchNetTab(event, tab) {
   netActiveTab = tab;
   document.querySelectorAll('.net-tab').forEach(b => b.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
   document.getElementById('net-tab-events').style.display = tab === 'events' ? 'block' : 'none';
   document.getElementById('net-tab-guests').style.display = tab === 'guests' ? 'block' : 'none';
   if (tab === 'guests' && globalGuests.length > 0) ngbRender();
@@ -1853,7 +1878,14 @@ function renderDashboard() {
 // ─ Guests tab ────────────────────────────────────────────────────────────────
 function renderGuestsPane(guests, owner, isEvent) {
   if (!owner.is_active) {
-    return `<div class="empty">⛔ Подписка истекла.<br><br>Оформите подписку чтобы видеть гостей сети.<br><br>Напишите нам: @great_guest_support</div>`;
+    return `<div class="empty" style="padding:40px 20px">
+      ⛔ Подписка истекла<br><br>
+      <a href="payment.html" style="display:inline-block;margin:16px 0;padding:12px 24px;background:linear-gradient(135deg,var(--gold),#E8C97E);
+        color:#0D0C12;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none">
+        💳 Продлить подписку
+      </a><br><br>
+      Или напишите нам: <a href="https://t.me/shpaksergey" style="color:var(--gold)">@shpaksergey</a>
+    </div>`;
   }
   const scanBtn = `
     <button onclick="openQRScanner()"
@@ -2513,7 +2545,10 @@ async function copyInviteLink() {
     btn.textContent = '✅ Скопировано';
     setTimeout(() => { btn.textContent = 'Копировать'; }, 2000);
   } catch {
-    document.getElementById('invite-link-url').select();
+    // Fallback: show prompt for manual copy
+    const inputEl = document.getElementById('invite-link-url');
+    inputEl.select();
+    prompt('Скопируйте ссылку:', url);
   }
 }
 async function saveInviteMessage() {
@@ -2539,8 +2574,8 @@ function confirmDeleteVenue() {
   const v = currentVenue;
   if (!v) return;
   const label = v.venue_type === 'event' ? 'событие' : 'заведение';
-  const ok = confirm(`Удалить ${label} «${v.name}»?\n\nБудет удалено: визиты, офферы и RSVP этого ${label === 'событие' ? 'события' : 'заведения'}.\n\n✅ Гости остаются в вашей базе — они накапливаются по всем событиям и не теряются.`);
-  if (ok) deleteVenue(v.id);
+  const message = `Удалить ${label} «${v.name}»?\n\nБудет удалено: визиты, офферы и RSVP этого ${label === 'событие' ? 'события' : 'заведения'}.\n\n✅ Гости остаются в вашей базе — они накапливаются по всем событиям и не теряются.`;
+  showConfirmModal(message, () => deleteVenue(v.id));
 }
 
 async function deleteVenue(venueId) {
@@ -2625,27 +2660,29 @@ async function sendBroadcast() {
 
   // Confirm before sending
   const countEl = document.getElementById('broadcast-count').textContent;
-  if (!confirm(`Отправить приглашение на «${v.name}»?\n\n${countEl}`)) return;
+  const message = `Отправить приглашение на «${v.name}»?\n\n${countEl}`;
 
-  btn.disabled    = true;
-  btn.textContent = 'Отправляем…';
+  showConfirmModal(message, async () => {
+    btn.disabled    = true;
+    btn.textContent = 'Отправляем…';
 
-  const data = await apiFetch('/api/invite', {
-    action: 'broadcast',
-    initData,
-    venueId:       v.id,
-    filter,
-    customMessage: msg,
+    const data = await apiFetch('/api/invite', {
+      action: 'broadcast',
+      initData,
+      venueId:       v.id,
+      filter,
+      customMessage: msg,
+    });
+
+    btn.disabled = false;
+    if (data.success !== undefined || data.sent !== undefined) {
+      btn.textContent = `✅ Отправлено ${data.sent || 0}`;
+      setTimeout(() => { closeBroadcastModal(); btn.textContent = 'Отправить'; }, 3000);
+    } else {
+      btn.textContent = 'Отправить';
+      alert('Ошибка: ' + (data.error || 'попробуйте позже'));
+    }
   });
-
-  btn.disabled = false;
-  if (data.success !== undefined || data.sent !== undefined) {
-    btn.textContent = `✅ Отправлено ${data.sent || 0}`;
-    setTimeout(() => { closeBroadcastModal(); btn.textContent = 'Отправить'; }, 3000);
-  } else {
-    btn.textContent = 'Отправить';
-    alert('Ошибка: ' + (data.error || 'попробуйте позже'));
-  }
 }
 
 // ─ Camera QR Scanner ─────────────────────────────────────────────────────────
@@ -3155,7 +3192,7 @@ document.getElementById('upgrade-modal').addEventListener('click', e => {
 });
 
 function contactSupport() {
-  window.open('https://t.me/great_guest_support', '_blank');
+  window.open('https://t.me/shpaksergey', '_blank');
 }
 
 // ─ Bonus visit ───────────────────────────────────────────────────────────────
@@ -3344,11 +3381,25 @@ function showSubscriptionModal() {
         <div style="font-size:12px;color:var(--muted)">Событий: ${venuesData.length} из ${owner.max_venues}</div>
       </div>
 
-      <a href="https://t.me/great_guest_support" target="_blank"
+      <a href="https://t.me/shpaksergey" target="_blank"
         style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
           padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#E8C97E);
-          color:#0D0C12;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:20px">
+          color:#0D0C12;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px">
         💬 Написать менеджеру
+      </a>
+      <a href="https://t.me/+5iAU_mY-AJ42ZGYy" target="_blank"
+        style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+          padding:14px;border-radius:12px;border:1px solid rgba(201,169,110,0.35);
+          color:var(--gold);font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px;
+          background:rgba(201,169,110,0.06)">
+        👥 Сообщество партнёров
+      </a>
+      <a href="faq.html" target="_blank"
+        style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+          padding:14px;border-radius:12px;border:1px solid var(--border);
+          color:var(--muted);font-size:15px;font-weight:600;text-decoration:none;margin-bottom:20px;
+          background:var(--card2)">
+        ❓ Частые вопросы
       </a>
 
       <!-- Divider -->

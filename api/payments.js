@@ -61,11 +61,16 @@ async function createYooKassaPayment({ amount, description, metadata }) {
     }),
   });
 
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(`YooKassa error ${resp.status}: ${errText}`);
+  }
+
   return resp.json();
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://great-guest.vercel.app');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
@@ -73,6 +78,14 @@ module.exports = async (req, res) => {
 
   // ── ЮKassa webhook ───────────────────────────────────────────────────────────
   if (body.type === 'notification') {
+    // Verify YooKassa webhook signature
+    const expectedAuth = 'Basic ' + Buffer.from(
+      `${process.env.YOOKASSA_SHOP_ID}:${process.env.YOOKASSA_SECRET_KEY}`
+    ).toString('base64');
+    if (req.headers['authorization'] !== expectedAuth) {
+      return res.status(401).json({ error: 'unauthorized' });
+    }
+
     const payment = body.object;
     if (!payment || payment.status !== 'succeeded') return res.status(200).end();
 

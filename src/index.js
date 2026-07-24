@@ -23,19 +23,62 @@ const appInlineBtn = Markup.inlineKeyboard([
 
 bot.start(async (ctx) => {
   const tgUser = ctx.from;
+  const payload = ctx.startPayload || '';
+
+  // КР-5: Обработка диплинков ?start=v_/qr_/ref_
+  if (payload.startsWith('v_')) {
+    const venueId = payload.slice(2);
+    return ctx.reply('Открываем заведение...', {
+      reply_markup: {
+        inline_keyboard: [[{
+          text: 'Открыть',
+          web_app: { url: `https://great-guest.vercel.app/miniapp/app.html?venue=${venueId}` }
+        }]]
+      }
+    });
+  }
+
+  if (payload.startsWith('qr_')) {
+    const venueId = payload.slice(3);
+    return ctx.reply('Получаем ваш QR...', {
+      reply_markup: {
+        inline_keyboard: [[{
+          text: 'Открыть кабинет',
+          web_app: { url: `https://great-guest.vercel.app/miniapp/app.html` }
+        }]]
+      }
+    });
+  }
+
+  // ref_ — реферальный код, продолжаем стандартный /start
+
+  // КР-4: Проверяем есть ли уже consent_at у гостя
+  const { data: existingGuest } = await supabase
+    .from('guests')
+    .select('consent_at')
+    .eq('telegram_id', String(tgUser.id))
+    .single();
+
+  const upsertData = {
+    telegram_id: String(tgUser.id),
+    first_name: tgUser.first_name || '',
+    last_name: tgUser.last_name || '',
+    username: tgUser.username || '',
+  };
+
+  // Устанавливаем consent_at только если не было раньше
+  if (!existingGuest?.consent_at) {
+    upsertData.consent_at = new Date().toISOString();
+  }
+
   const { error } = await supabase
     .from('guests')
-    .upsert({
-      telegram_id: String(tgUser.id),
-      first_name: tgUser.first_name || '',
-      last_name: tgUser.last_name || '',
-      username: tgUser.username || '',
-    }, { onConflict: 'telegram_id' });
+    .upsert(upsertData, { onConflict: 'telegram_id' });
 
   if (error) return ctx.reply('Ошибка регистрации, попробуй ещё раз.');
 
   await ctx.replyWithMarkdown(
-    `👋 Привет, *${tgUser.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности.\n\nКаждый визит в ресторан-партнёр повышает твой статус.`,
+    `Привет, *${tgUser.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности.\n\nКаждый визит в ресторан-партнёр повышает твой статус.`,
     mainKeyboard
   );
 });
@@ -48,9 +91,14 @@ bot.hears('🎫 Получить QR для визита', async (ctx) => {
   const telegramId = String(ctx.from.id);
   const visitToken = uuidv4();
 
+  // ВА-4: Добавляем expires_at (1 час)
   const { error } = await supabase
     .from('pending_visits')
-    .insert({ token: visitToken, telegram_id: telegramId });
+    .insert({
+      token: visitToken,
+      telegram_id: telegramId,
+      expires_at: new Date(Date.now() + 3600_000).toISOString()
+    });
 
   if (error) return ctx.reply('Не удалось создать QR, попробуй ещё раз.');
 
@@ -196,6 +244,26 @@ app.post('/api/confirm-visit', async (req, res) => {
       visits: newCount,
     },
   });
+});
+
+// МЛ-1: Команда /myid
+bot.command('myid', async (ctx) => {
+  await ctx.reply(`Ваш Telegram ID: \`${ctx.from.id}\``, { parse_mode: 'Markdown' });
+});
+
+// ВА-5: Catch-all для любых сообщений (должен быть последним перед launch)
+bot.on('message', async (ctx) => {
+  try {
+    await ctx.reply('Используйте меню ниже', {
+      reply_markup: {
+        keyboard: [
+          [{ text: 'Получить QR' }, { text: 'Мои визиты' }],
+          [{ text: 'Открыть кабинет', web_app: { url: 'https://great-guest.vercel.app/miniapp/app.html' } }]
+        ],
+        resize_keyboard: true
+      }
+    });
+  } catch (e) {}
 });
 
 // ─── Start both ───────────────────────────────────────────────────────────────

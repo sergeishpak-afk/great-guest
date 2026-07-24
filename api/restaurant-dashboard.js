@@ -424,7 +424,7 @@ module.exports = async (req, res) => {
         .select('guest_id, first_name, last_name, username, total_visits, rsvp_count, last_seen_at, status_override')
         .eq('organizer_id', ownerId)
         .order('last_seen_at', { ascending: false })
-        .limit(500),
+        .limit(500),  // Note: if 500 records returned, list may be truncated
       venueIds.length > 0
         ? db
             .from('offers')
@@ -523,6 +523,7 @@ module.exports = async (req, res) => {
   }
 
   // 10. Return response
+  const guestsTruncated = globalGuests.length === 500;
   return res.status(200).json({
     owner: ownerInfo,
     venues: venuesWithStats,
@@ -530,6 +531,7 @@ module.exports = async (req, res) => {
       ...g,
       alreadyTargeted: targetedIds.has(g.telegram_id),
     })),
+    guests_truncated: guestsTruncated,
     offers: offers || [],
     venueGuestIds,
   });

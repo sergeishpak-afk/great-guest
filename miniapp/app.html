@@ -201,7 +201,11 @@
         <div class="menu-left"><div class="menu-icon">🎫</div><span>Карта лояльности</span></div>
         <span class="menu-arr">›</span>
       </button>
-      <a href="https://t.me/great_guest_bot" class="menu-item">
+      <a href="faq.html" class="menu-item">
+        <div class="menu-left"><div class="menu-icon">❓</div><span>Частые вопросы</span></div>
+        <span class="menu-arr">›</span>
+      </a>
+      <a href="https://t.me/shpaksergey" class="menu-item">
         <div class="menu-left"><div class="menu-icon">💬</div><span>Написать в поддержку</span></div>
         <span class="menu-arr">›</span>
       </a>
@@ -320,6 +324,13 @@ async function init() {
     data = await res.json();
   } catch(e) { showErr('Сетевая ошибка: ' + e.message); return; }
 
+  if (data.error === 'consent_required') {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('err-msg').innerHTML = 'Для начала запустите бота: нажмите кнопку ниже и отправьте /start<br><br><a href="https://t.me/great_guest_bot" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#C9A96E;color:#0D0C12;border-radius:12px;text-decoration:none;font-weight:600">Открыть @great_guest_bot</a>';
+    return;
+  }
+
   if (!res.ok || !data.guest) { showErr('Ошибка: ' + (data.error || res.status)); return; }
 
   var g = data.guest;
@@ -397,7 +408,10 @@ async function renderOffers(initData) {
       var date = new Date(o.created_at).toLocaleDateString('ru-RU', {day:'numeric',month:'short'});
       return '<div class="offer-card"><div class="offer-head"><span class="offer-place">🏪 ' + esc(name) + '</span><span class="offer-date">' + date + '</span></div><div class="offer-text">' + esc(o.offer_text || '') + '</div></div>';
     }).join('');
-  } catch(e) {}
+  } catch(e) {
+    document.getElementById('offers-wrap').style.display = 'block';
+    document.getElementById('offers-list').innerHTML = '<div class="empty" style="text-align:center;padding:32px 16px;color:var(--muted);font-size:14px">Не удалось загрузить предложения.<br>Попробуйте позже.</div>';
+  }
 }
 
 // ── History ───────────────────────────────────────────────────
@@ -424,7 +438,7 @@ async function getQR() {
     var data = await res.json();
     if (!res.ok || !data.visitUrl) { alert2(data.error || 'Ошибка создания QR'); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита'; return; }
     var img = document.getElementById('qr-img');
-    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.visitUrl) + '&ecc=H';
+    img.src = 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=' + encodeURIComponent(data.visitUrl) + '&choe=UTF-8';
     document.getElementById('qr-display').style.display = 'block';
     btn.disabled = true; btn.textContent = '✓ QR активен';
   } catch(e) { alert2('Ошибка: ' + e.message); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита'; }

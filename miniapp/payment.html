@@ -36,7 +36,7 @@
   .header p  { font-size: 14px; color: var(--muted); margin-top: 6px; }
 
   /* Success screen */
-  #success-screen {
+  #success-screen, #loading-screen {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -48,6 +48,16 @@
   .success-icon { font-size: 72px; }
   .success-title { font-size: 24px; font-weight: 700; }
   .success-sub   { color: var(--muted); font-size: 14px; }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Tabs */
   .tabs {
@@ -223,6 +233,11 @@
   </div>
 </div>
 
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div class="success-sub">⏳ Проверяем оплату...</div>
+</div>
+
 <div id="success-screen" style="display:none">
   <div class="success-icon">✅</div>
   <div class="success-title">Оплата прошла!</div>
@@ -356,13 +371,25 @@ async function pay() {
 }
 
 // Check if returning from successful payment
-if (new URLSearchParams(location.search).get('status') === 'success') {
-  document.getElementById('main-screen').style.display = 'none';
-  document.getElementById('success-screen').style.display = 'flex';
-  if (tg) setTimeout(() => tg.close(), 4000);
-} else {
-  build();
+async function checkPaymentStatus() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('status') === 'success') {
+    document.getElementById('main-screen').style.display = 'none';
+    document.getElementById('loading-screen').style.display = 'flex';
+
+    // Wait 3 seconds for webhook to process
+    await new Promise(r => setTimeout(r, 3000));
+
+    // Show success in any case (webhook is async)
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'flex';
+    if (tg) setTimeout(() => tg.close(), 4000);
+  } else {
+    build();
+  }
 }
+
+checkPaymentStatus();
 </script>
 </body>
 </html>
