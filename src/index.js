@@ -43,14 +43,13 @@ bot.start(async (ctx) => {
   }
 
   if (payload.startsWith('qr_')) {
-    const venueId = payload.slice(3);
-    return ctx.reply('Получаем ваш QR...', {
+    return ctx.reply('Откройте кабинет лояльности и нажмите «Получить QR для визита» — QR-код появится сразу.', {
       reply_markup: {
         inline_keyboard: [[{
-          text: 'Открыть кабинет',
-          web_app: { url: `https://great-guest.vercel.app/app.html` }
-        }]]
-      }
+          text: '🎫 Открыть кабинет',
+          web_app: { url: 'https://great-guest.vercel.app/app.html' },
+        }]],
+      },
     });
   }
 

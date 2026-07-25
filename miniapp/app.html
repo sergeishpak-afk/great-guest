@@ -205,7 +205,7 @@
         <div class="menu-left"><div class="menu-icon">❓</div><span>Частые вопросы</span></div>
         <span class="menu-arr">›</span>
       </a>
-      <button class="menu-item" onclick="(window.Telegram?.WebApp?.openTelegramLink || window.open.bind(window))('https://t.me/shpaksergey', '_blank')">
+      <button class="menu-item" onclick="(window.Telegram?.WebApp?.openTelegramLink || window.open.bind(window))('https://t.me/great_guest_bot', '_blank')">
         <div class="menu-left"><div class="menu-icon">💬</div><span>Написать в поддержку</span></div>
         <span class="menu-arr">›</span>
       </button>
@@ -420,7 +420,10 @@ function renderCabinet(g) {
   renderEmailSection(g.email || null);
 }
 
+var _savedEmail = null;
+
 function renderEmailSection(currentEmail) {
+  _savedEmail = currentEmail;
   var sec = document.getElementById('email-recovery-section');
   if (!sec) return;
   if (currentEmail) {
@@ -466,7 +469,16 @@ async function saveEmail() {
 }
 
 function changeEmail() {
+  var prev = _savedEmail;
   renderEmailSection(null);
+  if (prev) {
+    var sec = document.getElementById('email-recovery-section');
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Отмена';
+    cancelBtn.style.cssText = 'display:block;margin-top:8px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline;padding:0';
+    cancelBtn.onclick = function() { renderEmailSection(prev); };
+    sec.appendChild(cancelBtn);
+  }
   setTimeout(() => { var i = document.getElementById('email-input'); if(i) i.focus(); }, 50);
 }
 
@@ -514,7 +526,14 @@ function renderHistory(visits) {
         img.src = src;
         document.getElementById('qr-display').style.display = 'block';
         btn.disabled = true; btn.textContent = '✓ QR активен';
+        var _rCd = setInterval(function() {
+          var left = Math.max(0, exp - Date.now());
+          if (!left) { clearInterval(_rCd); return; }
+          var m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+          btn.textContent = '✓ QR активен — ' + m + ':' + (s < 10 ? '0' : '') + s;
+        }, 1000);
         setTimeout(function() {
+          clearInterval(_rCd);
           btn.disabled = false; btn.textContent = '🎫 Получить QR для визита';
           sessionStorage.removeItem('qr_expires'); sessionStorage.removeItem('qr_data_url');
         }, exp - Date.now());
@@ -534,7 +553,7 @@ async function getQR() {
     var res  = await fetch('/api/create-qr', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ initData:tg.initData }), signal: ctrl.signal });
     clearTimeout(tid);
     var data = await res.json();
-    if (!res.ok || !data.visitUrl) { alert2(data.error || 'Ошибка создания QR'); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита'; return; }
+    if (!res.ok || !data.visitUrl) { alert2(data.message || data.error || 'Ошибка создания QR'); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита'; return; }
     var img = document.getElementById('qr-img');
     img.src = data.qrDataUrl;
     document.getElementById('qr-display').style.display = 'block';
@@ -543,7 +562,15 @@ async function getQR() {
     var expireAt = Date.now() + 55 * 60 * 1000;
     sessionStorage.setItem('qr_expires', String(expireAt));
     sessionStorage.setItem('qr_data_url', data.qrDataUrl);
+    // U-1: Show countdown in button
+    var _qrCd = setInterval(function() {
+      var left = Math.max(0, expireAt - Date.now());
+      if (!left) { clearInterval(_qrCd); return; }
+      var m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+      btn.textContent = '✓ QR активен — ' + m + ':' + (s < 10 ? '0' : '') + s;
+    }, 1000);
     setTimeout(function() {
+      clearInterval(_qrCd);
       btn.disabled = false; btn.textContent = '🎫 Получить QR для визита';
       sessionStorage.removeItem('qr_expires'); sessionStorage.removeItem('qr_data_url');
     }, 55 * 60 * 1000);

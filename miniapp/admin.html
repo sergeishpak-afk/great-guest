@@ -484,7 +484,7 @@
   <div style="font-size:32px;margin-bottom:12px">⚠️</div>
   <div id="err-msg" style="color:inherit"></div>
   <div style="margin-top:16px;font-size:13px;color:var(--muted)">
-    Откройте через @great_guest_bot → /restaurant
+    Откройте через меню @great_guest_bot
   </div>
 </div>
 
@@ -937,7 +937,8 @@ function toggleTheme() {
 initTheme();
 
 // ─ Custom Confirm Modal ──────────────────────────────────────────────────────
-function showConfirmModal(message, onConfirm) {
+function showConfirmModal(message, onConfirm, confirmLabel = 'Удалить') {
+  const isDanger = confirmLabel === 'Удалить';
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML = `
@@ -945,8 +946,8 @@ function showConfirmModal(message, onConfirm) {
       <div style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)">Подтверждение</div>
       <div id="_confirm_msg_" style="font-size:14px;color:var(--muted);margin-bottom:24px;white-space:pre-line;line-height:1.5"></div>
       <button data-action="confirm"
-        style="width:100%;padding:14px;background:#FF3B30;border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;font-family:inherit">
-        Удалить
+        style="width:100%;padding:14px;background:${isDanger ? '#FF3B30' : 'var(--accent)'};border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;font-family:inherit">
+        ${confirmLabel}
       </button>
       <button data-action="cancel"
         style="width:100%;padding:14px;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">
@@ -2761,7 +2762,8 @@ function updateBroadcastCount() {
     count = globalGuests.filter(g => guestLevel(g)?.name === filter).length;
   }
   const decl = count === 1 ? 'ь' : count < 5 ? 'я' : 'ей';
-  document.getElementById('broadcast-count').textContent = `${count} получател${decl}`;
+  const capNote = count > 200 ? ` (отправится 200)` : '';
+  document.getElementById('broadcast-count').textContent = `${count} получател${decl}${capNote}`;
 }
 async function sendBroadcast() {
   const v = currentVenue;
@@ -2797,7 +2799,7 @@ async function sendBroadcast() {
       btn.textContent = 'Отправить';
       showToast('Ошибка: ' + (data.error || 'попробуйте позже'), 'error');
     }
-  });
+  }, 'Отправить');
 }
 
 // ─ Camera QR Scanner ─────────────────────────────────────────────────────────
@@ -3215,7 +3217,7 @@ async function sendOffer() {
     id: data.offer?.id || 'new',
     restaurant_id: currentVenue.id,
     guest_telegram_id: currentGuestId,
-    offer_text: selectedOffer,
+    offer_text: finalText,
     status: 'sent',
     created_at: new Date().toISOString(),
   });

@@ -67,6 +67,18 @@ module.exports = async (req, res) => {
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+  // ── action: check_subscription — lightweight check for payment polling ───────
+  if ((req.body || {}).action === 'check_subscription') {
+    const { data: sub } = await db
+      .from('owner_subscriptions')
+      .select('subscription_status, subscription_expires_at')
+      .eq('telegram_id', ownerId)
+      .maybeSingle();
+    const isActive = sub && sub.subscription_status === 'active'
+      && sub.subscription_expires_at && new Date(sub.subscription_expires_at) > new Date();
+    return res.status(200).json({ subscription_status: sub?.subscription_status || null, is_active: !!isActive });
+  }
+
   // ── action: get_rsvp_list — RSVP guests for a guestlist venue ───────────────
   if ((req.body || {}).action === 'get_rsvp_list') {
     const { venueId } = req.body;
@@ -132,8 +144,16 @@ module.exports = async (req, res) => {
     await db.from('rsvp').update({ status: 'approved' }).eq('venue_id', venueId).eq('telegram_id', telegramId);
     try {
       await bot.telegram.sendMessage(telegramId,
-        `✅ *Заявка одобрена!*\n\n📍 *${ven.name}*\n\nВы в списке гостей. Получите QR-код для входа в боте.`,
-        { parse_mode: 'Markdown' });
+        `✅ *Заявка одобрена!*\n\n📍 *${ven.name}*\n\nВы в списке гостей. Нажмите кнопку ниже чтобы открыть кабинет и получить QR-код для входа.`,
+        {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [[{
+              text: '🎫 Открыть кабинет и получить QR',
+              web_app: { url: 'https://great-guest.vercel.app/app.html' },
+            }]],
+          },
+        });
     } catch (e) { console.error('Approve notify error:', e.message); }
     return res.status(200).json({ success: true });
   }
@@ -412,7 +432,7 @@ module.exports = async (req, res) => {
   const now = new Date();
   const expires = ownerSub.subscription_expires_at ? new Date(ownerSub.subscription_expires_at) : null;
   const daysLeft = expires ? Math.max(0, Math.ceil((expires - now) / 86400000)) : 0;
-  const isActive = (ownerSub.subscription_status === 'trial' || ownerSub.subscription_status === 'active') && daysLeft > 0;
+  const isActive = (ownerSub.subscription_status === 'trial' || ownerSub.subscription_status === 'active') && expires && expires > now;
 
   const { count: referralCount } = await db
     .from('owner_subscriptions')
@@ -454,11 +474,12 @@ module.exports = async (req, res) => {
           .from('offers')
           .select('*', { count: 'exact', head: true })
           .eq('restaurant_id', venue.id),
-        // RSVP confirmations
+        // RSVP confirmations (approved only)
         db
           .from('rsvp')
           .select('*', { count: 'exact', head: true })
-          .eq('venue_id', venue.id),
+          .eq('venue_id', venue.id)
+          .eq('status', 'approved'),
       ]);
 
       return {

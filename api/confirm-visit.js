@@ -105,18 +105,25 @@ module.exports = async (req, res) => {
   const guest = guestResult.data;
   const restaurantName = restResult.data?.name || 'ресторан-партнёр';
 
-  // Atomic visit_count increment (prevents race condition on simultaneous scans)
+  // К-4: Insert visit record first — if this fails, don't increment counter
+  const { error: visitInsertErr } = await supabase.from('visits').insert({
+    telegram_id: pending.telegram_id,
+    restaurant_id: effectiveRestaurantId || null,
+    visit_token: token,
+  });
+  if (visitInsertErr) {
+    console.error('[confirm-visit] visits.insert error:', visitInsertErr.message);
+    return res.status(500).json({ error: 'Ошибка записи визита' });
+  }
+
+  // Atomic visit_count increment after confirmed insert
   const { data: newCount, error: rpcError } = await supabase
     .rpc('increment_guest_visits', { p_telegram_id: pending.telegram_id });
 
   if (rpcError || newCount === null) {
-    console.error('increment_guest_visits error:', rpcError?.message);
-    return res.status(500).json({ error: 'Ошибка обновления счётчика' });
+    console.error('increment_guest_visits error after insert:', rpcError?.message);
+    // Visit is recorded — only counter is off, log for manual review
   }
-
-  // К-6: Log insert errors (can't rollback visit_count, but need visibility)
-  const { error: visitInsertErr } = await supabase.from('visits').insert({ telegram_id: pending.telegram_id, restaurant_id: effectiveRestaurantId || null, visit_token: token });
-  if (visitInsertErr) console.error('[confirm-visit] visits.insert error:', visitInsertErr.message);
 
   // Fetch status_override for this organizer's guest (for correct status in notification)
   let statusOverride = null;
