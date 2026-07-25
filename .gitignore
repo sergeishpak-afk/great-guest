@@ -11,3 +11,4 @@ node_modules/
 .claude/
 vercel_envs_tmp.json
 .env*
+.pending.json

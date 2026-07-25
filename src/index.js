@@ -4,6 +4,7 @@ const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const supabase = require('./admin-db'); // service_role — bypasses RLS for bot writes
 const { formatStatus } = require('./status');
 
@@ -18,8 +19,37 @@ const mainKeyboard = Markup.keyboard([
   ['📌 Команды', '💬 Поддержка'],
 ]).resize();
 
-const pendingSupport = new Set();
-const pendingEmail   = new Set();
+// Pending states persist across restarts via local file with 10-min TTL
+const PENDING_FILE = path.join(__dirname, '../.pending.json');
+const PENDING_TTL  = 10 * 60 * 1000;
+
+function _loadPending() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(PENDING_FILE, 'utf8'));
+    const now = Date.now();
+    return {
+      support: new Map(Object.entries(raw.support || {}).filter(([, e]) => e > now)),
+      email:   new Map(Object.entries(raw.email   || {}).filter(([, e]) => e > now)),
+    };
+  } catch { return { support: new Map(), email: new Map() }; }
+}
+function _savePending() {
+  try {
+    fs.writeFileSync(PENDING_FILE, JSON.stringify({
+      support: Object.fromEntries(pendingSupport),
+      email:   Object.fromEntries(pendingEmail),
+    }), 'utf8');
+  } catch (e) { console.warn('[pending] save error:', e.message); }
+}
+const { support: pendingSupport, email: pendingEmail } = _loadPending();
+function pAdd(map, id)    { map.set(id, Date.now() + PENDING_TTL); _savePending(); }
+function pHas(map, id)    {
+  const e = map.get(id);
+  if (!e) return false;
+  if (Date.now() > e) { map.delete(id); _savePending(); return false; }
+  return true;
+}
+function pDel(map, id)    { map.delete(id); _savePending(); }
 
 const appInlineBtn = Markup.inlineKeyboard([
   [Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP_URL)]
@@ -54,7 +84,7 @@ bot.start(async (ctx) => {
   }
 
   if (payload === 'support') {
-    pendingSupport.add(String(ctx.from.id));
+    pAdd(pendingSupport, String(ctx.from.id));
     return ctx.reply(
       'Опишите вашу проблему — мы ответим в течение 24 часов.\nНапишите сообщение прямо сейчас 👇',
       Markup.keyboard([['❌ Отмена']]).resize().oneTime(),
@@ -267,7 +297,7 @@ bot.command('myid', async (ctx) => {
 });
 
 bot.command('setemail', async (ctx) => {
-  pendingEmail.add(String(ctx.from.id));
+  pAdd(pendingEmail, String(ctx.from.id));
   await ctx.reply(
     '📧 Введите ваш email для восстановления аккаунта:\n\n_Поможет вернуть историю визитов при смене Telegram._',
     { parse_mode: 'Markdown', ...Markup.keyboard([['❌ Отмена']]).resize().oneTime() }
@@ -275,7 +305,7 @@ bot.command('setemail', async (ctx) => {
 });
 
 bot.hears('💬 Поддержка', async (ctx) => {
-  pendingSupport.add(String(ctx.from.id));
+  pAdd(pendingSupport, String(ctx.from.id));
   await ctx.reply(
     'Опишите вашу проблему — мы ответим в течение 24 часов.\nНапишите сообщение прямо сейчас 👇',
     Markup.keyboard([['❌ Отмена']]).resize().oneTime()
@@ -284,8 +314,8 @@ bot.hears('💬 Поддержка', async (ctx) => {
 
 bot.hears('❌ Отмена', async (ctx) => {
   const uid = String(ctx.from.id);
-  pendingSupport.delete(uid);
-  pendingEmail.delete(uid);
+  pDel(pendingSupport, uid);
+  pDel(pendingEmail, uid);
   await ctx.reply('Хорошо, возвращаемся в меню.', mainKeyboard);
 });
 
@@ -294,11 +324,11 @@ bot.on('message', async (ctx) => {
   const userId = String(ctx.from.id);
 
   // Перехватываем ввод email
-  if (pendingEmail.has(userId) && ctx.message?.text) {
-    pendingEmail.delete(userId);
+  if (pHas(pendingEmail, userId) && ctx.message?.text) {
+    pDel(pendingEmail, userId);
     const email = ctx.message.text.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      pendingEmail.add(userId);
+      pAdd(pendingEmail, userId);
       await ctx.reply('❌ Некорректный email. Попробуйте ещё раз:', Markup.keyboard([['❌ Отмена']]).resize().oneTime());
       return;
     }
@@ -316,8 +346,8 @@ bot.on('message', async (ctx) => {
   }
 
   // Перехватываем сообщение поддержки
-  if (pendingSupport.has(userId) && ctx.message?.text) {
-    pendingSupport.delete(userId);
+  if (pHas(pendingSupport, userId) && ctx.message?.text) {
+    pDel(pendingSupport, userId);
     const guestName = [ctx.from.first_name, ctx.from.last_name].filter(Boolean).join(' ') || 'Гость';
     const guestLabel = guestName + (ctx.from.username ? ` (@${ctx.from.username})` : '') + ` [${userId}]`;
     const supportId = process.env.SUPPORT_TELEGRAM_ID;

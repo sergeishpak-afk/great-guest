@@ -1464,6 +1464,8 @@ async function rsvpAddGuest() {
 
 async function rsvpApproveGuest(telegramId) {
   const msgEl = document.getElementById('rsvp-msg');
+  msgEl.style.color = 'var(--muted)';
+  msgEl.textContent = '⏳ Обрабатываем...';
   try {
     const initData = window.Telegram?.WebApp?.initData || '';
     const resp = await fetch('/api/restaurant-dashboard', {
@@ -1491,6 +1493,8 @@ function rsvpRejectGuest(telegramId) {
 }
 async function _doRejectGuest(telegramId) {
   const msgEl = document.getElementById('rsvp-msg');
+  msgEl.style.color = 'var(--muted)';
+  msgEl.textContent = '⏳ Обрабатываем...';
   try {
     const initData = window.Telegram?.WebApp?.initData || '';
     const resp = await fetch('/api/restaurant-dashboard', {
