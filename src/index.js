@@ -322,6 +322,8 @@ bot.on('message', async (ctx) => {
           { parse_mode: 'Markdown' }
         );
       } catch (e) { console.error('Support forward error:', e.message); }
+    } else {
+      console.error('[support] SUPPORT_TELEGRAM_ID not set — message lost:', guestLabel, ctx.message.text);
     }
     await ctx.reply('✅ Сообщение отправлено! Ответим здесь в течение 24 часов.', mainKeyboard);
     return;
