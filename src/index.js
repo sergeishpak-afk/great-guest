@@ -53,6 +53,14 @@ bot.start(async (ctx) => {
     });
   }
 
+  if (payload === 'support') {
+    pendingSupport.add(String(ctx.from.id));
+    return ctx.reply(
+      'Опишите вашу проблему — мы ответим в течение 24 часов.\nНапишите сообщение прямо сейчас 👇',
+      Markup.keyboard([['❌ Отмена']]).resize().oneTime(),
+    );
+  }
+
   if (payload.startsWith('rsvp_')) {
     const venueId = payload.slice(5);
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
