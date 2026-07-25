@@ -191,7 +191,7 @@ bot.start(async (ctx) => {
   if (error) return ctx.reply('Ошибка регистрации, попробуй ещё раз.');
 
   await ctx.replyWithMarkdown(
-    `Привет, *${tgUser.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности.\n\nКаждый визит в ресторан-партнёр повышает твой статус.`,
+    `Привет, *${tgUser.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности.\n\nКаждый визит в заведение-партнёр или мероприятие системы Great Guest повышает твой статус.`,
     mainKeyboard
   );
 });

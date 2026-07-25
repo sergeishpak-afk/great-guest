@@ -250,8 +250,8 @@ const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
 const PLANS = {
-  event:   { label: 'Разовый',  emoji: '🎟', price: 490,  max_venues: 1,   features: ['1 мероприятие', 'QR-чек-ин', 'База участников', 'Панель управления'], popular: true, oneTime: true },
-  basic:   { label: 'Базовый',  emoji: '🔑', price: 2990, max_venues: 1,   features: ['1 заведение', 'До 1 000 гостей', 'Сканер QR', 'База гостей'] },
+  event:   { label: 'Разовый',  emoji: '🎟', price: 490,  max_venues: 1,   features: ['1 мероприятие', 'QR-чек-ин', 'База участников', 'Панель управления'], oneTime: true },
+  basic:   { label: 'Базовый',  emoji: '🔑', price: 2990, max_venues: 1,   features: ['1 заведение', 'До 1 000 гостей', 'Сканер QR', 'База гостей'], popular: true },
   network: { label: 'Сеть',     emoji: '🏢', price: 7990, max_venues: 5,   features: ['До 5 заведений', 'Неограниченно гостей', 'Рассылки', 'RSVP-листы'] },
   empire:  { label: 'Империя',  emoji: '👑', price:19990, max_venues: 999, features: ['Неограниченно заведений', 'Белый лейбл', 'Приоритет поддержки', 'Всё из Сети'] },
 };
@@ -262,7 +262,7 @@ const DURATIONS = [
   { months: 12, label: '12 мес', discount: 0.20 },
 ];
 
-let selectedPlan    = 'event';
+let selectedPlan    = 'basic';
 let selectedMonths  = 1;
 
 function buildDurTabs() {
@@ -387,7 +387,19 @@ function showSuccess(confirmed) {
     backBtn.style.cssText = 'margin-top:16px;color:var(--accent);font-size:15px;text-decoration:none;font-weight:600';
     successEl.appendChild(backBtn);
   }
-  if (tg) setTimeout(() => tg.close(), 4000);
+  if (tg) {
+    let cd = 5;
+    const cdBtn = document.createElement('button');
+    cdBtn.style.cssText = 'margin-top:10px;background:none;border:none;color:rgba(240,235,224,0.35);font-size:12px;cursor:pointer;padding:4px 8px;font-family:inherit';
+    cdBtn.textContent = `Закроется через ${cd} сек`;
+    successEl.appendChild(cdBtn);
+    const timer = setInterval(() => {
+      cd--;
+      if (cd <= 0) { clearInterval(timer); tg.close(); }
+      else cdBtn.textContent = `Закроется через ${cd} сек`;
+    }, 1000);
+    cdBtn.onclick = () => { clearInterval(timer); tg.close(); };
+  }
 }
 
 function skipPaymentCheck() {

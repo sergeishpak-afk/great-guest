@@ -259,7 +259,7 @@ const LEVELS = [
 const VIP_LEVEL = { name:'VIP', emoji:'👑', min:0, reward:'Особый гость' };
 const LEVEL_MAP = { Bronze:LEVELS[0], Silver:LEVELS[1], Gold:LEVELS[2], Platinum:LEVELS[3], VIP:VIP_LEVEL };
 
-function getLevel(n) { return [...LEVELS].reverse().find(function(l){ return n >= l.min; }) || null; }
+function getLevel(n) { return [...LEVELS].reverse().find(function(l){ return n >= l.min; }) || LEVELS[0]; }
 function getNext(n)  { return LEVELS.find(function(l){ return l.min > n; }); }
 function getEffectiveLvl(n, override) {
   if (override && LEVEL_MAP[override]) return LEVEL_MAP[override];
@@ -496,8 +496,7 @@ async function renderOffers(initData) {
       return '<div class="offer-card"><div class="offer-head"><span class="offer-place">🏪 ' + esc(name) + '</span><span class="offer-date">' + date + '</span></div><div class="offer-text">' + esc(o.offer_text || '') + '</div></div>';
     }).join('');
   } catch(e) {
-    document.getElementById('offers-wrap').style.display = 'block';
-    document.getElementById('offers-list').innerHTML = '<div class="empty" style="text-align:center;padding:32px 16px;color:var(--muted);font-size:14px">Не удалось загрузить предложения.<br>Попробуйте позже.</div>';
+    // Don't show offers section on network error — empty state looks like a broken feature
   }
 }
 
@@ -587,7 +586,7 @@ async function checkOwner(tgId) {
     if (!r.data || !r.data.length) return;
     document.getElementById('venues-list').innerHTML = r.data.map(function(v) {
       var since = new Date(v.created_at).toLocaleDateString('ru-RU', {day:'numeric',month:'short',year:'numeric'});
-      return '<div class="venue-card"><div class="venue-info"><div class="venue-name">🍽 ' + esc(v.name) + '</div><div class="venue-meta">С ' + since + '</div></div><a href="admin.html" class="venue-btn">Управлять →</a></div>';
+      return '<div class="venue-card"><div class="venue-info"><div class="venue-name">🍽 ' + esc(v.name) + '</div><div class="venue-meta">С ' + since + '</div></div><a href="admin.html?venue=' + v.id + '" class="venue-btn">Управлять →</a></div>';
     }).join('');
     var netTab = document.getElementById('ntab-network');
     netTab.classList.add('show');
@@ -596,7 +595,7 @@ async function checkOwner(tgId) {
   }
 }
 
-init();
+init().catch(function(e) { showErr('Ошибка: ' + e.message); });
 </script>
 </body>
 </html>

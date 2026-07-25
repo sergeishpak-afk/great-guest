@@ -696,6 +696,7 @@
         border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;
         margin-bottom:10px;outline:none;font-family:inherit">
       <option value="all">Всем контактам сети</option>
+      <option value="VIP">👑 Только VIP</option>
       <option value="Platinum">💎 Только Platinum</option>
       <option value="Gold">🥇 Только Gold</option>
       <option value="Silver">🥈 Только Silver</option>
@@ -729,7 +730,7 @@
     </button>
 
     <div style="margin-top:12px;font-size:11px;color:var(--muted);text-align:center;line-height:1.5">
-      Каждый получит кнопку «Подтвердить участие» → откроется страница события в браузере
+      Каждый получит кнопку «Подтвердить участие» → откроет @great_guest_bot и подаст заявку
     </div>
   </div>
 </div>
@@ -1489,7 +1490,7 @@ async function rsvpApproveGuest(telegramId) {
 }
 
 function rsvpRejectGuest(telegramId) {
-  showConfirmModal('Отклонить заявку? Гость получит уведомление об отказе.', () => _doRejectGuest(telegramId));
+  showConfirmModal('Отклонить заявку? Гость получит уведомление об отказе.', () => _doRejectGuest(telegramId), 'Отклонить');
 }
 async function _doRejectGuest(telegramId) {
   const msgEl = document.getElementById('rsvp-msg');
@@ -1704,7 +1705,7 @@ function renderRegistrationForm() {
     </div>
     <div class="field">
       <label>Город</label>
-      <input id="r-city" value="Москва" maxlength="60"/>
+      <input id="r-city" placeholder="Введите город" maxlength="60"/>
     </div>
     ${extraFields}
 
@@ -1805,7 +1806,8 @@ async function register() {
     allOffers = dash.offers || [];
     renderNetwork();
   } else {
-    showErr('Зарегистрировано! Закройте и откройте панель снова через /restaurant в боте.');
+    showToast('Заведение создано ✓');
+    showErr('Заведение создано! Закройте окно и нажмите «Открыть Great Guest» в меню бота.');
   }
 }
 
@@ -1933,7 +1935,7 @@ function renderDashboard() {
     : owner.subscription_status === 'trial'
     ? `<div onclick="showSubscriptionModal()" style="background:rgba(201,169,110,0.08);border-bottom:1px solid rgba(201,169,110,0.15);
         padding:10px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-        <span style="font-size:13px;color:var(--gold);font-weight:500">⏳ Триал: ${owner.days_left} ${owner.days_left===1?'день':owner.days_left<5?'дня':'дней'}</span>
+        <span style="font-size:13px;color:var(--gold);font-weight:500">⏳ Триал: ${owner.days_left} ${(n=>n%100>=11&&n%100<=14?'дней':n%10===1?'день':n%10>=2&&n%10<=4?'дня':'дней')(owner.days_left)}</span>
         <span style="font-size:12px;color:var(--gold);font-weight:700">Выбрать тариф →</span>
       </div>`
     : '';
@@ -1978,7 +1980,7 @@ function renderGuestsPane(guests, owner, isEvent) {
         color:#0D0C12;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none">
         💳 Продлить подписку
       </a><br><br>
-      Или напишите нам: <button onclick="openTgLink('https://t.me/shpaksergey')" style="background:none;border:none;color:var(--gold);font-size:inherit;cursor:pointer;padding:0;font-family:inherit">@shpaksergey</button>
+      Или напишите нам: <button onclick="openTgLink('https://t.me/great_guest_bot?start=support')" style="background:none;border:none;color:var(--gold);font-size:inherit;cursor:pointer;padding:0;font-family:inherit">в поддержку</button>
     </div>`;
   }
   const scanBtn = `

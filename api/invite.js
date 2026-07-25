@@ -270,6 +270,15 @@ module.exports = async (req, res) => {
       if (!contact)
         return res.status(403).json({ error: 'guest_not_in_your_base', message: 'Гость не найден в вашей базе' });
 
+      // Security: new account must be a registered guest (prevents history theft via unknown IDs)
+      const { data: newGuest } = await db
+        .from('guests')
+        .select('telegram_id')
+        .eq('telegram_id', newId)
+        .maybeSingle();
+      if (!newGuest)
+        return res.status(404).json({ error: 'new_account_not_registered', message: 'Новый аккаунт не зарегистрирован в Great Guest' });
+
       const { data: result, error: rpcErr } = await db.rpc('merge_guest_accounts', {
         p_old_telegram_id: oldId,
         p_new_telegram_id: newId,
