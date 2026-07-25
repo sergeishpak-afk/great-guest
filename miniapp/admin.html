@@ -10,6 +10,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
+      --accent:#C9A96E;
       --gold:#C9A96E;
       --gold2:#E8C97E;
       --gold-bg:rgba(201,169,110,0.1);
@@ -1102,7 +1103,7 @@ function renderNetwork() {
   const badgeClass = owner.subscription_status === 'trial' ? 'net-trial' : owner.is_active ? 'net-active' : 'net-expired';
   const badgeText  = owner.subscription_status === 'trial' ? `⏳ ${owner.days_left} дн.` : owner.is_active ? `✅ Активна` : `⛔ Истекла`;
   const subStatus  = owner.subscription_status === 'trial'
-    ? `Пробный период — ${owner.days_left} ${owner.days_left===1?'день':owner.days_left<5?'дня':'дней'}`
+    ? `Пробный период — ${owner.days_left} ${(n=>n%100>=11&&n%100<=14?'дней':n%10===1?'день':n%10<=4?'дня':'дней')(owner.days_left)}`
     : owner.is_active ? `Активна до ${fmtDate(owner.subscription_expires_at)}` : `Истекла ${fmtDate(owner.subscription_expires_at)}`;
   const showUpgrade = !owner.is_active || owner.subscription_status === 'trial' || owner.plan === 'trial';
   const gc = globalGuests.length;
@@ -1403,7 +1404,10 @@ async function loadRsvpList(venueId) {
   }
 }
 
-async function rsvpRemoveGuest(telegramId) {
+async function rsvpRemoveGuest(telegramId, confirmed) {
+  if (!confirmed) {
+    return showConfirmModal('Удалить гостя из списка? Это действие нельзя отменить.', () => rsvpRemoveGuest(telegramId, true));
+  }
   const msgEl = document.getElementById('rsvp-msg');
   try {
     const initData = window.Telegram?.WebApp?.initData || '';
@@ -2288,14 +2292,15 @@ function infoRow(label, value) {
 // ─ Level distribution infographic ────────────────────────────────────────────
 function renderLevelChart(guests) {
   if (!guests || !guests.length) return '';
-  const counts = { Bronze:0, Silver:0, Gold:0, Platinum:0 };
-  guests.forEach(g => { const n = guestLevel(g)?.name; counts[n]++; });
+  const counts = { Bronze:0, Silver:0, Gold:0, Platinum:0, VIP:0 };
+  guests.forEach(g => { const n = guestLevel(g)?.name; if (n && n in counts) counts[n]++; });
   const total = guests.length;
   const levels = [
     { name:'Bronze',   emoji:'🥉', color:'#C47A3D' },
     { name:'Silver',   emoji:'🥈', color:'#9CA3AF' },
     { name:'Gold',     emoji:'🥇', color:'#C9A96E' },
     { name:'Platinum', emoji:'💎', color:'#60A5FA' },
+    { name:'VIP',      emoji:'👑', color:'#A78BFA' },
   ];
   const bars = levels.map(l => {
     const cnt = counts[l.name];
@@ -2596,7 +2601,7 @@ function renderDiscoverySection(v, guests, targetedIds) {
               <span style="font-size:13px;font-weight:600">${esc(fullName)}</span>
               <span class="level-badge lvl-${lvl.name}" style="margin-left:6px">${lvl.emoji} ${lvl.name}</span>
               <div style="font-size:11px;color:var(--muted);margin-top:2px">
-                ${g.visit_count} ${g.visit_count === 1 ? 'визит' : g.visit_count < 5 ? 'визита' : 'визитов'} в сети
+                ${g.visit_count} ${(n=>n%100>=11&&n%100<=14?'визитов':n%10===1?'визит':n%10<=4?'визита':'визитов')(g.visit_count)} в сети
               </div>
             </div>
             <button class="action-btn"
@@ -3010,6 +3015,10 @@ function renderGuestBaseList() {
 function exportGuestBaseCSV() {
   const guests = globalGuests;
   if (!guests.length) { showToast('База пустая', 'error'); return; }
+  if (window.Telegram?.WebApp?.initData) {
+    showToast('Откройте кабинет в браузере — скачивание файлов в Telegram недоступно', 'warning');
+    return;
+  }
   const BOM = '﻿';
   const header = 'Имя,Фамилия,Username,Статус,Визитов (сеть),Визитов (у вас),RSVP,Последняя активность\n';
   const rows = guests.map(g => {
@@ -3286,7 +3295,7 @@ function showUpgradeModal(reason, errorData) {
       </div>
       <div class="upgrade-plan-venues">До ${p.max_venues} ${typeof p.max_venues === 'number' && p.max_venues === 1 ? 'события' : 'событий'}</div>
       <div class="upgrade-plan-price">${p.price}</div>
-      <button class="upgrade-plan-btn" onclick="contactSupport()">Подключить</button>
+      <button class="upgrade-plan-btn" onclick="window.location.href='payment.html'">Подключить</button>
     </div>
   `).join('');
 
@@ -3317,7 +3326,7 @@ function openTgLink(url) {
 }
 
 function contactSupport() {
-  openTgLink('https://t.me/shpaksergey');
+  openTgLink('https://t.me/great_guest_bot?start=support');
 }
 
 // ─ Bonus visit ───────────────────────────────────────────────────────────────

@@ -236,6 +236,7 @@
 <div id="loading-screen">
   <div class="spinner"></div>
   <div class="success-sub">⏳ Проверяем оплату...</div>
+  <button onclick="skipPaymentCheck()" style="margin-top:20px;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;text-decoration:underline">Пропустить →</button>
 </div>
 
 <div id="success-screen" style="display:none">
@@ -329,6 +330,7 @@ function build() {
   buildPlanList();
   buildTotalLine();
   document.getElementById('err-msg').textContent = '';
+  document.getElementById('dur-tabs').style.display = PLANS[selectedPlan]?.oneTime ? 'none' : '';
 }
 
 async function pay() {
@@ -370,6 +372,28 @@ async function pay() {
   }
 }
 
+function showSuccess(confirmed) {
+  document.getElementById('loading-screen').style.display = 'none';
+  const successEl = document.getElementById('success-screen');
+  successEl.style.display = 'flex';
+  if (!confirmed) {
+    const subEl = successEl.querySelector('.success-sub');
+    if (subEl) subEl.innerHTML = 'Оплата принята!<br>Подписка активируется в течение минуты.';
+  }
+  if (!tg) {
+    const backBtn = document.createElement('a');
+    backBtn.href = 'admin.html';
+    backBtn.textContent = '← Вернуться в кабинет';
+    backBtn.style.cssText = 'margin-top:16px;color:var(--accent);font-size:15px;text-decoration:none;font-weight:600';
+    successEl.appendChild(backBtn);
+  }
+  if (tg) setTimeout(() => tg.close(), 4000);
+}
+
+function skipPaymentCheck() {
+  showSuccess(false);
+}
+
 // Check if returning from successful payment
 async function checkPaymentStatus() {
   const params = new URLSearchParams(location.search);
@@ -394,29 +418,9 @@ async function checkPaymentStatus() {
           }
         } catch (e) {}
       }
-    } else {
-      await new Promise(r => setTimeout(r, 8000));
     }
 
-    document.getElementById('loading-screen').style.display = 'none';
-    const successEl = document.getElementById('success-screen');
-    successEl.style.display = 'flex';
-
-    if (!confirmed) {
-      const subEl = successEl.querySelector('.success-sub');
-      if (subEl) subEl.innerHTML = 'Оплата принята!<br>Подписка активируется в течение минуты.';
-    }
-
-    // Show back button when opened outside Telegram
-    if (!tg) {
-      const backBtn = document.createElement('a');
-      backBtn.href = 'admin.html';
-      backBtn.textContent = '← Вернуться в кабинет';
-      backBtn.style.cssText = 'margin-top:16px;color:var(--accent);font-size:15px;text-decoration:none;font-weight:600';
-      successEl.appendChild(backBtn);
-    }
-
-    if (tg) setTimeout(() => tg.close(), 4000);
+    showSuccess(confirmed);
   } else {
     build();
   }

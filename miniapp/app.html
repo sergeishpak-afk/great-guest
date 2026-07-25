@@ -388,7 +388,7 @@ function renderStatus(count, override) {
   document.getElementById('s-reward').style.display  = 'inline-block';
   document.getElementById('prog-wrap').style.display = next ? 'block' : 'none';
   if (next) {
-    var pct = Math.min(100, Math.round((count - lvl.min) / (next.min - lvl.min) * 100));
+    var pct = Math.min(100, Math.max(count > 0 ? 10 : 0, Math.round((count - lvl.min) / (next.min - lvl.min) * 100)));
     document.getElementById('prog-from').textContent = lvl.emoji + ' ' + lvl.name;
     document.getElementById('prog-to').textContent   = next.emoji + ' ' + next.name;
     document.getElementById('prog-fill').style.width = pct + '%';
@@ -591,7 +591,9 @@ async function checkOwner(tgId) {
     }).join('');
     var netTab = document.getElementById('ntab-network');
     netTab.classList.add('show');
-  } catch(e) {}
+  } catch(e) {
+    document.getElementById('venues-list').innerHTML = '<div class="empty" style="text-align:center;padding:24px 0;color:var(--muted);font-size:14px">Не удалось загрузить.<br><button onclick="checkOwner(\'' + tgId + '\')" style="margin-top:8px;background:none;border:none;color:var(--gold);font-size:14px;cursor:pointer;text-decoration:underline">Повторить</button></div>';
+  }
 }
 
 init();

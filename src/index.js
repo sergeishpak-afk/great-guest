@@ -43,7 +43,7 @@ bot.start(async (ctx) => {
   }
 
   if (payload.startsWith('qr_')) {
-    return ctx.reply('Откройте кабинет лояльности и нажмите «Получить QR для визита» — QR-код появится сразу.', {
+    return ctx.reply('Откройте кабинет лояльности и нажмите «🎫 Мой QR-код» — QR-код появится сразу.', {
       reply_markup: {
         inline_keyboard: [[{
           text: '🎫 Открыть кабинет',
@@ -129,7 +129,7 @@ bot.start(async (ctx) => {
     } catch (e) { console.error('Organizer notify error:', e.message); }
 
     // Показываем главное меню — на случай если пользователь новый и пришёл только через инвайт
-    await ctx.reply(`Нажми «🎫 Получить QR для визита» когда придёшь в заведение.`, mainKeyboard);
+    await ctx.reply(`Нажми «🎫 Мой QR-код» когда придёшь в заведение.`, mainKeyboard);
     return;
   }
 
@@ -350,17 +350,18 @@ app.listen(PORT, () => {
 
 // Регистрируем команды в меню Telegram
 bot.telegram.setMyCommands([
-  { command: 'start',    description: 'Начать / перезапустить бота' },
-  { command: 'help',     description: 'Что умеет бот' },
-  { command: 'app',      description: 'Открыть мини-приложение' },
-  { command: 'setemail', description: 'Добавить email для восстановления аккаунта' },
-  { command: 'myid',     description: 'Мой Telegram ID' },
+  { command: 'start',      description: 'Начать / перезапустить бота' },
+  { command: 'help',       description: 'Что умеет бот' },
+  { command: 'app',        description: 'Открыть мини-приложение' },
+  { command: 'restaurant', description: 'Панель сканирования QR (для персонала)' },
+  { command: 'setemail',   description: 'Добавить email для восстановления аккаунта' },
+  { command: 'myid',       description: 'Мой Telegram ID' },
 ]).then(() => console.log('✅ Команды бота зарегистрированы'))
   .catch(e => console.warn('⚠️  setMyCommands:', e.message));
 
 // Устанавливаем menu button до запуска polling
 bot.telegram.setChatMenuButton({
-  menu_button: { type: 'web_app', text: 'Open Great Guest', web_app: { url: MINI_APP_URL } }
+  menu_button: { type: 'web_app', text: 'Открыть Great Guest', web_app: { url: MINI_APP_URL } }
 }).then(() => console.log('✅ Menu button установлен'))
   .catch(e => console.warn('⚠️  Menu button:', e.message));
 
