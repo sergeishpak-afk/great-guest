@@ -2,7 +2,6 @@
   "version": 2,
   "outputDirectory": "miniapp",
   "framework": null,
-  "buildCommand": "node scripts/register-webhook.js",
   "rewrites": [
     { "source": "/api/guest-preview/:token", "destination": "/api/guest-preview?token=:token" },
     { "source": "/privacy",   "destination": "/privacy.html" },
@@ -19,11 +18,19 @@
       ]
     },
     {
+      "source": "/admin.html",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options",        "value": "SAMEORIGIN" },
-        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" }
+        { "key": "X-Content-Type-Options",    "value": "nosniff" },
+        { "key": "X-Frame-Options",           "value": "SAMEORIGIN" },
+        { "key": "Referrer-Policy",           "value": "strict-origin-when-cross-origin" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains" },
+        { "key": "Permissions-Policy",        "value": "camera=self, microphone=()" }
       ]
     }
   ]

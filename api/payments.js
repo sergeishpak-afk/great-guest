@@ -40,6 +40,17 @@ function validateInitData(initData, token) {
   } catch { return null; }
 }
 
+async function fetchYooKassaPayment(paymentId) {
+  const resp = await fetch(`https://api.yookassa.ru/v3/payments/${paymentId}`, {
+    headers: {
+      'Authorization': 'Basic ' + Buffer.from(`${process.env.YOOKASSA_SHOP_ID}:${process.env.YOOKASSA_SECRET_KEY}`).toString('base64'),
+    },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!resp.ok) return null;
+  return resp.json();
+}
+
 async function createYooKassaPayment({ amount, description, metadata }) {
   const shopId    = process.env.YOOKASSA_SHOP_ID;
   const secretKey = process.env.YOOKASSA_SECRET_KEY;
@@ -105,7 +116,14 @@ module.exports = async (req, res) => {
     const payment = body.object;
     if (!payment || payment.status !== 'succeeded') return res.status(200).end();
 
-    const { telegram_id, plan, months } = payment.metadata || {};
+    // В-6: Re-verify payment with YooKassa API to prevent forged webhooks
+    const verifiedPayment = await fetchYooKassaPayment(payment.id).catch(() => null);
+    if (!verifiedPayment || verifiedPayment.status !== 'succeeded') {
+      console.warn('[payments] webhook verification mismatch for payment:', payment.id);
+      return res.status(200).end();
+    }
+
+    const { telegram_id, plan, months } = verifiedPayment.metadata || {};
     if (!telegram_id || !plan || !PLANS[plan]) return res.status(200).end();
 
     const m = parseInt(months) || 1;

@@ -74,7 +74,38 @@ module.exports = async (req, res) => {
       .map(r => r.status_override).filter(Boolean)
       .sort((a, b) => (RANK[b] || 0) - (RANK[a] || 0))[0] || null;
 
-    return res.status(200).json({ guest: { ...guest, status_override: bestOverride } });
+    // К-2: Fetch recent visits via service_role so RLS doesn't block anon access
+    const { data: recentVisits } = await supabase
+      .from('visits')
+      .select('visited_at, restaurants(name)')
+      .eq('telegram_id', telegramId)
+      .order('visited_at', { ascending: false })
+      .limit(10);
+
+    return res.status(200).json({ guest: { ...guest, status_override: bestOverride, recent_visits: recentVisits || [] } });
+  }
+
+  // ── action: set_email — save optional recovery email ─────────────────────────
+  if (body.action === 'set_email') {
+    const email = (body.email || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'invalid_email' });
+    }
+    const { error: emailErr } = await supabase
+      .from('guests')
+      .update({ email })
+      .eq('telegram_id', telegramId);
+    if (emailErr) {
+      if (emailErr.code === '23505') return res.status(409).json({ error: 'email_taken' });
+      return res.status(500).json({ error: 'DB error' });
+    }
+    return res.status(200).json({ success: true });
+  }
+
+  // ── action: remove_email ──────────────────────────────────────────────────────
+  if (body.action === 'remove_email') {
+    await supabase.from('guests').update({ email: null }).eq('telegram_id', telegramId);
+    return res.status(200).json({ success: true });
   }
 
   // ── Default: create QR token ──────────────────────────────────────────────────

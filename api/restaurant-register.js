@@ -71,10 +71,17 @@ module.exports = async (req, res) => {
       .from('restaurants').select('id, name, owner_telegram_id').eq('id', venueId).single();
     if (fetchErr || !venue) return res.status(404).json({ error: 'Venue not found' });
     if (venue.owner_telegram_id !== ownerId) return res.status(403).json({ error: 'Not your venue' });
-    await db.from('rsvp').delete().eq('venue_id', venueId);
-    await db.from('offers').delete().eq('restaurant_id', venueId);
-    await db.from('visits').delete().eq('restaurant_id', venueId);
-    await db.from('pending_visits').delete().eq('restaurant_id', venueId);
+    // В-9: Run sub-deletes in parallel and log individual errors
+    const [r1, r2, r3, r4] = await Promise.all([
+      db.from('rsvp').delete().eq('venue_id', venueId),
+      db.from('offers').delete().eq('restaurant_id', venueId),
+      db.from('visits').delete().eq('restaurant_id', venueId),
+      db.from('pending_visits').delete().eq('restaurant_id', venueId),
+    ]);
+    if (r1.error) console.error('[delete-venue] rsvp:', r1.error.message);
+    if (r2.error) console.error('[delete-venue] offers:', r2.error.message);
+    if (r3.error) console.error('[delete-venue] visits:', r3.error.message);
+    if (r4.error) console.error('[delete-venue] pending_visits:', r4.error.message);
     const { error: delErr } = await db.from('restaurants').delete().eq('id', venueId);
     if (delErr) return res.status(500).json({ error: 'Delete failed' });
     return res.status(200).json({ success: true, deleted: venue.name });

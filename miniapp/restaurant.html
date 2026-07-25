@@ -266,7 +266,8 @@ const SUPABASE_URL = 'https://wjlhaizrygeyeishbycp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentToken = null;
+let currentToken  = null;
+let venueIdLocked = null;
 let scanStream    = null;
 let scanAnimId    = null;
 let scanCanvas    = null;
@@ -309,6 +310,7 @@ async function checkGuest() {
   try {
     const res  = await fetch(`/api/guest-preview/${token}`);
     const data = await res.json();
+    if (res.status === 410) return showError('QR-код устарел — гость должен получить новый в Telegram');
     if (!res.ok) return showError(data.error || 'Токен не найден или уже использован');
     showGuest(data.guest);
   } catch {
@@ -321,7 +323,7 @@ async function checkGuest() {
 
 // ── Confirm visit ──
 async function confirmVisit() {
-  const restaurantId = document.getElementById('restaurantSelect').value;
+  const restaurantId = venueIdLocked || document.getElementById('restaurantSelect').value;
   if (!restaurantId) { showError('Выберите ресторан'); return; }
   const btn = document.getElementById('result').querySelector('.confirm-btn');
   btn.disabled = true; btn.textContent = 'Подтверждаю...';
@@ -367,6 +369,8 @@ function showSuccess(g) {
     <div class="guest-meta">${g.name} — итого ${g.visits} визитов</div>
     <span class="badge ${b.cls}">${b.label}</span>
     <button class="btn btn-dark next-btn" onclick="reset()">👤 Следующий гость</button>`;
+  // UX-3: Auto-clear success screen after 8 seconds
+  setTimeout(function() { reset(); }, 8000);
 }
 
 function showError(msg) {
@@ -480,9 +484,28 @@ document.getElementById('token').addEventListener('keydown', e => {
   if (e.key === 'Enter') checkGuest();
 });
 
-// ── Auto-fill from URL: restaurant.html?token=UUID ──
-const urlToken = new URLSearchParams(window.location.search).get('token');
-if (urlToken) {
+// ── Auto-fill from URL: restaurant.html?token=UUID&venue=UUID ──
+const _urlParams = new URLSearchParams(window.location.search);
+const urlToken   = _urlParams.get('token');
+const urlVenue   = _urlParams.get('venue');
+
+if (urlVenue && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(urlVenue)) {
+  venueIdLocked = urlVenue;
+  // Hide the generic dropdown — staff is locked to their venue
+  document.querySelector('label[for="restaurantSelect"]').style.display = 'none';
+  document.getElementById('restaurantSelect').style.display = 'none';
+  // Fetch and show venue name
+  db.from('restaurants').select('name').eq('id', urlVenue).single().then(({ data }) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom:20px;padding:12px 16px;background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.2);border-radius:12px;font-size:14px;font-weight:600';
+    div.textContent = '📍 ' + (data?.name || 'Заведение');
+    document.getElementById('restaurantSelect').insertAdjacentElement('afterend', div);
+  });
+  if (urlToken) {
+    document.getElementById('token').value = urlToken;
+    checkGuest();
+  }
+} else if (urlToken) {
   document.getElementById('token').value = urlToken;
   loadRestaurants().then(() => checkGuest());
 } else {

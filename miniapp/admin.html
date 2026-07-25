@@ -2140,6 +2140,11 @@ function renderStatsPane(v) {
       ${v.city ? infoRow('Город', v.city) : ''}
       ${v.cuisine ? infoRow('Кухня', v.cuisine) : ''}
     </div>
+    <div style="margin-top:10px;padding:14px 16px;background:rgba(201,169,110,0.04);border:1px solid rgba(201,169,110,0.15);border-radius:12px">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.06em;margin-bottom:6px">🔗 ССЫЛКА ДЛЯ ПЕРСОНАЛА</div>
+      <div style="font-size:12px;color:var(--muted);font-family:monospace;word-break:break-all;line-height:1.5;margin-bottom:10px">great-guest.vercel.app/restaurant.html?venue=${v.id}</div>
+      <button onclick="copyStaffUrl('${v.id}')" style="width:100%;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px;color:#60A5FA;font-size:13px;font-weight:600;cursor:pointer">📋 Скопировать</button>
+    </div>
     ${renderLevelChart(globalGuests)}
 
     <div style="display:flex;gap:10px;margin-top:4px">
@@ -2392,7 +2397,8 @@ function uploadCover(venueId) {
   inp.onchange = () => {
     const file = inp.files[0];
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { showToast('Файл слишком большой (макс. 8 МБ)', 'error'); return; }
+    // UX-7: Align UI limit with server decode limit (4 MB)
+    if (file.size > 4 * 1024 * 1024) { showToast('Файл слишком большой (макс. 4 МБ)', 'error'); return; }
     const objUrl = URL.createObjectURL(file);
     const img = new Image();
     img.onerror = () => { URL.revokeObjectURL(objUrl); showToast('Не удалось прочитать изображение', 'error'); };
@@ -2633,6 +2639,13 @@ function showInviteLink() {
 function closeInviteLink() {
   document.getElementById('invite-link-modal').style.display = 'none';
 }
+function copyStaffUrl(venueId) {
+  const url = `https://great-guest.vercel.app/restaurant.html?venue=${venueId}`;
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('Ссылка для персонала скопирована!'))
+    .catch(() => { prompt('Скопируйте ссылку:', url); });
+}
+
 async function copyInviteLink() {
   const url = document.getElementById('invite-link-url').value;
   try {
@@ -2715,7 +2728,8 @@ async function downloadAnalytics() {
   if (btn) { btn.innerHTML = origText; btn.disabled = false; }
 
   if (r && r.success) {
-    showToast('📊 CSV отправлен в ваш Telegram чат');
+    if (r.capped) showToast(`Отправлено 500 из ${r.total} контактов — лимит выгрузки`, 'warning');
+    else showToast('📊 CSV отправлен в ваш Telegram чат');
   } else {
     showToast('Ошибка экспорта: ' + ((r && r.error) || 'попробуйте снова'), 'error');
   }
@@ -2750,9 +2764,11 @@ function updateBroadcastCount() {
 async function sendBroadcast() {
   const v = currentVenue;
   if (!v) return;
+  const btn = document.getElementById('broadcast-send-btn');
+  // UX-6: Guard against double-click while a send is already in progress
+  if (btn && btn.disabled) return;
   const filter = document.getElementById('broadcast-filter').value;
   const msg    = document.getElementById('broadcast-msg').value.trim();
-  const btn    = document.getElementById('broadcast-send-btn');
 
   // Confirm before sending
   const countEl = document.getElementById('broadcast-count').textContent;

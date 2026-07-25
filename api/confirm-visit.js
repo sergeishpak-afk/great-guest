@@ -84,19 +84,13 @@ module.exports = async (req, res) => {
   if (effectiveRestaurantId && !UUID_RE.test(effectiveRestaurantId)) return res.status(400).json({ error: 'invalid restaurantId' });
   if (effectiveRestaurantId && !restResult.data) return res.status(404).json({ error: 'Ресторан не найден' });
 
-  // Guestlist mode: deny entry if guest never confirmed RSVP
+  // Guestlist mode: deny entry if guest has no approved RSVP for this venue
   if (restResult.data?.classification_mode === 'guestlist') {
-    // Anonymous QR (generated via /qr command, no venue binding) — reject at guestlist venues
-    if (!claimedVisit.restaurant_id) {
-      return res.status(403).json({
-        error: 'guestlist_requires_venue_qr',
-        message: 'QR-код не привязан к мероприятию. Гость должен получить QR через ссылку события.',
-      });
-    }
+    // К-4: Use effectiveRestaurantId so generic QR also works when guest has approved RSVP
     const { data: rsvpRow } = await supabase
       .from('rsvp')
       .select('status')
-      .eq('venue_id', claimedVisit.restaurant_id)
+      .eq('venue_id', effectiveRestaurantId)
       .eq('telegram_id', pending.telegram_id)
       .maybeSingle();
 
@@ -120,7 +114,9 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Ошибка обновления счётчика' });
   }
 
-  await supabase.from('visits').insert({ telegram_id: pending.telegram_id, restaurant_id: effectiveRestaurantId || null, visit_token: token });
+  // К-6: Log insert errors (can't rollback visit_count, but need visibility)
+  const { error: visitInsertErr } = await supabase.from('visits').insert({ telegram_id: pending.telegram_id, restaurant_id: effectiveRestaurantId || null, visit_token: token });
+  if (visitInsertErr) console.error('[confirm-visit] visits.insert error:', visitInsertErr.message);
 
   // Fetch status_override for this organizer's guest (for correct status in notification)
   let statusOverride = null;

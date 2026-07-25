@@ -26,12 +26,15 @@ module.exports = async (req, res) => {
 
   const { data: pending } = await supabase
     .from('pending_visits')
-    .select('telegram_id, used')
+    .select('telegram_id, used, expires_at')
     .eq('token', token)
     .single();
 
   if (!pending) return res.status(404).json({ error: 'QR не найден' });
   if (pending.used) return res.status(400).json({ error: 'QR уже использован' });
+  // В-2: Check expiry before showing guest preview
+  if (pending.expires_at && new Date(pending.expires_at) < new Date())
+    return res.status(410).json({ error: 'QR-код устарел — гость должен получить новый в Telegram' });
 
   // Return only first_name + visit_count — minimal PII needed for confirmation screen
   const { data: guest } = await supabase

@@ -102,6 +102,11 @@ module.exports = async (req, res) => {
     const { data: ven } = await db.from('restaurants').select('id, owner_telegram_id').eq('id', venueId).single();
     if (!ven) return res.status(404).json({ error: 'Venue not found' });
     if (ven.owner_telegram_id !== ownerId) return res.status(403).json({ error: 'Not your venue' });
+    // В-3: Require active subscription (same as approve_rsvp)
+    const { data: addSub } = await db.from('owner_subscriptions').select('subscription_status, subscription_expires_at').eq('telegram_id', ownerId).single();
+    const addSubExp = addSub?.subscription_expires_at ? new Date(addSub.subscription_expires_at) : null;
+    if (!addSub || addSub.subscription_status !== 'active' || !addSubExp || addSubExp <= new Date())
+      return res.status(403).json({ error: 'Управление гостевым списком доступно только на платном тарифе' });
     const { error } = await db.from('rsvp').upsert(
       { venue_id: venueId, telegram_id: telegramId, status: 'approved' },
       { onConflict: 'venue_id,telegram_id' }
@@ -249,12 +254,16 @@ module.exports = async (req, res) => {
 
   // ── action: export_csv — generate guest list CSV and send via bot ──────────
   if ((req.body || {}).action === 'export_csv') {
-    const { data: contacts } = await db
-      .from('organizer_contacts')
-      .select('guest_id, first_name, last_name, username, total_visits, rsvp_count, last_seen_at')
-      .eq('organizer_id', ownerId)
-      .order('last_seen_at', { ascending: false })
-      .limit(500);
+    const [{ data: contacts }, { count: totalContacts }] = await Promise.all([
+      db.from('organizer_contacts')
+        .select('guest_id, first_name, last_name, username, total_visits, rsvp_count, last_seen_at')
+        .eq('organizer_id', ownerId)
+        .order('last_seen_at', { ascending: false })
+        .limit(500),
+      db.from('organizer_contacts')
+        .select('*', { count: 'exact', head: true })
+        .eq('organizer_id', ownerId),
+    ]);
 
     const rows = [['Имя', 'Фамилия', 'Username', 'Telegram ID', 'Визитов', 'RSVP', 'Последний визит']];
     for (const g of (contacts || [])) {
@@ -289,7 +298,8 @@ module.exports = async (req, res) => {
       const err = await tgRes.json().catch(() => ({}));
       return res.status(500).json({ error: 'Telegram send failed' });
     }
-    return res.status(200).json({ success: true, count: (contacts || []).length });
+    const contactsArr = contacts || [];
+    return res.status(200).json({ success: true, count: contactsArr.length, total: totalContacts || contactsArr.length, capped: contactsArr.length === 500 });
   }
 
   // ── action: sync_avatar — fetch TG profile photo + store in Supabase ─────────

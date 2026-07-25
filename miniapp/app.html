@@ -222,6 +222,7 @@
         <span class="menu-arr">›</span>
       </a>
     </div>
+    <div id="email-recovery-section" style="margin-bottom:20px"></div>
     <div class="footer-note">Great Guest © 2026</div>
   </div>
 
@@ -281,6 +282,19 @@ function alert2(msg) {
   if (tg && tg.showAlert) tg.showAlert(msg); else alert(msg);
 }
 
+// К-1: showToast was missing — crashes saveEmail/changeEmail flows
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
+    'background:' + (type === 'error' ? '#ef4444' : '#22c55e') + ';color:#fff;' +
+    'padding:10px 18px;border-radius:12px;font-size:14px;font-weight:500;' +
+    'z-index:9999;max-width:80%;text-align:center;pointer-events:none;' +
+    'box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3000);
+}
+
 // ── Tab switching ─────────────────────────────────────────────
 var currentTab = 'card';
 function goTab(tab) {
@@ -320,14 +334,22 @@ async function init() {
 
   var res, data;
   try {
-    res  = await fetch('/api/create-qr', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ initData:initData, action:'init' }) });
+    // UX-1: 10-second timeout on init fetch
+    var ctrl = new AbortController();
+    var tid  = setTimeout(function(){ ctrl.abort(); }, 10000);
+    res  = await fetch('/api/create-qr', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ initData:initData, action:'init' }), signal: ctrl.signal });
+    clearTimeout(tid);
     data = await res.json();
-  } catch(e) { showErr('Сетевая ошибка: ' + e.message); return; }
+  } catch(e) { showErr(e.name === 'AbortError' ? 'Сервер не отвечает. Проверьте соединение.' : 'Сетевая ошибка: ' + e.message); return; }
 
   if (data.error === 'consent_required') {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error').style.display = 'block';
-    document.getElementById('err-msg').innerHTML = 'Для начала запустите бота: нажмите кнопку ниже и отправьте /start<br><br><button onclick="window.Telegram?.WebApp?.openTelegramLink(\'https://t.me/great_guest_bot\')" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#C9A96E;color:#0D0C12;border-radius:12px;font-weight:600;border:none;cursor:pointer;font-size:inherit;font-family:inherit">Открыть @great_guest_bot</button>';
+    // UX-5: Add retry button alongside the bot link
+    document.getElementById('err-msg').innerHTML =
+      'Для начала запустите бота: нажмите кнопку ниже и отправьте /start<br><br>' +
+      '<button onclick="window.Telegram?.WebApp?.openTelegramLink(\'https://t.me/great_guest_bot\')" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#C9A96E;color:#0D0C12;border-radius:12px;font-weight:600;border:none;cursor:pointer;font-size:inherit;font-family:inherit">Открыть @great_guest_bot</button>' +
+      '<br><button onclick="document.getElementById(\'error\').style.display=\'none\';document.getElementById(\'loading\').style.display=\'flex\';init()" style="display:inline-block;margin-top:10px;padding:10px 20px;background:rgba(255,255,255,0.08);color:#F0EBE0;border-radius:12px;font-weight:500;border:1px solid rgba(255,255,255,0.12);cursor:pointer;font-size:13px;font-family:inherit">↻ Попробовать снова</button>';
     return;
   }
 
@@ -338,7 +360,9 @@ async function init() {
   renderStatus(g.visit_count, g.status_override || null);
   renderCabinet(g);
 
-  await Promise.all([ renderHistory(g.telegram_id), renderOffers(initData), checkOwner(g.telegram_id) ]);
+  // К-2: Pass visits from init response (fetched via service_role, not blocked by RLS)
+  renderHistory(g.recent_visits || []);
+  await Promise.all([ renderOffers(initData), checkOwner(g.telegram_id) ]);
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display     = 'block';
@@ -393,6 +417,57 @@ function renderCabinet(g) {
     document.getElementById('cab-next').textContent     = override ? '✨' : '💎';
     document.getElementById('cab-next-lbl').textContent = override ? 'статус присвоен организатором' : 'максимальный уровень';
   }
+  renderEmailSection(g.email || null);
+}
+
+function renderEmailSection(currentEmail) {
+  var sec = document.getElementById('email-recovery-section');
+  if (!sec) return;
+  if (currentEmail) {
+    sec.innerHTML =
+      '<div class="sec-title">Восстановление аккаунта</div>' +
+      '<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:14px;padding:14px 16px">' +
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">📧 Email для восстановления</div>' +
+        '<div style="font-size:14px;color:var(--text);word-break:break-all">' + esc(currentEmail) + '</div>' +
+        '<button onclick="changeEmail()" style="margin-top:10px;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0;text-decoration:underline">Изменить</button>' +
+      '</div>';
+  } else {
+    sec.innerHTML =
+      '<div class="sec-title">Восстановление аккаунта</div>' +
+      '<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:14px;padding:14px 16px">' +
+        '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Добавьте email — это поможет восстановить историю визитов при смене Telegram</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<input id="email-input" type="email" placeholder="your@email.com" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;min-width:0"/>' +
+          '<button onclick="saveEmail()" style="background:linear-gradient(135deg,var(--gold),var(--gold2,#E8C97E));border:none;border-radius:10px;padding:10px 16px;color:#0D0C12;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">Сохранить</button>' +
+        '</div>' +
+      '</div>';
+  }
+}
+
+async function saveEmail() {
+  var inp = document.getElementById('email-input');
+  if (!inp) return;
+  var email = inp.value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('Введите корректный email', 'error'); return;
+  }
+  inp.disabled = true;
+  try {
+    var r = await fetch('/api/create-qr', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ initData: window.Telegram?.WebApp?.initData || '', action:'set_email', email }) });
+    var d = await r.json();
+    if (!r.ok) {
+      showToast(d.error === 'email_taken' ? 'Этот email уже занят' : 'Ошибка сохранения', 'error');
+      inp.disabled = false; return;
+    }
+    renderEmailSection(email);
+    showToast('Email сохранён ✓');
+  } catch(e) { showToast('Ошибка сети', 'error'); inp.disabled = false; }
+}
+
+function changeEmail() {
+  renderEmailSection(null);
+  setTimeout(() => { var i = document.getElementById('email-input'); if(i) i.focus(); }, 50);
 }
 
 // ── Offers ────────────────────────────────────────────────────
@@ -415,34 +490,67 @@ async function renderOffers(initData) {
 }
 
 // ── History ───────────────────────────────────────────────────
-async function renderHistory(tgId) {
-  try {
-    var r = await db.from('visits').select('visited_at, restaurants(name)').eq('telegram_id', tgId).order('visited_at', {ascending:false}).limit(10);
-    var el = document.getElementById('visits-list');
-    if (!r.data || !r.data.length) { el.innerHTML = '<div class="empty">Визитов пока нет — получи QR и посети заведение!</div>'; return; }
-    el.innerHTML = r.data.map(function(v) {
-      var date = new Date(v.visited_at).toLocaleDateString('ru-RU', {day:'numeric',month:'short'});
-      var name = (v.restaurants && v.restaurants.name) ? v.restaurants.name : 'Заведение';
-      return '<div class="visit-row"><span class="visit-place">🍽 ' + esc(name) + '</span><span class="visit-date">' + date + '</span></div>';
-    }).join('');
-  } catch(e) { document.getElementById('visits-list').innerHTML = '<div class="empty">Не удалось загрузить историю</div>'; }
+// К-2: Now accepts visits array from init response (no anon Supabase call)
+function renderHistory(visits) {
+  var el = document.getElementById('visits-list');
+  if (!visits || !visits.length) { el.innerHTML = '<div class="empty">Визитов пока нет — получи QR и посети заведение!</div>'; return; }
+  el.innerHTML = visits.map(function(v) {
+    var date = new Date(v.visited_at).toLocaleDateString('ru-RU', {day:'numeric',month:'short'});
+    var name = (v.restaurants && v.restaurants.name) ? v.restaurants.name : 'Заведение';
+    return '<div class="visit-row"><span class="visit-place">🍽 ' + esc(name) + '</span><span class="visit-date">' + date + '</span></div>';
+  }).join('');
 }
 
 // ── QR ────────────────────────────────────────────────────────
+// UX-2: Restore QR lock state from sessionStorage on page reload
+(function restoreQRState() {
+  var exp = parseInt(sessionStorage.getItem('qr_expires') || '0', 10);
+  var src = sessionStorage.getItem('qr_data_url') || '';
+  if (exp && Date.now() < exp && src) {
+    window.addEventListener('load', function() {
+      var btn = document.getElementById('qr-btn');
+      var img = document.getElementById('qr-img');
+      if (btn && img) {
+        img.src = src;
+        document.getElementById('qr-display').style.display = 'block';
+        btn.disabled = true; btn.textContent = '✓ QR активен';
+        setTimeout(function() {
+          btn.disabled = false; btn.textContent = '🎫 Получить QR для визита';
+          sessionStorage.removeItem('qr_expires'); sessionStorage.removeItem('qr_data_url');
+        }, exp - Date.now());
+      }
+    });
+  }
+})();
+
 async function getQR() {
   if (!tg || !tg.initData) return;
   var btn = document.getElementById('qr-btn');
   btn.disabled = true; btn.textContent = '⏳ Создаём QR...';
   try {
-    var res  = await fetch('/api/create-qr', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ initData:tg.initData }) });
+    // UX-1: 10-second timeout
+    var ctrl = new AbortController();
+    var tid  = setTimeout(function(){ ctrl.abort(); }, 10000);
+    var res  = await fetch('/api/create-qr', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ initData:tg.initData }), signal: ctrl.signal });
+    clearTimeout(tid);
     var data = await res.json();
     if (!res.ok || !data.visitUrl) { alert2(data.error || 'Ошибка создания QR'); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита'; return; }
     var img = document.getElementById('qr-img');
     img.src = data.qrDataUrl;
     document.getElementById('qr-display').style.display = 'block';
     btn.disabled = true; btn.textContent = '✓ QR активен';
-    setTimeout(function() { btn.disabled = false; btn.textContent = '🎫 Получить QR для визита'; }, 55 * 60 * 1000);
-  } catch(e) { alert2('Ошибка: ' + e.message); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита'; }
+    // UX-2: Persist QR state in sessionStorage so reload doesn't reset the timer
+    var expireAt = Date.now() + 55 * 60 * 1000;
+    sessionStorage.setItem('qr_expires', String(expireAt));
+    sessionStorage.setItem('qr_data_url', data.qrDataUrl);
+    setTimeout(function() {
+      btn.disabled = false; btn.textContent = '🎫 Получить QR для визита';
+      sessionStorage.removeItem('qr_expires'); sessionStorage.removeItem('qr_data_url');
+    }, 55 * 60 * 1000);
+  } catch(e) {
+    var msg = e.name === 'AbortError' ? 'Сервер не отвечает. Попробуйте позже.' : ('Ошибка: ' + e.message);
+    alert2(msg); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита';
+  }
 }
 
 // ── Owner check ───────────────────────────────────────────────
