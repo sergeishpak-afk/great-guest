@@ -301,7 +301,12 @@ module.exports = async (req, res) => {
         updates.name = n;
       }
       if (req.body.event_type !== undefined) updates.event_type = String(req.body.event_type || '').slice(0, 60);
-      if (req.body.event_date !== undefined) updates.event_date = req.body.event_date || null;
+      if (req.body.event_date !== undefined) {
+        const _dateVal = req.body.event_date;
+        if (_dateVal && isNaN(Date.parse(_dateVal)))
+          return res.status(400).json({ error: 'Неверный формат даты события' });
+        updates.event_date = _dateVal || null;
+      }
       if (req.body.address !== undefined) updates.address = String(req.body.address || '').trim().slice(0, 120);
       if (req.body.city !== undefined) updates.city = String(req.body.city || '').trim().slice(0, 60);
       if (req.body.invite_message !== undefined) updates.invite_message = String(req.body.invite_message || '').trim().slice(0, 1000);

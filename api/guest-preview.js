@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
   // Return only first_name + visit_count — minimal PII needed for confirmation screen
   const { data: guest } = await supabase
     .from('guests')
-    .select('first_name, visit_count')
+    .select('first_name, last_name, visit_count')
     .eq('telegram_id', pending.telegram_id)
     .single();
 

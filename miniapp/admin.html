@@ -943,7 +943,7 @@ function showConfirmModal(message, onConfirm) {
   overlay.innerHTML = `
     <div style="background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px;margin:0 auto">
       <div style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)">Подтверждение</div>
-      <div style="font-size:14px;color:var(--muted);margin-bottom:24px;white-space:pre-line;line-height:1.5">${message}</div>
+      <div id="_confirm_msg_" style="font-size:14px;color:var(--muted);margin-bottom:24px;white-space:pre-line;line-height:1.5"></div>
       <button data-action="confirm"
         style="width:100%;padding:14px;background:#FF3B30;border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;font-family:inherit">
         Удалить
@@ -953,6 +953,7 @@ function showConfirmModal(message, onConfirm) {
         Отмена
       </button>
     </div>`;
+  overlay.querySelector('#_confirm_msg_').textContent = message;
   overlay.querySelector('[data-action="confirm"]').onclick = () => { overlay.remove(); onConfirm(); };
   overlay.querySelector('[data-action="cancel"]').onclick = () => overlay.remove();
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
@@ -1038,6 +1039,7 @@ async function apiFetch(url, body) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
     });
     const json = await res.json();
     return { ok: res.ok, status: res.status, ...json };
@@ -3708,7 +3710,7 @@ if (!document.getElementById('toast-styles')) {
 
 // ─ Utils ─────────────────────────────────────────────────────────────────────
 function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 }
 
 function fmtDate(isoStr) {

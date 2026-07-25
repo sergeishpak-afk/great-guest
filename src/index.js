@@ -13,12 +13,13 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const MINI_APP_URL = 'https://great-guest.vercel.app/app.html';
 
 const mainKeyboard = Markup.keyboard([
-  ['🎫 Получить QR для визита'],
+  ['🎫 Мой QR-код'],
   ['⭐ Мой статус', '📋 История визитов'],
-  ['💬 Поддержка'],
+  ['📌 Команды', '💬 Поддержка'],
 ]).resize();
 
 const pendingSupport = new Set();
+const pendingEmail   = new Set();
 
 const appInlineBtn = Markup.inlineKeyboard([
   [Markup.button.webApp('🚀 Открыть Great Guest', MINI_APP_URL)]
@@ -68,11 +69,17 @@ bot.start(async (ctx) => {
       return ctx.reply('Мероприятие не найдено или уже не принимает заявки.');
     }
 
+    // Check if consent already exists before upserting
+    const { data: existingRsvpGuest } = await supabase
+      .from('guests').select('consent_at').eq('telegram_id', String(tgUser.id)).maybeSingle();
+
     await supabase.from('guests').upsert({
       telegram_id: String(tgUser.id),
       first_name: tgUser.first_name || '',
       last_name: tgUser.last_name || '',
       username: tgUser.username || '',
+      // 152-ФЗ: record consent timestamp on first interaction
+      ...(!existingRsvpGuest?.consent_at && { consent_at: new Date().toISOString() }),
     }, { onConflict: 'telegram_id' });
 
     const { data: existing } = await supabase
@@ -156,7 +163,35 @@ bot.command('app', async (ctx) => {
   await ctx.reply('👇 Нажми чтобы открыть:', appInlineBtn);
 });
 
-bot.hears('🎫 Получить QR для визита', async (ctx) => {
+const HELP_TEXT = `❓ *Что умеет Great Guest:*
+
+🎫 *Мой QR-код*
+Генерирует одноразовый код — покажи сотруднику заведения, он отметит визит.
+
+⭐ *Мой статус*
+Текущий уровень лояльности и сколько визитов до следующего.
+
+📋 *История визитов*
+Последние 10 посещений с датами и названиями заведений.
+
+💬 *Поддержка*
+Напишем ответ прямо в этот чат в течение 24 часов.
+
+🚀 *Личный кабинет*
+Полная карта лояльности, офферы и настройки — через кнопку ниже.
+
+📧 *Восстановление аккаунта*
+Добавь email командой /setemail — поможет вернуть историю при смене Telegram.`;
+
+bot.hears('📌 Команды', async (ctx) => {
+  await ctx.replyWithMarkdown(HELP_TEXT, appInlineBtn);
+});
+
+bot.command('help', async (ctx) => {
+  await ctx.replyWithMarkdown(HELP_TEXT, appInlineBtn);
+});
+
+bot.hears('🎫 Мой QR-код', async (ctx) => {
   const telegramId = String(ctx.from.id);
   const visitToken = uuidv4();
 
@@ -180,7 +215,7 @@ bot.hears('🎫 Получить QR для визита', async (ctx) => {
   await ctx.replyWithPhoto(
     { source: qrBuffer },
     {
-      caption: `🎫 *Твой QR-код для визита*\n\nПокажи этот код администратору ресторана.\nКод действителен для одного визита.`,
+      caption: `🎫 *Твой QR-код для визита*\n\nПокажи этот код администратору ресторана.\nКод действителен 1 час, для одного визита.`,
       parse_mode: 'Markdown',
     }
   );
@@ -219,105 +254,17 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'web/public')));
 
-// Получить профиль гостя по QR-токену (без подтверждения)
-app.get('/api/guest-preview/:token', async (req, res) => {
-  const { data: pending } = await supabase
-    .from('pending_visits')
-    .select('telegram_id, used')
-    .eq('token', req.params.token)
-    .single();
-
-  if (!pending) return res.status(404).json({ error: 'QR не найден' });
-  if (pending.used) return res.status(400).json({ error: 'QR уже использован' });
-
-  const { data: guest } = await supabase
-    .from('guests')
-    .select('first_name, last_name, username, visit_count')
-    .eq('telegram_id', pending.telegram_id)
-    .single();
-
-  res.json({ guest });
-});
-
-// Подтвердить визит
-app.post('/api/confirm-visit', async (req, res) => {
-  const { token, restaurantId } = req.body;
-  if (!token) return res.status(400).json({ error: 'token required' });
-
-  const { data: pending } = await supabase
-    .from('pending_visits')
-    .select('*')
-    .eq('token', token)
-    .eq('used', false)
-    .single();
-
-  if (!pending) return res.status(404).json({ error: 'QR не найден или уже использован' });
-
-  const { data: guest } = await supabase
-    .from('guests')
-    .select('*')
-    .eq('telegram_id', pending.telegram_id)
-    .single();
-
-  if (!guest) return res.status(404).json({ error: 'Гость не найден' });
-
-  const newCount = guest.visit_count + 1;
-
-  // Получаем название ресторана
-  let restaurantName = 'ресторан-партнёр';
-  if (restaurantId) {
-    const { data: rest } = await supabase
-      .from('restaurants')
-      .select('name')
-      .eq('id', restaurantId)
-      .single();
-    if (rest) restaurantName = rest.name;
-  }
-
-  // Записываем визит
-  await supabase.from('visits').insert({
-    telegram_id: pending.telegram_id,
-    restaurant_id: restaurantId || null,
-    visit_token: token,
-  });
-
-  // Обновляем счётчик
-  await supabase
-    .from('guests')
-    .update({ visit_count: newCount })
-    .eq('telegram_id', pending.telegram_id);
-
-  // Помечаем токен использованным
-  await supabase
-    .from('pending_visits')
-    .update({ used: true })
-    .eq('token', token);
-
-  // 🔔 Уведомляем гостя в Telegram
-  try {
-    const status = formatStatus(newCount);
-    await bot.telegram.sendMessage(
-      pending.telegram_id,
-      `✅ *Визит подтверждён!*\n\n📍 ${restaurantName}\n\n${status}`,
-      { parse_mode: 'Markdown' }
-    );
-  } catch (e) {
-    console.error('Failed to notify guest:', e.message);
-  }
-
-  res.json({
-    success: true,
-    guest: {
-      name: `${guest.first_name} ${guest.last_name}`.trim(),
-      username: guest.username,
-      visits: newCount,
-    },
-  });
-});
-
 // МЛ-1: Команда /myid
 bot.command('myid', async (ctx) => {
   await ctx.reply(`Ваш Telegram ID: \`${ctx.from.id}\``, { parse_mode: 'Markdown' });
+});
+
+bot.command('setemail', async (ctx) => {
+  pendingEmail.add(String(ctx.from.id));
+  await ctx.reply(
+    '📧 Введите ваш email для восстановления аккаунта:\n\n_Поможет вернуть историю визитов при смене Telegram._',
+    { parse_mode: 'Markdown', ...Markup.keyboard([['❌ Отмена']]).resize().oneTime() }
+  );
 });
 
 bot.hears('💬 Поддержка', async (ctx) => {
@@ -329,13 +276,37 @@ bot.hears('💬 Поддержка', async (ctx) => {
 });
 
 bot.hears('❌ Отмена', async (ctx) => {
-  pendingSupport.delete(String(ctx.from.id));
+  const uid = String(ctx.from.id);
+  pendingSupport.delete(uid);
+  pendingEmail.delete(uid);
   await ctx.reply('Хорошо, возвращаемся в меню.', mainKeyboard);
 });
 
 // Catch-all — последний перед launch
 bot.on('message', async (ctx) => {
   const userId = String(ctx.from.id);
+
+  // Перехватываем ввод email
+  if (pendingEmail.has(userId) && ctx.message?.text) {
+    pendingEmail.delete(userId);
+    const email = ctx.message.text.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      pendingEmail.add(userId);
+      await ctx.reply('❌ Некорректный email. Попробуйте ещё раз:', Markup.keyboard([['❌ Отмена']]).resize().oneTime());
+      return;
+    }
+    const { error: emailErr } = await supabase.from('guests').update({ email }).eq('telegram_id', userId);
+    if (emailErr) {
+      if (emailErr.code === '23505') {
+        await ctx.reply('❌ Этот email уже привязан к другому аккаунту.', mainKeyboard);
+      } else {
+        await ctx.reply('❌ Ошибка сохранения. Попробуйте позже.', mainKeyboard);
+      }
+    } else {
+      await ctx.reply(`✅ Email *${email}* сохранён.\nИспользуй его для восстановления аккаунта.`, { parse_mode: 'Markdown', ...mainKeyboard });
+    }
+    return;
+  }
 
   // Перехватываем сообщение поддержки
   if (pendingSupport.has(userId) && ctx.message?.text) {
@@ -368,11 +339,25 @@ app.listen(PORT, () => {
   console.log(`✅ Веб-панель ресторана: http://localhost:${PORT}`);
 });
 
+// Регистрируем команды в меню Telegram
+bot.telegram.setMyCommands([
+  { command: 'start',    description: 'Начать / перезапустить бота' },
+  { command: 'help',     description: 'Что умеет бот' },
+  { command: 'app',      description: 'Открыть мини-приложение' },
+  { command: 'setemail', description: 'Добавить email для восстановления аккаунта' },
+  { command: 'myid',     description: 'Мой Telegram ID' },
+]).then(() => console.log('✅ Команды бота зарегистрированы'))
+  .catch(e => console.warn('⚠️  setMyCommands:', e.message));
+
 // Устанавливаем menu button до запуска polling
 bot.telegram.setChatMenuButton({
   menu_button: { type: 'web_app', text: 'Open Great Guest', web_app: { url: MINI_APP_URL } }
 }).then(() => console.log('✅ Menu button установлен'))
   .catch(e => console.warn('⚠️  Menu button:', e.message));
+
+if (!process.env.SUPPORT_TELEGRAM_ID) {
+  console.warn('⚠️  SUPPORT_TELEGRAM_ID не задан — сообщения поддержки будут потеряны');
+}
 
 bot.launch({ dropPendingUpdates: true })
   .then(() => console.log('✅ @great_guest_bot запущен'))

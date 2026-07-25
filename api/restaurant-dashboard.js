@@ -105,7 +105,8 @@ module.exports = async (req, res) => {
     // В-3: Require active subscription (same as approve_rsvp)
     const { data: addSub } = await db.from('owner_subscriptions').select('subscription_status, subscription_expires_at').eq('telegram_id', ownerId).single();
     const addSubExp = addSub?.subscription_expires_at ? new Date(addSub.subscription_expires_at) : null;
-    if (!addSub || addSub.subscription_status !== 'active' || !addSubExp || addSubExp <= new Date())
+    const addSubActive = addSub && (addSub.subscription_status === 'active' || addSub.subscription_status === 'trial') && addSubExp && addSubExp > new Date();
+    if (!addSubActive)
       return res.status(403).json({ error: 'Управление гостевым списком доступно только на платном тарифе' });
     const { error } = await db.from('rsvp').upsert(
       { venue_id: venueId, telegram_id: telegramId, status: 'approved' },
@@ -125,7 +126,8 @@ module.exports = async (req, res) => {
     if (ven.owner_telegram_id !== ownerId) return res.status(403).json({ error: 'Not your venue' });
     const { data: sub } = await db.from('owner_subscriptions').select('subscription_status, subscription_expires_at').eq('telegram_id', ownerId).single();
     const subExpires = sub?.subscription_expires_at ? new Date(sub.subscription_expires_at) : null;
-    if (!sub || sub.subscription_status !== 'active' || !subExpires || subExpires <= new Date())
+    const subActive = sub && (sub.subscription_status === 'active' || sub.subscription_status === 'trial') && subExpires && subExpires > new Date();
+    if (!subActive)
       return res.status(403).json({ error: 'Управление заявками доступно только на платном тарифе' });
     await db.from('rsvp').update({ status: 'approved' }).eq('venue_id', venueId).eq('telegram_id', telegramId);
     try {
@@ -146,7 +148,8 @@ module.exports = async (req, res) => {
     if (ven.owner_telegram_id !== ownerId) return res.status(403).json({ error: 'Not your venue' });
     const { data: sub } = await db.from('owner_subscriptions').select('subscription_status, subscription_expires_at').eq('telegram_id', ownerId).single();
     const subExpires = sub?.subscription_expires_at ? new Date(sub.subscription_expires_at) : null;
-    if (!sub || sub.subscription_status !== 'active' || !subExpires || subExpires <= new Date())
+    const rejectSubActive = sub && (sub.subscription_status === 'active' || sub.subscription_status === 'trial') && subExpires && subExpires > new Date();
+    if (!rejectSubActive)
       return res.status(403).json({ error: 'Управление заявками доступно только на платном тарифе' });
     await db.from('rsvp').update({ status: 'rejected' }).eq('venue_id', venueId).eq('telegram_id', telegramId);
     try {
@@ -523,8 +526,9 @@ module.exports = async (req, res) => {
       }
       contactRows = Object.values(map);
 
-      // Backfill organizer_contacts so next load is fast (fire-and-forget)
-      for (const c of contactRows) {
+      // Backfill organizer_contacts — cap at 200 per load to protect DB connection pool
+      const backfillRows = contactRows.slice(0, 200);
+      for (const c of backfillRows) {
         db.rpc('upsert_organizer_contact', {
           p_org: ownerId, p_guest: c.guest_id,
           p_first: c.first_name, p_last: c.last_name, p_user: c.username, p_rsvp: false,

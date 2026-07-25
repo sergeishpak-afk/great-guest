@@ -509,7 +509,7 @@ if (urlVenue && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
   document.getElementById('token').value = urlToken;
   loadRestaurants().then(() => checkGuest());
 } else {
-  loadRestaurants();
+  showError('Используйте персональную ссылку заведения или откройте страницу через QR гостя.');
 }
 </script>
 </body>

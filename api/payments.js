@@ -204,7 +204,7 @@ module.exports = async (req, res) => {
   }
 
   // Record pending payment
-  await db.from('payments').insert({
+  const { error: payInsertErr } = await db.from('payments').insert({
     payment_id:  ykPayment.id,
     telegram_id: telegramId,
     plan,
@@ -212,6 +212,7 @@ module.exports = async (req, res) => {
     months,
     status: 'pending',
   });
+  if (payInsertErr) console.error('[payments] payments.insert error:', payInsertErr.message);
 
   return res.status(200).json({
     payment_id:       ykPayment.id,
