@@ -95,6 +95,24 @@ bot.start(async (ctx) => {
     );
   }
 
+  if (payload === 'guest') {
+    const upsertData = {
+      telegram_id: String(tgUser.id),
+      first_name: tgUser.first_name || '',
+      last_name: tgUser.last_name || '',
+      username: tgUser.username || '',
+    };
+    const { data: existingG } = await supabase
+      .from('guests').select('consent_at').eq('telegram_id', String(tgUser.id)).single();
+    if (!existingG?.consent_at) upsertData.consent_at = new Date().toISOString();
+    await supabase.from('guests').upsert(upsertData, { onConflict: 'telegram_id' });
+    await ctx.replyWithMarkdown(
+      `Привет, *${tgUser.first_name}*! Собирай визиты в ресторанах-партнёрах и повышай свой статус.`,
+      mainKeyboard
+    );
+    return ctx.reply('👇 Открыть личный кабинет:', appInlineBtn);
+  }
+
   if (payload.startsWith('rsvp_')) {
     const venueId = payload.slice(5);
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
