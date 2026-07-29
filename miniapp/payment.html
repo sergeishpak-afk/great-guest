@@ -408,6 +408,9 @@ function skipPaymentCheck() {
 
 // Check if returning from successful payment
 async function checkPaymentStatus() {
+  // Fix #1: CSS shows loading-screen by default — hide it before deciding what to show
+  document.getElementById('loading-screen').style.display = 'none';
+
   const params = new URLSearchParams(location.search);
   if (params.get('status') === 'cancel') {
     build();
@@ -424,6 +427,9 @@ async function checkPaymentStatus() {
     let confirmed = false;
     if (tg && tg.initData) {
       for (let i = 0; i < 10; i++) {
+        // Fix #2: Show polling progress to user
+        const subEl = document.querySelector('#loading-screen .success-sub');
+        if (subEl) subEl.textContent = `⏳ Проверяем оплату... (${i + 1}/10)`;
         await new Promise(r => setTimeout(r, 3000));
         try {
           const r = await fetch('/api/restaurant-dashboard', {

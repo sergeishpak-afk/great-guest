@@ -340,7 +340,20 @@ async function init() {
     res  = await fetch('/api/create-qr', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ initData:initData, action:'init' }), signal: ctrl.signal });
     clearTimeout(tid);
     data = await res.json();
-  } catch(e) { showErr(e.name === 'AbortError' ? 'Сервер не отвечает. Проверьте соединение.' : 'Сетевая ошибка: ' + e.message); return; }
+  } catch(e) {
+    // Fix #7: On timeout/network error show retry button instead of dead-end message
+    if (e.name === 'AbortError' || e.name === 'TypeError') {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('err-msg').innerHTML =
+        'Сервер не отвечает. Проверьте соединение.' +
+        '<br><button onclick="document.getElementById(\'error\').style.display=\'none\';document.getElementById(\'loading\').style.display=\'flex\';init()" ' +
+        'style="display:inline-block;margin-top:10px;padding:10px 20px;background:rgba(255,255,255,0.08);color:#F0EBE0;border-radius:12px;font-weight:500;border:1px solid rgba(255,255,255,0.12);cursor:pointer;font-size:13px;font-family:inherit">↻ Попробовать снова</button>';
+    } else {
+      showErr('Сетевая ошибка: ' + e.message);
+    }
+    return;
+  }
 
   if (data.error === 'consent_required') {
     document.getElementById('loading').style.display = 'none';
@@ -477,7 +490,10 @@ function changeEmail() {
   renderEmailSection(null);
   if (prev) {
     var sec = document.getElementById('email-recovery-section');
+    // Fix #6: Guard against duplicate cancel button on double-tap
+    if (sec.querySelector('.cancel-email-btn')) return;
     var cancelBtn = document.createElement('button');
+    cancelBtn.className = 'cancel-email-btn';
     cancelBtn.textContent = 'Отмена';
     cancelBtn.style.cssText = 'display:block;margin-top:8px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline;padding:0';
     cancelBtn.onclick = function() { renderEmailSection(prev); };

@@ -274,12 +274,26 @@ let scanCanvas    = null;
 
 // ── Restaurants ──
 async function loadRestaurants() {
-  const { data } = await db.from('restaurants').select('id, name').order('name');
-  const sel = document.getElementById('restaurantSelect');
-  if (data && data.length) {
-    sel.innerHTML = data.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-  } else {
-    sel.innerHTML = '<option value="">Нет ресторанов</option>';
+  try {
+    const { data } = await db.from('restaurants').select('id, name').order('name');
+    const sel = document.getElementById('restaurantSelect');
+    if (data && data.length) {
+      sel.innerHTML = data.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    } else {
+      sel.innerHTML = '<option value="">Нет ресторанов</option>';
+    }
+  } catch (err) {
+    console.error('loadRestaurants error:', err);
+    const sel = document.getElementById('restaurantSelect');
+    sel.innerHTML = '<option value="">Ошибка загрузки</option>';
+    showError('Не удалось загрузить список заведений.');
+    const r = document.getElementById('result');
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'btn btn-dark';
+    retryBtn.style.marginTop = '12px';
+    retryBtn.textContent = '↻ Повторить';
+    retryBtn.onclick = loadRestaurants;
+    r.appendChild(retryBtn);
   }
 }
 
@@ -300,6 +314,11 @@ function extractToken(raw) {
 async function checkGuest() {
   const raw = document.getElementById('token').value.trim();
   if (!raw) return;
+  // Fix #3: Require venue selection before making API call
+  if (!venueIdLocked && !document.getElementById('restaurantSelect').value) {
+    showError('Сначала выберите заведение из списка выше');
+    return;
+  }
   const token = extractToken(raw);
   currentToken = token;
 
@@ -343,15 +362,16 @@ async function confirmVisit() {
 }
 
 // ── Badge helper ──
-function badge(n) {
-  if (n >= 30) return { label: '💎 Platinum', cls: 'badge-platinum' };
-  if (n >= 15) return { label: '🥇 Gold',     cls: 'badge-gold'     };
-  if (n >= 5)  return { label: '🥈 Silver',   cls: 'badge-silver'   };
-  return               { label: '🥉 Bronze',  cls: 'badge-bronze'   };
+function badge(n, override) {
+  if (override === 'VIP') return { label: '👑 VIP',      cls: 'badge-platinum' };
+  if (n >= 30) return           { label: '💎 Platinum', cls: 'badge-platinum' };
+  if (n >= 15) return           { label: '🥇 Gold',     cls: 'badge-gold'     };
+  if (n >= 5)  return           { label: '🥈 Silver',   cls: 'badge-silver'   };
+  return                        { label: '🥉 Bronze',   cls: 'badge-bronze'   };
 }
 
 function showGuest(g) {
-  const b = badge(g.visit_count);
+  const b = badge(g.visit_count, g.status_override);
   const r = document.getElementById('result');
   r.className = 'result success'; r.style.display = 'block';
   r.innerHTML = `

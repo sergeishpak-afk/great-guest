@@ -122,7 +122,15 @@ module.exports = async (req, res) => {
 
   if (rpcError || newCount === null) {
     console.error('increment_guest_visits error after insert:', rpcError?.message);
-    // Visit is recorded — only counter is off, log for manual review
+    // Fix #18: Fallback — read actual count from DB so response stays correct
+    const { data: fallbackGuest } = await supabase
+      .from('guests')
+      .select('visit_count')
+      .eq('telegram_id', pending.telegram_id)
+      .single();
+    if (fallbackGuest?.visit_count != null) {
+      newCount = fallbackGuest.visit_count;
+    }
   }
 
   // Fetch status_override for this organizer's guest (for correct status in notification)

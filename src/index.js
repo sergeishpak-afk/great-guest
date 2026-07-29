@@ -84,6 +84,10 @@ bot.start(async (ctx) => {
   }
 
   if (payload === 'support') {
+    // Fix #12: Guard — if SUPPORT_TELEGRAM_ID not set, messages would be silently lost
+    if (!process.env.SUPPORT_TELEGRAM_ID) {
+      return ctx.reply('Поддержка временно недоступна. Попробуйте позже.', mainKeyboard);
+    }
     pAdd(pendingSupport, String(ctx.from.id));
     return ctx.reply(
       'Опишите вашу проблему — мы ответим в течение 24 часов.\nНапишите сообщение прямо сейчас 👇',
@@ -370,11 +374,15 @@ bot.on('message', async (ctx) => {
           `🆘 *Обращение в поддержку*\n\n👤 ${guestLabel}\n\n💬 ${ctx.message.text}`,
           { parse_mode: 'Markdown' }
         );
-      } catch (e) { console.error('Support forward error:', e.message); }
+        await ctx.reply('✅ Сообщение отправлено! Ответим здесь в течение 24 часов.', mainKeyboard);
+      } catch (e) {
+        console.error('Support forward error:', e.message);
+        await ctx.reply('❌ Не удалось отправить сообщение. Попробуйте позже.', mainKeyboard);
+      }
     } else {
       console.error('[support] SUPPORT_TELEGRAM_ID not set — message lost:', guestLabel, ctx.message.text);
+      await ctx.reply('❌ Поддержка временно недоступна. Попробуйте позже.', mainKeyboard);
     }
-    await ctx.reply('✅ Сообщение отправлено! Ответим здесь в течение 24 часов.', mainKeyboard);
     return;
   }
 

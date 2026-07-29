@@ -36,10 +36,10 @@ module.exports = async (req, res) => {
   if (pending.expires_at && new Date(pending.expires_at) < new Date())
     return res.status(410).json({ error: 'QR-код устарел — гость должен получить новый в Telegram' });
 
-  // Return only first_name + visit_count — minimal PII needed for confirmation screen
+  // Return minimal PII needed for confirmation screen — include status_override for VIP badge
   const { data: guest } = await supabase
     .from('guests')
-    .select('first_name, last_name, visit_count')
+    .select('first_name, last_name, visit_count, status_override')
     .eq('telegram_id', pending.telegram_id)
     .single();
 

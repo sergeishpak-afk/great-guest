@@ -553,7 +553,7 @@
       font-size:18px;font-weight:800;letter-spacing:-0.5px;color:var(--text)">
       Great<span style="color:var(--gold)">Guest</span>
     </button>
-    <div style="font-size:10px;color:var(--muted);opacity:0.5;margin-top:4px">v2026.06.24</div>
+    <div style="font-size:10px;color:var(--muted);opacity:0.5;margin-top:4px">v2026.07.29</div>
     <br>
     <a href="privacy.html" style="color:var(--muted);text-decoration:none;margin:0 8px">Политика конфиденциальности</a>
     <span style="color:var(--border)">·</span>
@@ -1089,6 +1089,9 @@ async function init() {
     openVenue(venuesData[0]);
   } else {
     renderNetwork();
+    // Fix #19: Honor ?venue= URL param — open specific venue directly from app.html links
+    const urlVenueId = new URLSearchParams(location.search).get('venue');
+    if (urlVenueId) openVenueById(urlVenueId);
   }
 }
 
@@ -1432,7 +1435,10 @@ async function rsvpRemoveGuest(telegramId, confirmed) {
   }
 }
 
+let _rsvpProcessing = false;
+
 async function rsvpAddGuest() {
+  if (_rsvpProcessing) return;
   const telegramId = document.getElementById('rsvp-add-id').value.trim();
   const msgEl = document.getElementById('rsvp-msg');
   if (!telegramId || !/^\d+$/.test(telegramId)) {
@@ -1440,6 +1446,11 @@ async function rsvpAddGuest() {
     msgEl.textContent = 'Введите корректный Telegram ID (только цифры)';
     return;
   }
+  _rsvpProcessing = true;
+  const addBtn = document.querySelector('[onclick="rsvpAddGuest()"]');
+  if (addBtn) { addBtn.disabled = true; }
+  msgEl.style.color = 'var(--muted)';
+  msgEl.textContent = '⏳ Добавляем...';
   try {
     const initData = window.Telegram?.WebApp?.initData || '';
     const resp = await fetch('/api/restaurant-dashboard', {
@@ -1460,10 +1471,15 @@ async function rsvpAddGuest() {
   } catch {
     msgEl.style.color = 'var(--error, #e57373)';
     msgEl.textContent = 'Ошибка сети';
+  } finally {
+    _rsvpProcessing = false;
+    if (addBtn) { addBtn.disabled = false; }
   }
 }
 
 async function rsvpApproveGuest(telegramId) {
+  if (_rsvpProcessing) return;
+  _rsvpProcessing = true;
   const msgEl = document.getElementById('rsvp-msg');
   msgEl.style.color = 'var(--muted)';
   msgEl.textContent = '⏳ Обрабатываем...';
@@ -1486,6 +1502,8 @@ async function rsvpApproveGuest(telegramId) {
   } catch {
     msgEl.style.color = 'var(--error, #e57373)';
     msgEl.textContent = 'Ошибка сети';
+  } finally {
+    _rsvpProcessing = false;
   }
 }
 
@@ -1771,29 +1789,25 @@ async function register() {
     classification_mode:   classMode,
   });
 
+  const btnLabel = venueType === 'event' ? 'Создать кабинет мероприятия →' : 'Подключить ресторан →';
+
   if (data.error === 'limit_reached') {
     btn.disabled = false;
-    btn.textContent = venueType === 'event'
-      ? 'Создать кабинет мероприятия →'
-      : 'Добавить событие →';
+    btn.textContent = btnLabel;
     showUpgradeModal('limit_reached', data);
     return;
   }
 
   if (data.error === 'subscription_expired') {
     btn.disabled = false;
-    btn.textContent = venueType === 'event'
-      ? 'Создать кабинет мероприятия →'
-      : 'Добавить событие →';
+    btn.textContent = btnLabel;
     showUpgradeModal('expired');
     return;
   }
 
   if (data.error) {
     btn.disabled = false;
-    btn.textContent = venueType === 'event'
-      ? 'Создать кабинет мероприятия →'
-      : 'Добавить событие →';
+    btn.textContent = btnLabel;
     showToast('Ошибка: ' + data.error, 'error');
     return;
   }
@@ -2472,7 +2486,12 @@ function renderHistoryPane(offers, guests, isEvent) {
     return `<div class="empty">${isEvent ? 'Приглашений' : 'Предложений'} ещё не было.<br><br>${cta}</div>`;
   }
 
-  return offers.map(o => {
+  // Fix #20: Warn when guest base is truncated — some names/levels will show as unknown
+  const truncNote = guestsTruncated
+    ? `<div style="margin-bottom:12px;padding:10px 14px;background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.25);border-radius:10px;font-size:13px;color:#FFA500">⚠️ База гостей > 500 записей — имена и статусы могут отображаться неполно</div>`
+    : '';
+
+  return truncNote + offers.map(o => {
     const g    = guestMap[String(o.guest_telegram_id)];
     const name = g ? esc(g.first_name) : 'Гость';
     const lvl  = g ? guestLevel(g) : LEVELS[0];
@@ -2791,6 +2810,10 @@ function showBroadcastModal() {
   btn.disabled = false;
   btn.textContent = 'Отправить';
   updateBroadcastCount();
+  // Fix #16: Warn upfront when guest list exceeds 200-recipient cap
+  if (globalGuests.length > 200) {
+    showToast(`База ${globalGuests.length} гостей — рассылка ограничена 200 получателями`, 'warning');
+  }
   document.getElementById('broadcast-modal').style.display = 'flex';
 }
 function closeBroadcastModal() {
@@ -2853,6 +2876,11 @@ let camRaf    = null;
 let camBusy   = false;
 
 async function openQRScanner() {
+  // Fix #17: Prevent recording visits with null restaurant_id
+  if (!currentVenue) {
+    showToast('Сначала откройте заведение', 'error');
+    return;
+  }
   const overlay = document.getElementById('cam-scanner');
   overlay.style.display = 'flex';
   const resEl = document.getElementById('cam-result');
@@ -2871,17 +2899,41 @@ async function openQRScanner() {
     camScanLoop();
   } catch {
     closeQRScanner();
-    // Fallback: Telegram native scanner
+    // Fallback 1: Telegram native scanner
     if (tg?.showScanQrPopup) {
       tg.showScanQrPopup({ text: 'Наведите на QR-код гостя' }, async (raw) => {
         tg.closeScanQrPopup();
-        const tok = extractToken(raw);
-        if (!tok) { showScanResult('error', null, 'Неверный QR — попросите гостя нажать /qr'); return; }
+        const { token: tok } = extractToken(raw);
+        if (!tok) { showToast('Неверный QR — попросите гостя нажать /qr', 'error'); return; }
         await confirmVisitToken(tok);
         return false;
       });
     } else {
-      showToast('Нет доступа к камере. Разрешите камеру в настройках.', 'error');
+      // Fix #13: Fallback 2 — manual token input when camera and native scanner unavailable
+      const overlay = document.getElementById('cam-scanner');
+      overlay.style.display = 'flex';
+      const bottomBar = overlay.querySelector('[style*="background:#111"]');
+      if (bottomBar && !bottomBar.querySelector('.manual-token-input')) {
+        const inp = document.createElement('input');
+        inp.className = 'manual-token-input';
+        inp.type = 'text';
+        inp.placeholder = 'Вставьте код гостя вручную';
+        inp.style.cssText = 'width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:12px 14px;color:#fff;font-size:15px;margin-bottom:10px;outline:none;font-family:inherit';
+        const confirmBtn = document.createElement('button');
+        confirmBtn.textContent = '✅ Подтвердить';
+        confirmBtn.style.cssText = 'width:100%;background:#4ADE80;color:#000;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px';
+        confirmBtn.onclick = async () => {
+          const raw = inp.value.trim();
+          if (!raw) return;
+          const { token: tok } = extractToken(raw);
+          if (!tok) { setCamStatus('❌ Неверный формат кода', '#F87171'); return; }
+          closeQRScanner();
+          await confirmVisitToken(tok);
+        };
+        bottomBar.insertBefore(confirmBtn, bottomBar.firstChild);
+        bottomBar.insertBefore(inp, bottomBar.firstChild);
+      }
+      setCamStatus('Камера недоступна — введите код вручную', '#F87171');
     }
   }
 }
@@ -3056,7 +3108,8 @@ function exportGuestBaseCSV() {
   const guests = globalGuests;
   if (!guests.length) { showToast('База пустая', 'error'); return; }
   if (window.Telegram?.WebApp?.initData) {
-    showToast('Откройте кабинет в браузере — скачивание файлов в Telegram недоступно', 'warning');
+    // Fix #10: Telegram blocks Blob downloads — use bot-based export instead
+    downloadAnalytics();
     return;
   }
   const BOM = '﻿';
@@ -3426,7 +3479,8 @@ document.getElementById('import-modal').addEventListener('click', e => {
 });
 
 function downloadCSVTemplate() {
-  const csv = 'Имя,Телефон\nАнна Иванова,+79001234567\nИван Петров,+79001112233\nЕлена Сидорова,+79005556677';
+  showToast('Телефон — только для справки. Система идентифицирует гостей по Telegram ID.', 'warning');
+  const csv = 'Имя,Телефон (справочно — не используется для поиска)\nАнна Иванова,+79001234567\nИван Петров,+79001112233\nЕлена Сидорова,+79005556677';
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

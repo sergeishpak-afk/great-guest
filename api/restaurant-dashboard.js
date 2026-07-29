@@ -295,10 +295,9 @@ module.exports = async (req, res) => {
       .limit(2000);
 
     const getLevel = (n) => {
-      if (n >= 30) return 'VIP';
-      if (n >= 15) return 'Platinum';
-      if (n >= 5)  return 'Gold';
-      if (n >= 1)  return 'Silver';
+      if (n >= 30) return 'Platinum';
+      if (n >= 15) return 'Gold';
+      if (n >= 5)  return 'Silver';
       return 'Bronze';
     };
 
