@@ -275,6 +275,71 @@ module.exports = async (req, res) => {
     return res.status(200).json({ success: true });
   }
 
+  // ── action: export_visits_csv — flat visits + guest info CSV via bot ────────
+  if ((req.body || {}).action === 'export_visits_csv') {
+    const { data: venues } = await db
+      .from('restaurants')
+      .select('id')
+      .eq('owner_telegram_id', ownerId);
+
+    const venueIds = (venues || []).map(v => v.id);
+    if (!venueIds.length) {
+      return res.status(200).json({ success: true, count: 0, capped: false });
+    }
+
+    const { data: visits } = await db
+      .from('visits')
+      .select('visited_at, visit_type, telegram_id, restaurant_id, restaurants(name), guests(first_name, last_name, username, visit_count)')
+      .in('restaurant_id', venueIds)
+      .order('visited_at', { ascending: false })
+      .limit(2000);
+
+    const getLevel = (n) => {
+      if (n >= 30) return 'VIP';
+      if (n >= 15) return 'Platinum';
+      if (n >= 5)  return 'Gold';
+      if (n >= 1)  return 'Silver';
+      return 'Bronze';
+    };
+
+    const rows = [['Дата визита', 'Время', 'Заведение', 'Тип', 'Имя', 'Фамилия', 'Username', 'Telegram ID', 'Статус', 'Визитов всего']];
+    for (const v of (visits || [])) {
+      const dt = v.visited_at ? new Date(v.visited_at) : null;
+      const g = v.guests || {};
+      rows.push([
+        dt ? dt.toLocaleDateString('ru-RU') : '',
+        dt ? dt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '',
+        v.restaurants?.name || '',
+        v.visit_type === 'bonus' ? 'Бонус' : 'QR',
+        g.first_name || '',
+        g.last_name  || '',
+        g.username   ? '@' + g.username : '',
+        v.telegram_id || '',
+        getLevel(g.visit_count || 0),
+        g.visit_count || 0,
+      ]);
+    }
+
+    const escape = v => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = '﻿' + rows.map(r => r.map(escape).join(',')).join('\r\n');
+    const csvBuffer = Buffer.from(csv, 'utf-8');
+
+    const dateStr = new Date().toLocaleDateString('ru-RU');
+    const filename = `great-guest-visits_${dateStr.replace(/\./g, '-')}.csv`;
+    const totalRows = (visits || []).length;
+    const form = new FormData();
+    form.set('chat_id', ownerId);
+    form.set('caption', `📅 Визиты + гости · ${dateStr}\nЗаписей: ${totalRows}${totalRows === 2000 ? ' (последние 2 000)' : ''}`);
+    form.set('document', new Blob([csvBuffer], { type: 'text/csv' }), filename);
+
+    const tgRes = await fetch(
+      `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendDocument`,
+      { method: 'POST', body: form }
+    );
+    if (!tgRes.ok) return res.status(500).json({ error: 'Telegram send failed' });
+    return res.status(200).json({ success: true, count: totalRows, capped: totalRows === 2000 });
+  }
+
   // ── action: export_csv — generate guest list CSV and send via bot ──────────
   if ((req.body || {}).action === 'export_csv') {
     const [{ data: contacts }, { count: totalContacts }] = await Promise.all([
