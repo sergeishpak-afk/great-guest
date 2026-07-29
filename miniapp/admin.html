@@ -484,6 +484,7 @@
 <div id="s-error" class="screen">
   <div style="font-size:32px;margin-bottom:12px">⚠️</div>
   <div id="err-msg" style="color:inherit"></div>
+  <div id="err-retry"></div>
   <div style="margin-top:16px;font-size:13px;color:var(--muted)">
     Откройте через меню @great_guest_bot
   </div>
@@ -1024,15 +1025,57 @@ const SCREEN_DISPLAY = {
   's-reg':     'block',
   's-dash':    'block',
 };
+let _screenStack = [];
+let _currentScreen = null;
+let _regDraft = {};
+
 function show(id) {
+  if (_currentScreen === 's-reg' && id !== 's-reg') {
+    _regDraft.name      = document.getElementById('r-name')?.value      || '';
+    _regDraft.addr      = document.getElementById('r-addr')?.value      || '';
+    _regDraft.city      = document.getElementById('r-city')?.value      || '';
+    _regDraft.cuisine   = document.getElementById('r-cuisine')?.value   || '';
+    _regDraft.etype     = document.getElementById('r-etype')?.value     || '';
+    _regDraft.edate     = document.getElementById('r-edate')?.value     || '';
+    _regDraft.inviteMsg = document.getElementById('r-invite-msg')?.value || '';
+  }
+  if (_currentScreen && _currentScreen !== id && id !== 's-error') {
+    _screenStack.push(_currentScreen);
+    if (_screenStack.length > 8) _screenStack.shift();
+  }
+  _currentScreen = id;
   Object.keys(SCREEN_DISPLAY).forEach(k => {
     const el = document.getElementById(k);
     if (el) el.style.display = k === id ? SCREEN_DISPLAY[k] : 'none';
   });
+  if (typeof tg !== 'undefined' && tg?.BackButton) {
+    if (_screenStack.length > 0) tg.BackButton.show();
+    else tg.BackButton.hide();
+  }
 }
-function showErr(msg) {
+
+function goBack() {
+  const prev = _screenStack.pop();
+  if (prev) { _currentScreen = null; show(prev); }
+  else window.location.href = 'app.html';
+}
+
+function showErr(msg, retryFn) {
   show('s-error');
   document.getElementById('err-msg').textContent = msg;
+  const retryEl = document.getElementById('err-retry');
+  if (retryEl) {
+    if (retryFn) {
+      retryEl.innerHTML = '';
+      const btn = document.createElement('button');
+      btn.textContent = '↻ Повторить';
+      btn.style.cssText = 'margin-top:14px;padding:10px 24px;background:var(--gold);color:#0e0d0b;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit';
+      btn.onclick = retryFn;
+      retryEl.appendChild(btn);
+    } else {
+      retryEl.innerHTML = '';
+    }
+  }
 }
 
 // ─ API helper ────────────────────────────────────────────────────────────────
@@ -1047,7 +1090,10 @@ async function apiFetch(url, body) {
     const json = await res.json();
     return { ok: res.ok, status: res.status, ...json };
   } catch(e) {
-    return { ok: false, error: e.message };
+    const msg = (e.name === 'TimeoutError' || e.name === 'AbortError')
+      ? 'Превышено время ожидания. Проверьте соединение.'
+      : e.message;
+    return { ok: false, error: msg };
   }
 }
 
@@ -1057,8 +1103,7 @@ async function init() {
     tg.ready();
     tg.expand();
     if (tg.BackButton) {
-      tg.BackButton.show();
-      tg.BackButton.onClick(function() { window.location.href = 'app.html'; });
+      tg.BackButton.onClick(goBack);
     }
   }
   if (!initData) { showErr('Откройте через @great_guest_bot → /restaurant'); return; }
@@ -1070,7 +1115,7 @@ async function init() {
     return;
   }
   if (!data.owner) {
-    showErr('Ошибка загрузки: ' + (data.error || 'попробуйте позже'));
+    showErr('Ошибка загрузки: ' + (data.error || 'попробуйте позже'), init);
     return;
   }
 
@@ -1759,6 +1804,13 @@ function renderRegistrationForm() {
     </button>
     ${showTrialBadge ? '<div class="price-note">После пробного периода — 2 990 ₽/мес. Отмена в любой момент.</div>' : ''}
   `;
+  if (_regDraft.name)      { const el = document.getElementById('r-name');       if (el) el.value = _regDraft.name; }
+  if (_regDraft.addr)      { const el = document.getElementById('r-addr');       if (el) el.value = _regDraft.addr; }
+  if (_regDraft.city)      { const el = document.getElementById('r-city');       if (el) el.value = _regDraft.city; }
+  if (_regDraft.cuisine)   { const el = document.getElementById('r-cuisine');    if (el) el.value = _regDraft.cuisine; }
+  if (_regDraft.etype)     { const el = document.getElementById('r-etype');      if (el) el.value = _regDraft.etype; }
+  if (_regDraft.edate)     { const el = document.getElementById('r-edate');      if (el) el.value = _regDraft.edate; }
+  if (_regDraft.inviteMsg) { const el = document.getElementById('r-invite-msg'); if (el) el.value = _regDraft.inviteMsg; }
 }
 
 // ─ Register ──────────────────────────────────────────────────────────────────
@@ -1848,7 +1900,7 @@ function openVenue(venue) {
     renderDashboard();
   } catch (e) {
     console.error('[GG] renderDashboard error:', e);
-    showErr('Ошибка загрузки кабинета: ' + e.message);
+    showErr('Ошибка загрузки кабинета: ' + e.message, init);
   }
 }
 

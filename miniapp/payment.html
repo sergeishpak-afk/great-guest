@@ -388,17 +388,25 @@ function showSuccess(confirmed) {
     successEl.appendChild(backBtn);
   }
   if (tg) {
-    let cd = 5;
-    const cdBtn = document.createElement('button');
-    cdBtn.style.cssText = 'margin-top:10px;background:none;border:none;color:rgba(240,235,224,0.7);font-size:12px;cursor:pointer;padding:4px 8px;font-family:inherit';
-    cdBtn.textContent = `Закроется через ${cd} сек`;
-    successEl.appendChild(cdBtn);
-    const timer = setInterval(() => {
-      cd--;
-      if (cd <= 0) { clearInterval(timer); tg.close(); }
-      else cdBtn.textContent = `Закроется через ${cd} сек`;
-    }, 1000);
-    cdBtn.onclick = () => { clearInterval(timer); tg.close(); };
+    if (confirmed) {
+      let cd = 5;
+      const cdBtn = document.createElement('button');
+      cdBtn.style.cssText = 'margin-top:10px;background:none;border:none;color:rgba(240,235,224,0.7);font-size:12px;cursor:pointer;padding:4px 8px;font-family:inherit';
+      cdBtn.textContent = `Закроется через ${cd} сек`;
+      successEl.appendChild(cdBtn);
+      const timer = setInterval(() => {
+        cd--;
+        if (cd <= 0) { clearInterval(timer); tg.close(); }
+        else cdBtn.textContent = `Закроется через ${cd} сек`;
+      }, 1000);
+      cdBtn.onclick = () => { clearInterval(timer); tg.close(); };
+    } else {
+      const closeBtn = document.createElement('button');
+      closeBtn.style.cssText = 'margin-top:14px;padding:10px 24px;background:rgba(240,235,224,0.1);border:1px solid rgba(240,235,224,0.2);color:rgba(240,235,224,0.8);border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit';
+      closeBtn.textContent = '← Вернуться в кабинет';
+      closeBtn.onclick = () => tg.close();
+      successEl.appendChild(closeBtn);
+    }
   }
 }
 
@@ -436,6 +444,7 @@ async function checkPaymentStatus() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ initData: tg.initData, action: 'check_subscription' }),
+            signal: AbortSignal.timeout(8000),
           });
           if (r.ok) {
             const d = await r.json();

@@ -536,15 +536,12 @@ if (urlVenue && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
     checkGuest();
   }
 } else if (urlToken) {
-  document.getElementById('token').value = urlToken;
-  loadRestaurants().then(() => {
-    const warn = document.createElement('div');
-    warn.style.cssText = 'margin-bottom:12px;padding:10px 14px;background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.25);border-radius:10px;font-size:13px;color:#FFA500';
-    warn.textContent = '⚠️ Выберите ваше заведение из списка';
-    const sel = document.getElementById('restaurantSelect');
-    if (sel) sel.before(warn);
-    checkGuest();
-  });
+  // Token without venue: block access — staff must use their venue-specific link
+  document.getElementById('restaurantSelect').style.display = 'none';
+  document.querySelector('label[for="restaurantSelect"]').style.display = 'none';
+  const r = document.getElementById('result');
+  r.className = 'result error'; r.style.display = 'block';
+  r.innerHTML = '<div class="error-msg">❌ Используйте персональную ссылку вашего заведения. Обратитесь к администратору.</div>';
 } else {
   document.getElementById('restaurantSelect').style.display = 'none';
   const r = document.getElementById('result');

@@ -339,6 +339,9 @@ bot.command('setemail', async (ctx) => {
 });
 
 bot.hears('💬 Поддержка', async (ctx) => {
+  if (!process.env.SUPPORT_TELEGRAM_ID) {
+    return ctx.reply('Поддержка временно недоступна. Попробуйте позже.', mainKeyboard);
+  }
   pAdd(pendingSupport, String(ctx.from.id));
   await ctx.reply(
     'Опишите вашу проблему — мы ответим в течение 24 часов.\nНапишите сообщение прямо сейчас 👇',

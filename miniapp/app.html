@@ -578,7 +578,7 @@ async function getQR() {
     document.getElementById('qr-display').style.display = 'block';
     btn.disabled = true; btn.textContent = '✓ QR активен';
     // UX-2: Persist QR state in sessionStorage so reload doesn't reset the timer
-    var expireAt = Date.now() + 55 * 60 * 1000;
+    var expireAt = Date.now() + 60 * 60 * 1000;
     sessionStorage.setItem('qr_expires', String(expireAt));
     sessionStorage.setItem('qr_data_url', data.qrDataUrl);
     // U-1: Show countdown in button
@@ -592,7 +592,7 @@ async function getQR() {
       clearInterval(_qrCd);
       btn.disabled = false; btn.textContent = '🎫 Получить QR для визита';
       sessionStorage.removeItem('qr_expires'); sessionStorage.removeItem('qr_data_url');
-    }, 55 * 60 * 1000);
+    }, 60 * 60 * 1000);
   } catch(e) {
     var msg = e.name === 'AbortError' ? 'Сервер не отвечает. Попробуйте позже.' : ('Ошибка: ' + e.message);
     alert2(msg); btn.disabled=false; btn.innerHTML='🎫 Получить QR для визита';

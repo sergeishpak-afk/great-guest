@@ -117,12 +117,13 @@ module.exports = async (req, res) => {
   }
 
   // Atomic visit_count increment after confirmed insert
-  const { data: newCount, error: rpcError } = await supabase
+  let newCount;
+  const { data: rpcData, error: rpcError } = await supabase
     .rpc('increment_guest_visits', { p_telegram_id: pending.telegram_id });
+  newCount = rpcData;
 
   if (rpcError || newCount === null) {
     console.error('increment_guest_visits error after insert:', rpcError?.message);
-    // Fix #18: Fallback — read actual count from DB so response stays correct
     const { data: fallbackGuest } = await supabase
       .from('guests')
       .select('visit_count')
