@@ -73,11 +73,11 @@ bot.start(async (ctx) => {
   }
 
   if (payload.startsWith('qr_')) {
-    return ctx.reply('Откройте кабинет лояльности и нажмите «🎫 Мой QR-код» — QR-код появится сразу.', {
+    return ctx.reply('Ваш QR-код 👇', {
       reply_markup: {
         inline_keyboard: [[{
-          text: '🎫 Открыть кабинет',
-          web_app: { url: 'https://great-guest.vercel.app/app.html' },
+          text: '🎫 Показать QR-код',
+          web_app: { url: 'https://great-guest.vercel.app/app.html?qr=1' },
         }]],
       },
     });
@@ -194,10 +194,22 @@ bot.start(async (ctx) => {
     `Привет, *${tgUser.first_name}*!\n\nДобро пожаловать в *Great Guest* — программу лояльности.\n\nКаждый визит в заведение-партнёр или мероприятие системы Great Guest повышает твой статус.`,
     mainKeyboard
   );
+  await ctx.reply('👇 Открыть личный кабинет:', appInlineBtn);
 });
 
 bot.command('app', async (ctx) => {
   await ctx.reply('👇 Нажми чтобы открыть:', appInlineBtn);
+});
+
+bot.command('restaurant', async (ctx) => {
+  await ctx.reply('Панель сканирования QR для персонала 👇', {
+    reply_markup: {
+      inline_keyboard: [[{
+        text: '📷 Открыть панель сканирования',
+        web_app: { url: 'https://great-guest.vercel.app/restaurant.html' },
+      }]],
+    },
+  });
 });
 
 const HELP_TEXT = `❓ *Что умеет Great Guest:*

@@ -477,7 +477,7 @@
 <div id="s-loading" class="screen">
   <div class="spinner"></div>
   <div style="color:var(--muted);font-size:14px">Загружаем...</div>
-  <div style="color:var(--muted);font-size:10px;margin-top:8px;opacity:0.4">v2026.06.24b</div>
+  <div style="color:var(--muted);font-size:10px;margin-top:8px;opacity:0.4">v2026.07.29</div>
 </div>
 
 <!-- ─ Error ─────────────────────────────────────────────── -->
@@ -1183,7 +1183,7 @@ function renderNetwork() {
         ? `<div class="venue-cover-img" style="background-image:url('${esc(v.cover_image_url)}')"></div>`
         : `<div class="venue-icon">${icon}</div>`;
       const rsvpBtn = v.classification_mode === 'guestlist'
-        ? `<button class="rsvp-btn" onclick="event.stopPropagation();openRsvpPanel('${v.id}','${esc(v.name)}')">📋 Гостевой список · ${v.stats.rsvpCount} подтверждено</button>`
+        ? `<button class="rsvp-btn" onclick="event.stopPropagation();openRsvpPanel('${v.id}','${esc(v.name)}')">📋 Заявки · ${v.stats.rsvpCount} подтверждено</button>`
         : '';
       content += `
         <div class="venue-card" onclick="openVenueById('${v.id}')">
@@ -1819,6 +1819,7 @@ function openVenueById(id) {
   if (!venue) {
     console.error('[GG] openVenueById: venue not found for id', id,
       'map size:', venuesMap.size, 'keys:', [...venuesMap.keys()]);
+    showToast('Ошибка загрузки заведения', 'error');
     return;
   }
   openVenue(venue);
@@ -2775,6 +2776,8 @@ function updateBroadcastCount() {
   const decl = count === 1 ? 'ь' : count < 5 ? 'я' : 'ей';
   const capNote = count > 200 ? ` (отправится 200)` : '';
   document.getElementById('broadcast-count').textContent = `${count} получател${decl}${capNote}`;
+  const sendBtn = document.getElementById('broadcast-send-btn');
+  if (sendBtn) sendBtn.disabled = count === 0;
 }
 async function sendBroadcast() {
   const v = currentVenue;

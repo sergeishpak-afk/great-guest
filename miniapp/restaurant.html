@@ -364,13 +364,19 @@ function showGuest(g) {
 function showSuccess(g) {
   const b = badge(g.visits);
   const r = document.getElementById('result');
+  let cd = 8;
   r.innerHTML = `
     <div class="guest-name">✅ Визит записан!</div>
     <div class="guest-meta">${g.name} — итого ${g.visits} визитов</div>
     <span class="badge ${b.cls}">${b.label}</span>
-    <button class="btn btn-dark next-btn" onclick="reset()">👤 Следующий гость</button>`;
-  // UX-3: Auto-clear success screen after 8 seconds
-  setTimeout(function() { reset(); }, 8000);
+    <button class="btn btn-dark next-btn" id="next-guest-btn" onclick="reset()">👤 Следующий гость (${cd})</button>`;
+  const cdTimer = setInterval(function() {
+    cd--;
+    const btn = document.getElementById('next-guest-btn');
+    if (!btn) { clearInterval(cdTimer); return; }
+    if (cd <= 0) { clearInterval(cdTimer); reset(); }
+    else btn.textContent = `👤 Следующий гость (${cd})`;
+  }, 1000);
 }
 
 function showError(msg) {
@@ -421,6 +427,10 @@ async function startScanner() {
     status.textContent = 'Нет доступа к камере';
     dot.classList.remove('active');
     console.error(err);
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      showError('Нет доступа к камере. Разрешите доступ в настройках браузера или введите код вручную.');
+    }, 1500);
   }
 }
 
@@ -517,7 +527,10 @@ if (urlVenue && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
   });
 } else {
   document.getElementById('restaurantSelect').style.display = 'none';
-  showError('Используйте персональную ссылку заведения или откройте страницу через QR гостя.');
+  const r = document.getElementById('result');
+  r.className = 'result error'; r.style.display = 'block';
+  r.innerHTML = `<div class="error-msg">❌ Используйте персональную ссылку заведения или откройте страницу через QR гостя.</div>
+    <a href="https://t.me/great_guest_bot" class="btn btn-dark" style="margin-top:12px;display:inline-block;text-decoration:none">← Открыть бот</a>`;
 }
 </script>
 </body>

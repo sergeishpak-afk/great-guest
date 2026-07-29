@@ -367,6 +367,10 @@ async function init() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display     = 'block';
   document.getElementById('bnav').style.display    = 'flex';
+
+  if (new URLSearchParams(location.search).get('qr') === '1') {
+    document.getElementById('qr-btn').click();
+  }
 }
 
 // ── Status ────────────────────────────────────────────────────
@@ -388,7 +392,7 @@ function renderStatus(count, override) {
   document.getElementById('s-reward').style.display  = 'inline-block';
   document.getElementById('prog-wrap').style.display = next ? 'block' : 'none';
   if (next) {
-    var pct = Math.min(100, Math.max(count > 0 ? 10 : 0, Math.round((count - lvl.min) / (next.min - lvl.min) * 100)));
+    var pct = Math.min(100, Math.max(0, Math.round((count - lvl.min) / (next.min - lvl.min) * 100)));
     document.getElementById('prog-from').textContent = lvl.emoji + ' ' + lvl.name;
     document.getElementById('prog-to').textContent   = next.emoji + ' ' + next.name;
     document.getElementById('prog-fill').style.width = pct + '%';

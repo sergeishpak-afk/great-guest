@@ -390,7 +390,7 @@ function showSuccess(confirmed) {
   if (tg) {
     let cd = 5;
     const cdBtn = document.createElement('button');
-    cdBtn.style.cssText = 'margin-top:10px;background:none;border:none;color:rgba(240,235,224,0.35);font-size:12px;cursor:pointer;padding:4px 8px;font-family:inherit';
+    cdBtn.style.cssText = 'margin-top:10px;background:none;border:none;color:rgba(240,235,224,0.7);font-size:12px;cursor:pointer;padding:4px 8px;font-family:inherit';
     cdBtn.textContent = `Закроется через ${cd} сек`;
     successEl.appendChild(cdBtn);
     const timer = setInterval(() => {
@@ -409,6 +409,13 @@ function skipPaymentCheck() {
 // Check if returning from successful payment
 async function checkPaymentStatus() {
   const params = new URLSearchParams(location.search);
+  if (params.get('status') === 'cancel') {
+    build();
+    const errEl = document.getElementById('err-msg');
+    if (errEl) errEl.textContent = 'Оплата отменена. Вы можете выбрать тариф снова.';
+    return;
+  }
+
   if (params.get('status') === 'success') {
     document.getElementById('main-screen').style.display = 'none';
     document.getElementById('loading-screen').style.display = 'flex';
