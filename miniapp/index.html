@@ -1185,7 +1185,7 @@
     /* ── Pricing ── */
     #pricing {
       padding:100px 48px; background:var(--bg);
-      text-align:center;
+      text-align:center; max-width:960px; margin:0 auto;
     }
     #pricing .sec-hdr { margin-bottom:56px; }
     .pr-grid {
@@ -1262,8 +1262,12 @@
       .pr-grid { grid-template-columns:repeat(2,1fr); }
     }
     @media(max-width:540px) {
-      #pricing { padding:60px 16px; }
-      .pr-grid { grid-template-columns:1fr; }
+      #pricing { padding:56px 16px; }
+      .pr-grid { grid-template-columns:1fr; gap:16px; }
+      .pr-card { padding:24px 20px; }
+      .pr-price { font-size:36px; white-space:nowrap; }
+      .pr-price sup { font-size:17px; }
+      .pr-cta { padding:15px 16px; font-size:14px; font-weight:700; margin-top:20px; }
     }
   </style>
 </head>
@@ -1684,7 +1688,7 @@
 </section>
 
 <!-- PRICING -->
-<section id="pricing" style="padding:80px 24px;max-width:960px;margin:0 auto">
+<section id="pricing">
   <div class="sec-hdr reveal">
     <div class="sec-lbl">Тарифы</div>
     <h2 class="sec-title">Начни бесплатно — <em>плати когда вырастешь</em></h2>
@@ -1721,7 +1725,7 @@
         <li>Рассылки участникам</li>
         <li class="pr-miss">Аналитика</li>
       </ul>
-      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-gold">Начать за 490₽</a>
+      <a href="https://t.me/great_guest_bot?start=plan_event" class="pr-cta pr-cta-gold">Начать за 490₽</a>
     </div>
 
     <div class="pr-card">
@@ -1737,7 +1741,7 @@
         <li>Рассылки участникам</li>
         <li>Базовая аналитика</li>
       </ul>
-      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-outline">Выбрать тариф</a>
+      <a href="https://t.me/great_guest_bot?start=plan_basic" class="pr-cta pr-cta-outline">Выбрать тариф</a>
     </div>
 
     <div class="pr-card">
@@ -1753,7 +1757,7 @@
         <li>Рассылки участникам</li>
         <li>Полная аналитика</li>
       </ul>
-      <a href="https://t.me/great_guest_bot" class="pr-cta pr-cta-outline">Выбрать тариф</a>
+      <a href="https://t.me/great_guest_bot?start=plan_network" class="pr-cta pr-cta-outline">Выбрать тариф</a>
     </div>
 
     <div class="pr-card">

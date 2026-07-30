@@ -95,6 +95,22 @@ bot.start(async (ctx) => {
     );
   }
 
+  if (payload.startsWith('plan_')) {
+    const planKey = payload.slice(5); // event | basic | network | empire
+    const planInfo = {
+      event:   { label: 'Разовый',  price: '490₽',    period: 'разово · 30 дней',     emoji: '⚡' },
+      basic:   { label: 'Базовый',  price: '2 990₽',  period: 'в месяц',              emoji: '🔑' },
+      network: { label: 'Сеть',     price: '7 990₽',  period: 'в месяц · до 5 площадок', emoji: '🏢' },
+      empire:  { label: 'Империя',  price: '19 990₽', period: 'в месяц · без ограничений', emoji: '👑' },
+    }[planKey];
+    if (!planInfo) return ctx.reply('Неизвестный тариф. Откройте панель управления.', appInlineBtn);
+    await ctx.replyWithMarkdown(
+      `${planInfo.emoji} *Тариф ${planInfo.label}* — ${planInfo.price} ${planInfo.period}\n\nОткройте панель управления и перейдите в раздел *Тарифы* для оформления.`,
+      appInlineBtn
+    );
+    return;
+  }
+
   if (payload === 'guest') {
     const upsertData = {
       telegram_id: String(tgUser.id),
