@@ -1,0 +1,88 @@
+{
+  "name": "Great Guest — Еженедельный отчёт",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicScheduleTrigger",
+      "version": 1,
+      "parameters": {
+        "interval": 10080
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {
+          "parameters": {
+            "interval": { "label": "Каждые 7 дней (понедельник 9:00)" }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false },
+      "mapper": {
+        "url": "https://wjlhaizrygeyeishbycp.supabase.co/rest/v1/owner_subscriptions?select=plan,subscription_status,created_at",
+        "method": "GET",
+        "headers": [
+          { "name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps" },
+          { "name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps" },
+          { "name": "Prefer", "value": "count=exact" }
+        ],
+        "serialize": false,
+        "bodyType": "raw",
+        "contentType": "application/json"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false },
+      "mapper": {
+        "url": "https://wjlhaizrygeyeishbycp.supabase.co/rest/v1/owner_subscriptions?subscription_status=eq.active&select=telegram_id",
+        "method": "GET",
+        "headers": [
+          { "name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps" },
+          { "name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbGhhaXpyeWdleWVpc2hieWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODg3NTIsImV4cCI6MjA5NDg2NDc1Mn0.BtSP2YukFJD-0KoghZqyE-w66k6h_eo8wOjKokLfcps" },
+          { "name": "Prefer", "value": "count=exact" }
+        ],
+        "serialize": false,
+        "bodyType": "raw",
+        "contentType": "application/json"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 }
+      }
+    },
+    {
+      "id": 4,
+      "module": "telegram-bot-api:ActionSendMessage",
+      "version": 1,
+      "parameters": { "token": "8604236222:AAHT3yi1TyMRVLlrH_ucW8e_J96IeeqVQIw" },
+      "mapper": {
+        "chat_id": "148446386",
+        "text": "📊 *Great Guest — Отчёт за неделю*\n\n👥 Всего организаторов: {{length(parseJSON(2.data))}}\n✅ Активных подписок: {{length(parseJSON(3.data))}}\n🆓 На триале: {{subtract(length(parseJSON(2.data)); length(parseJSON(3.data)))}}\n\n📅 {{formatDate(now; 'DD.MM.YYYY')}}\n🔗 https://great-guest.ru/superadmin.html",
+        "parse_mode": "Markdown"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "sequential": false
+    }
+  }
+}

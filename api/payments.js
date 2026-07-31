@@ -97,7 +97,7 @@ async function createYooKassaPayment({ amount, description, metadata }) {
 }
 
 module.exports = async (req, res) => {
-  const ORIGIN = process.env.APP_ORIGIN || 'https://great-guest.vercel.app';
+  const ORIGIN = process.env.APP_ORIGIN || 'https://great-guest.ru';
   res.setHeader('Access-Control-Allow-Origin', ORIGIN);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });

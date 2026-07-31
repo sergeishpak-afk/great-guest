@@ -48,7 +48,7 @@ function validateInitData(initData, token) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', process.env.APP_ORIGIN || 'https://great-guest.vercel.app');
+  res.setHeader('Access-Control-Allow-Origin', process.env.APP_ORIGIN || 'https://great-guest.ru');
   res.setHeader('Access-Control-Allow-Methods', 'POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();

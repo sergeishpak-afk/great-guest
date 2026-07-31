@@ -50,7 +50,7 @@ function validateInitData(initData, token) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', process.env.APP_ORIGIN || 'https://great-guest.vercel.app');
+  res.setHeader('Access-Control-Allow-Origin', process.env.APP_ORIGIN || 'https://great-guest.ru');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -150,7 +150,7 @@ module.exports = async (req, res) => {
           reply_markup: {
             inline_keyboard: [[{
               text: '🎫 Открыть кабинет и получить QR',
-              web_app: { url: 'https://great-guest.vercel.app/app.html' },
+              web_app: { url: `${(process.env.APP_URL || 'https://great-guest.ru').replace(/\/$/, '')}/app.html` },
             }]],
           },
         });

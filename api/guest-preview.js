@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const ORIGIN  = process.env.APP_ORIGIN || 'https://great-guest.vercel.app';
+const ORIGIN  = process.env.APP_ORIGIN || 'https://great-guest.ru';
 
 const RL_MAP = new Map();
 function checkRL(ip) {

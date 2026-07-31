@@ -8,7 +8,7 @@ if (!process.env.BOT_TOKEN) require('dotenv').config();
 
 const BOT_TOKEN      = process.env.BOT_TOKEN;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
-const APP_URL        = (process.env.APP_URL || 'https://great-guest.vercel.app').replace(/\/$/, '');
+const APP_URL        = (process.env.APP_URL || 'https://great-guest.ru').replace(/\/$/, '');
 
 if (!BOT_TOKEN)      { console.log('[webhook] BOT_TOKEN not set — skipping'); process.exit(0); }
 if (!WEBHOOK_SECRET) { console.log('[webhook] WEBHOOK_SECRET not set — skipping'); process.exit(0); }

@@ -8,8 +8,8 @@ const { createClient } = require('@supabase/supabase-js');
 
 const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const APP_URL = (process.env.APP_URL || 'https://great-guest.vercel.app').replace(/\/$/, '');
-const ORIGIN  = process.env.APP_ORIGIN || 'https://great-guest.vercel.app';
+const APP_URL = (process.env.APP_URL || 'https://great-guest.ru').replace(/\/$/, '');
+const ORIGIN  = process.env.APP_ORIGIN || 'https://great-guest.ru';
 
 // Broadcast rate limit: 1 per owner per venue per 5 minutes
 const BROADCAST_RL = new Map();

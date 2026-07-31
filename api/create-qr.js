@@ -33,7 +33,7 @@ function validateInitData(initData, botToken) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', process.env.APP_ORIGIN || 'https://great-guest.vercel.app');
+  res.setHeader('Access-Control-Allow-Origin', process.env.APP_ORIGIN || 'https://great-guest.ru');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
@@ -121,7 +121,7 @@ module.exports = async (req, res) => {
 
   if (error) return res.status(500).json({ error: 'DB error' });
 
-  const appUrl = process.env.APP_URL || 'https://great-guest.vercel.app';
+  const appUrl = process.env.APP_URL || 'https://great-guest.ru';
   const visitUrl = `${appUrl}/restaurant.html?token=${token}`;
   const qrDataUrl = await QRCode.toDataURL(visitUrl, { errorCorrectionLevel: 'H', width: 300, margin: 2 });
   return res.status(200).json({ token, visitUrl, qrDataUrl });

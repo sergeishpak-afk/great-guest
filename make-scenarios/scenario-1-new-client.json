@@ -1,0 +1,43 @@
+{
+  "name": "Great Guest — Новый клиент",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "ВСТАВЬ_WEBHOOK_ID_ИЗ_MAKE",
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": { "parameters": { "hook": { "label": "Great Guest — Новый клиент" } } }
+      }
+    },
+    {
+      "id": 2,
+      "module": "telegram-bot-api:ActionSendMessage",
+      "version": 1,
+      "parameters": { "token": "8604236222:AAHT3yi1TyMRVLlrH_ucW8e_J96IeeqVQIw" },
+      "mapper": {
+        "chat_id": "148446386",
+        "text": "🆕 *Новый клиент Great Guest!*\n\n👤 Telegram ID: {{1.record.telegram_id}}\n📋 Тариф: {{1.record.plan}}\n📅 Пробный до: {{1.record.subscription_expires_at}}\n\nПроверь: https://great-guest.ru/superadmin.html",
+        "parse_mode": "Markdown"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "sequential": false
+    }
+  }
+}

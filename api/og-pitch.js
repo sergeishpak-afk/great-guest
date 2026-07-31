@@ -42,7 +42,7 @@ export default function handler() {
             )
           )
         ),
-        el('div', { style: { color: '#444', fontSize: '14px' } }, 'great-guest.vercel.app')
+        el('div', { style: { color: '#444', fontSize: '14px' } }, 'great-guest.ru')
       )
     ),
     { width: 1200, height: 630 }

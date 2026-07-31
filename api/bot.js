@@ -1,6 +1,6 @@
 /**
  * api/bot.js — Telegram bot webhook (Vercel Serverless)
- * Webhook URL: https://great-guest.vercel.app/api/bot
+ * Webhook URL: https://great-guest.ru/api/bot
  *
  * Handles dual-role users: guest + venue owner simultaneously.
  * 152-ФЗ: consent required before data collection.
