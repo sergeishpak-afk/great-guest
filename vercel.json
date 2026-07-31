@@ -2,6 +2,9 @@
   "version": 2,
   "outputDirectory": "miniapp",
   "framework": null,
+  "crons": [
+    { "path": "/api/cron-notify", "schedule": "0 5 * * *" }
+  ],
   "rewrites": [
     { "source": "/api/guest-preview/:token", "destination": "/api/guest-preview?token=:token" },
     { "source": "/privacy",   "destination": "/privacy.html" },
