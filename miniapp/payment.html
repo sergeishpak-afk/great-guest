@@ -12,8 +12,8 @@
     --bg:      #0D0C12;
     --card:    #1A1825;
     --border:  #2E2B3D;
-    --accent:  #7C6AF7;
-    --gold:    #F5A623;
+    --accent:  #C9A96E;
+    --gold:    #C9A96E;
     --text:    #E8E6F0;
     --muted:   #8B8AA0;
     --green:   #34C759;
@@ -35,7 +35,8 @@
   .header h1 { font-size: 22px; font-weight: 700; }
   .header p  { font-size: 14px; color: var(--muted); margin-top: 6px; }
 
-  /* Success screen */
+  /* Success / loading screens */
+  #loading-screen { display: none; }
   #success-screen, #loading-screen {
     display: flex;
     flex-direction: column;
@@ -250,10 +251,11 @@ const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
 const PLANS = {
-  event:   { label: 'Разовый',  emoji: '🎟', price: 490,  max_venues: 1,   features: ['1 мероприятие', 'QR-чек-ин', 'База участников', 'Панель управления'], oneTime: true },
-  basic:   { label: 'Базовый',  emoji: '🔑', price: 2990, max_venues: 1,   features: ['1 заведение', 'До 1 000 гостей', 'Сканер QR', 'База гостей'], popular: true },
-  network: { label: 'Сеть',     emoji: '🏢', price: 7990, max_venues: 5,   features: ['До 5 заведений', 'Неограниченно гостей', 'Рассылки', 'RSVP-листы'] },
-  empire:  { label: 'Империя',  emoji: '👑', price:19990, max_venues: 999, features: ['Неограниченно заведений', 'Белый лейбл', 'Приоритет поддержки', 'Всё из Сети'] },
+  start:   { label: 'Старт',    emoji: '🎁', price: 0,    max_venues: 1,   features: ['1 мероприятие или клуб', 'QR-чек-ин', 'База участников', 'Панель управления'], free: true },
+  event:   { label: 'Разовый',  emoji: '🎟', price: 490,  max_venues: 1,   features: ['1 мероприятие', 'QR-чек-ин', 'База участников', 'Панель управления', 'Рассылки участникам'], oneTime: true, popular: true },
+  basic:   { label: 'Базовый',  emoji: '🔑', price: 2990, max_venues: 1,   features: ['1 заведение', 'QR-чек-ин', 'База участников', 'Панель управления', 'Рассылки', 'Базовая аналитика'] },
+  network: { label: 'Сеть',     emoji: '🏢', price: 7990, max_venues: 5,   features: ['До 5 заведений', 'Неограниченно гостей', 'Рассылки', 'Полная аналитика'] },
+  empire:  { label: 'Империя',  emoji: '👑', price:19990, max_venues: 999, features: ['Неограниченно заведений', 'API', 'Белый лейбл', 'Приоритет поддержки'] },
 };
 const DURATIONS = [
   { months: 1,  label: '1 мес',  discount: 0    },
@@ -262,7 +264,7 @@ const DURATIONS = [
   { months: 12, label: '12 мес', discount: 0.20 },
 ];
 
-let selectedPlan    = 'basic';
+let selectedPlan    = 'event';
 let selectedMonths  = 1;
 
 function buildDurTabs() {
@@ -286,31 +288,49 @@ function buildPlanList() {
   const c   = document.getElementById('plan-list');
   c.innerHTML = '';
   Object.entries(PLANS).forEach(([key, p]) => {
-    const isActive     = key === selectedPlan;
-    const finalPrice   = p.oneTime ? p.price : calcPrice(p.price, selectedMonths, dur.discount);
-    const fullPrice    = p.oneTime ? p.price : p.price * selectedMonths;
-    const priceLabel   = p.oneTime ? 'разово · 30 дней' : (selectedMonths === 1 ? 'мес' : `${selectedMonths} мес`);
-
+    const isActive   = key === selectedPlan;
     const card = document.createElement('div');
-    card.className = 'plan-card' + (isActive ? ' active' : '');
-    card.onclick   = () => { selectedPlan = key; build(); };
-    card.innerHTML = `
-      ${p.popular ? '<div class="popular-badge">Популярный</div>' : ''}
-      <div class="plan-header">
-        <div class="plan-name">${p.emoji} ${p.label}</div>
-        <div class="plan-check">${isActive ? '✓' : ''}</div>
-      </div>
-      <div class="plan-price">
-        ${finalPrice.toLocaleString('ru-RU')} ₽
-        <span>/ ${priceLabel}</span>
-      </div>
-      <div class="plan-old-price">
-        ${!p.oneTime && dur.discount ? `${fullPrice.toLocaleString('ru-RU')} ₽ без скидки` : '&nbsp;'}
-      </div>
-      <div class="plan-features">
-        ${p.features.map(f => `<div class="feature"><span class="feature-dot">•</span>${f}</div>`).join('')}
-      </div>
-    `;
+
+    if (p.free) {
+      card.className = 'plan-card';
+      card.style.cssText = 'opacity:0.85;cursor:pointer';
+      card.onclick = () => { window.location.href = 'https://t.me/great_guest_bot'; };
+      card.innerHTML = `
+        <div class="plan-header">
+          <div class="plan-name">${p.emoji} ${p.label}</div>
+        </div>
+        <div class="plan-price">Бесплатно <span>· 14 дней</span></div>
+        <div class="plan-old-price">&nbsp;</div>
+        <div class="plan-features">
+          ${p.features.map(f => `<div class="feature"><span class="feature-dot">•</span>${f}</div>`).join('')}
+        </div>
+        <a href="https://t.me/great_guest_bot" style="display:block;margin-top:12px;text-align:center;padding:10px;border-radius:8px;background:rgba(201,169,110,0.15);color:var(--gold);font-size:13px;font-weight:600;text-decoration:none">Попробовать бесплатно →</a>
+      `;
+    } else {
+      const finalPrice = p.oneTime ? p.price : calcPrice(p.price, selectedMonths, dur.discount);
+      const fullPrice  = p.oneTime ? p.price : p.price * selectedMonths;
+      const priceLabel = p.oneTime ? 'разово · 30 дней' : (selectedMonths === 1 ? 'мес' : `${selectedMonths} мес`);
+
+      card.className = 'plan-card' + (isActive ? ' active' : '');
+      card.onclick   = () => { selectedPlan = key; build(); };
+      card.innerHTML = `
+        ${p.popular ? '<div class="popular-badge">Популярный</div>' : ''}
+        <div class="plan-header">
+          <div class="plan-name">${p.emoji} ${p.label}</div>
+          <div class="plan-check">${isActive ? '✓' : ''}</div>
+        </div>
+        <div class="plan-price">
+          ${finalPrice.toLocaleString('ru-RU')} ₽
+          <span>/ ${priceLabel}</span>
+        </div>
+        <div class="plan-old-price">
+          ${!p.oneTime && dur.discount ? `${fullPrice.toLocaleString('ru-RU')} ₽ без скидки` : '&nbsp;'}
+        </div>
+        <div class="plan-features">
+          ${p.features.map(f => `<div class="feature"><span class="feature-dot">•</span>${f}</div>`).join('')}
+        </div>
+      `;
+    }
     c.appendChild(card);
   });
 }
@@ -377,8 +397,12 @@ function showSuccess(confirmed) {
   const successEl = document.getElementById('success-screen');
   successEl.style.display = 'flex';
   if (!confirmed) {
-    const subEl = successEl.querySelector('.success-sub');
-    if (subEl) subEl.innerHTML = 'Оплата принята!<br>Подписка активируется в течение минуты.';
+    const iconEl  = successEl.querySelector('.success-icon');
+    const titleEl = successEl.querySelector('.success-title');
+    const subEl   = successEl.querySelector('.success-sub');
+    if (iconEl)  iconEl.textContent  = '⏳';
+    if (titleEl) titleEl.textContent = 'Обрабатываем оплату';
+    if (subEl)   subEl.innerHTML     = 'Если средства списаны, подписка активируется<br>в течение нескольких минут.';
   }
   if (!tg) {
     const backBtn = document.createElement('a');
@@ -416,9 +440,6 @@ function skipPaymentCheck() {
 
 // Check if returning from successful payment
 async function checkPaymentStatus() {
-  // Fix #1: CSS shows loading-screen by default — hide it before deciding what to show
-  document.getElementById('loading-screen').style.display = 'none';
-
   const params = new URLSearchParams(location.search);
   if (params.get('status') === 'cancel') {
     build();

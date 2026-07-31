@@ -50,7 +50,7 @@ function validateInitData(initData, token) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://great-guest.vercel.app');
+  res.setHeader('Access-Control-Allow-Origin', process.env.APP_ORIGIN || 'https://great-guest.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -294,11 +294,11 @@ module.exports = async (req, res) => {
       .order('visited_at', { ascending: false })
       .limit(2000);
 
+    const { getStatus } = require('../src/status');
     const getLevel = (n) => {
-      if (n >= 30) return 'Platinum';
-      if (n >= 15) return 'Gold';
-      if (n >= 5)  return 'Silver';
-      return 'Bronze';
+      if (!n) return '—';
+      const s = getStatus(n);
+      return s ? s.name : 'Bronze';
     };
 
     const rows = [['Дата визита', 'Время', 'Заведение', 'Тип', 'Имя', 'Фамилия', 'Username', 'Telegram ID', 'Статус', 'Визитов всего']];

@@ -9,7 +9,7 @@ const crypto = require('crypto');
 const { Telegraf } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 
-const ORIGIN  = 'https://great-guest.vercel.app';
+const ORIGIN  = process.env.APP_ORIGIN || 'https://great-guest.vercel.app';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // In-memory rate limit: max 20 send-offer requests per owner per minute

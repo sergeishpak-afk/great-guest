@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<!-- BUILD: 2026-07-01T12:00 -->
+<!-- BUILD: 2026-07-30T00:00 -->
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
@@ -7,12 +7,12 @@
   <title>Great Guest — Создай закрытый клуб в Telegram за 15 минут</title>
   <meta name="description" content="Great Guest — членская карта для твоего клуба, мероприятия или заведения в Telegram. Гость сканирует QR, ты видишь кто пришёл, сколько раз, какой статус. Запуск за 15 минут, без приложений." />
   <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://great-guest.vercel.app/" />
+  <link rel="canonical" href="https://great-guest.ru/" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="Great Guest — Закрытый клуб в Telegram за 15 минут" />
-  <meta property="og:description" content="Членская карта для твоего клуба, мероприятия или заведения. QR-чек-ин, история гостей, рассылки — всё в Telegram. Бесплатно." />
-  <meta property="og:url" content="https://great-guest.vercel.app/" />
+  <meta property="og:description" content="Членская карта для твоего клуба, мероприятия или заведения. QR-чек-ин, история гостей, рассылки — всё в Telegram. 14 дней бесплатно, от 490 ₽." />
+  <meta property="og:url" content="https://great-guest.ru/" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ru_RU" />
   <meta property="og:site_name" content="Great Guest" />
@@ -23,7 +23,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Great Guest — Закрытый клуб в Telegram за 15 минут" />
-  <meta name="twitter:description" content="Членская карта для клуба, мероприятия, заведения. QR-чек-ин, история гостей, рассылки. Бесплатно." />
+  <meta name="twitter:description" content="Членская карта для клуба, мероприятия, заведения. QR-чек-ин, история гостей, рассылки. 14 дней бесплатно, от 490 ₽." />
   <meta name="twitter:image" content="https://uhuegcgiysvbcxokebjg.supabase.co/storage/v1/object/public/ads/org_3E33NFG5eRGmCoINIhntDm2TXx4/e624e469-a22b-4c99-a6b5-fb29110ff4cd/bd928d1e-608d-4e42-9875-80a87f80ff96/v1-1779393857870.jpg" />
 
   <!-- Schema.org JSON-LD -->
@@ -38,21 +38,21 @@
         "operatingSystem": "Web, Telegram",
         "description": "Платформа управления гостями для клубов, мероприятий, ресторанов и комьюнити на базе Telegram Mini App",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "RUB", "description": "Бесплатный старт" },
-        "url": "https://great-guest.vercel.app",
+        "url": "https://great-guest.ru",
         "inLanguage": "ru",
         "keywords": "членский клуб telegram, управление гостями мероприятие, QR чек-ин, программа лояльности, комьюнити telegram"
       },
       {
         "@type": "Organization",
         "name": "Great Guest",
-        "url": "https://great-guest.vercel.app",
+        "url": "https://great-guest.ru",
         "sameAs": ["https://t.me/great_guest_bot"],
         "description": "Платформа лояльности нового поколения через Telegram"
       },
       {
         "@type": "WebSite",
         "name": "Great Guest",
-        "url": "https://great-guest.vercel.app",
+        "url": "https://great-guest.ru",
         "inLanguage": "ru"
       }
     ]
@@ -61,7 +61,7 @@
 
   <!-- Favicon -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
 
   <!-- Performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -248,7 +248,7 @@
     .phone-live { background:#0D0C12; }
     .phone-iframe {
       width:375px; height:812px; border:none;
-      transform:scale(0.6667); transform-origin:top left;
+      transform:scale(0.6158); transform-origin:top left;
       pointer-events:none; display:block;
     }
     .pscreen {
@@ -922,8 +922,8 @@
       .cta-btns { flex-direction: column; align-items: center; }
       .cta-btns .btn-m { width: 100%; max-width: 340px; justify-content: center; }
 
-      footer { padding: 28px 20px; }
-      .ft-links { display: none; }
+      footer { padding: 28px 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
+      .ft-links { flex-wrap: wrap; gap: 12px; }
     }
 
     /* ── Mobile phones ── */
@@ -1185,12 +1185,12 @@
     /* ── Pricing ── */
     #pricing {
       padding:100px 48px; background:var(--bg);
-      text-align:center; max-width:960px; margin:0 auto;
+      text-align:center; max-width:1280px; margin:0 auto;
     }
     #pricing .sec-hdr { margin-bottom:56px; }
     .pr-grid {
       display:grid; grid-template-columns:repeat(5,1fr);
-      gap:20px; max-width:1300px; margin:0 auto;
+      gap:20px; margin:0 auto;
       text-align:left;
     }
     .pr-card {
@@ -1254,7 +1254,7 @@
       box-shadow:0 4px 14px rgba(201,169,110,0.25);
     }
     .pr-cta-gold:hover { background:var(--gold2); }
-    @media(max-width:1100px) {
+    @media(max-width:1200px) {
       .pr-grid { grid-template-columns:repeat(3,1fr); }
     }
     @media(max-width:900px) {
@@ -1300,10 +1300,10 @@
 <section id="hero">
   <canvas id="hero-canvas"></canvas>
 
-  <div class="hero-3d"><div class="dot-grid"></div></div>
+  <div class="dot-grid"></div>
 
   <div class="hero-left">
-    <div class="hero-eyebrow">Telegram Mini App · Без регистраций и приложений</div>
+    <div class="hero-eyebrow">Telegram Mini App · Без регистраций и сторонних приложений</div>
     <h1 class="hero-title">
       <span class="ln"><span class="li">Клуб или мероприятие</span></span>
       <span class="ln"><span class="li">в Telegram.</span></span>
@@ -1634,7 +1634,7 @@
       <div style="display:flex;flex-direction:column;gap:14px">
         <div>
           <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;color:var(--text)">
-            <span>🥉 Bronze</span><span style="color:var(--muted)">1–5 визитов</span>
+            <span>🥉 Bronze</span><span style="color:var(--muted)">1–4 визита</span>
           </div>
           <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px">
             <div style="height:5px;width:28%;background:#C47A3D;border-radius:3px"></div>
@@ -1642,7 +1642,7 @@
         </div>
         <div>
           <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;color:var(--text)">
-            <span>🥈 Silver</span><span style="color:var(--muted)">6–14</span>
+            <span>🥈 Silver</span><span style="color:var(--muted)">5–14</span>
           </div>
           <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px">
             <div style="height:5px;width:52%;background:#8A9BB0;border-radius:3px"></div>
@@ -1801,7 +1801,7 @@
     <a href="/terms.html">Оферта</a>
     <a href="/privacy.html">Конфиденциальность</a>
   </div>
-  <div class="ft-r">© 2026 Great Guest · <a href="mailto:sergei.shpak@spiro.vc" style="color:inherit;opacity:.5;text-decoration:none">Контакты</a></div>
+  <div class="ft-r">© 2026 Great Guest · <a href="https://t.me/great_guest_bot?start=support" style="color:inherit;opacity:.5;text-decoration:none">Контакты</a></div>
 </footer>
 
 <!-- Cookie consent (152-ФЗ) -->

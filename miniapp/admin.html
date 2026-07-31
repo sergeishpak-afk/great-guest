@@ -2228,7 +2228,7 @@ function renderStatsPane(v) {
     </div>
     <div style="margin-top:10px;padding:14px 16px;background:rgba(201,169,110,0.04);border:1px solid rgba(201,169,110,0.15);border-radius:12px">
       <div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.06em;margin-bottom:6px">🔗 ССЫЛКА ДЛЯ ПЕРСОНАЛА</div>
-      <div style="font-size:12px;color:var(--muted);font-family:monospace;word-break:break-all;line-height:1.5;margin-bottom:10px">great-guest.vercel.app/restaurant.html?venue=${v.id}</div>
+      <div style="font-size:12px;color:var(--muted);font-family:monospace;word-break:break-all;line-height:1.5;margin-bottom:10px">great-guest.ru/restaurant.html?venue=${v.id}</div>
       <button onclick="copyStaffUrl('${v.id}')" style="width:100%;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px;color:#60A5FA;font-size:13px;font-weight:600;cursor:pointer">📋 Скопировать</button>
     </div>
     ${renderLevelChart(globalGuests)}
@@ -2726,7 +2726,7 @@ function closeVenueQR() {
 function showInviteLink() {
   const v = currentVenue;
   if (!v) return;
-  const APP = 'https://great-guest.vercel.app';
+  const APP = 'https://great-guest.ru';
   const link = `${APP}/api/invite?v=${v.id}`;
   document.getElementById('invite-link-name').textContent = v.name;
   document.getElementById('invite-link-url').value = link;
@@ -2738,7 +2738,7 @@ function closeInviteLink() {
   document.getElementById('invite-link-modal').style.display = 'none';
 }
 function copyStaffUrl(venueId) {
-  const url = `https://great-guest.vercel.app/restaurant.html?venue=${venueId}`;
+  const url = `https://great-guest.ru/restaurant.html?venue=${venueId}`;
   navigator.clipboard.writeText(url)
     .then(() => showToast('Ссылка для персонала скопирована!'))
     .catch(() => { prompt('Скопируйте ссылку:', url); });
@@ -3730,7 +3730,7 @@ function showSubscriptionModal() {
 }
 
 function openLanding() {
-  const url = 'https://great-guest.vercel.app/';
+  const url = 'https://great-guest.ru/';
   if (tg && tg.openLink) { tg.openLink(url); } else { window.open(url, '_blank'); }
 }
 

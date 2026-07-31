@@ -38,5 +38,5 @@ Great Guest — SaaS-платформа, которая позволяет лю�
 
 ## Контакт
 - Telegram-бот: https://t.me/great_guest_bot
-- Сайт: https://great-guest.vercel.app
-- Питч для инвесторов: https://great-guest.vercel.app/pitch.html
+- Сайт: https://great-guest.ru
+- Питч для инвесторов: https://great-guest.ru/pitch.html
