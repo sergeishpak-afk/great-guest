@@ -11,7 +11,7 @@ const { Telegraf } = require('telegraf');
 const db  = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-const APP_URL = (process.env.APP_URL || 'https://great-guest.vercel.app').replace(/\/$/, '');
+const APP_URL = (process.env.APP_URL || 'https://great-guest.ru').replace(/\/$/, '');
 
 const PLANS = {
   event:   { label: 'Разовый',  price: 49000,   max_venues: 1,   oneTime: true  }, // 490 ₽ разово, 30 дней

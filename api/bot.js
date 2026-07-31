@@ -13,7 +13,7 @@ const { createClient } = require('@supabase/supabase-js');
 const bot      = new Telegraf(process.env.BOT_TOKEN);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-const APP_URL   = (process.env.APP_URL || 'https://great-guest.vercel.app').replace(/\/$/, '');
+const APP_URL   = (process.env.APP_URL || 'https://great-guest.ru').replace(/\/$/, '');
 const MINI_APP  = `${APP_URL}/app.html`;
 const ADMIN_APP = `${APP_URL}/admin.html?v=20260624`;
 
@@ -911,7 +911,7 @@ bot.command('superadmin', async (ctx) => {
     {
       reply_markup: {
         inline_keyboard: [[
-          { text: '⚙️ Открыть панель', web_app: { url: `${process.env.WEBAPP_URL || 'https://great-guest.vercel.app'}/superadmin.html` } }
+          { text: '⚙️ Открыть панель', web_app: { url: `${APP_URL}/superadmin.html` } }
         ]]
       }
     }

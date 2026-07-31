@@ -11,7 +11,8 @@ const { formatStatus } = require('./status');
 // ─── Bot ──────────────────────────────────────────────────────────────────────
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-const MINI_APP_URL = 'https://great-guest.vercel.app/app.html';
+const APP_URL      = (process.env.APP_URL || 'https://great-guest.ru').replace(/\/$/, '');
+const MINI_APP_URL = `${APP_URL}/app.html`;
 
 const mainKeyboard = Markup.keyboard([
   ['🎫 Мой QR-код'],
@@ -66,7 +67,7 @@ bot.start(async (ctx) => {
       reply_markup: {
         inline_keyboard: [[{
           text: 'Открыть',
-          web_app: { url: `https://great-guest.vercel.app/app.html?venue=${venueId}` }
+          web_app: { url: `${APP_URL}/app.html?venue=${venueId}` }
         }]]
       }
     });
@@ -77,7 +78,7 @@ bot.start(async (ctx) => {
       reply_markup: {
         inline_keyboard: [[{
           text: '🎫 Показать QR-код',
-          web_app: { url: 'https://great-guest.vercel.app/app.html?qr=1' },
+          web_app: { url: `${APP_URL}/app.html?qr=1` },
         }]],
       },
     });
@@ -244,7 +245,7 @@ bot.command('restaurant', async (ctx) => {
     reply_markup: {
       inline_keyboard: [[{
         text: '📷 Открыть панель сканирования',
-        web_app: { url: 'https://great-guest.vercel.app/restaurant.html' },
+        web_app: { url: `${APP_URL}/restaurant.html` },
       }]],
     },
   });
