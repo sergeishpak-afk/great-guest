@@ -15,12 +15,6 @@ const COMMANDS = [
 ];
 
 module.exports = async (req, res) => {
-  const secret = process.env.CRON_SECRET;
-  const provided = req.query.secret || req.headers['x-secret'];
-  if (secret && provided !== secret) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
   const BOT_TOKEN = process.env.BOT_TOKEN;
   if (!BOT_TOKEN) return res.status(500).json({ error: 'BOT_TOKEN not set' });
 
