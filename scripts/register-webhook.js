@@ -15,6 +15,15 @@ if (!WEBHOOK_SECRET) { console.log('[webhook] WEBHOOK_SECRET not set — skippin
 
 const webhookUrl = `${APP_URL}/api/bot`;
 
+const COMMANDS = [
+  { command: 'start',   description: '👋 Главное меню' },
+  { command: 'qr',      description: '🎫 Мой QR-код для входа на событие' },
+  { command: 'status',  description: '⭐ Мой статус гостя' },
+  { command: 'history', description: '📋 История посещений' },
+  { command: 'mydata',  description: '📊 Мои данные (152-ФЗ)' },
+  { command: 'forget',  description: '🗑 Удалить мои данные' },
+];
+
 fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -26,3 +35,15 @@ fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`, {
     else      console.warn(`[webhook] ⚠️ Failed (non-fatal): ${d.description}`);
   })
   .catch(e => console.warn(`[webhook] ⚠️ Error (non-fatal): ${e.message}`));
+
+fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyCommands`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ commands: COMMANDS }),
+})
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) console.log('[webhook] ✅ Commands registered');
+    else      console.warn('[webhook] ⚠️ Commands failed:', d.description);
+  })
+  .catch(e => console.warn('[webhook] ⚠️ Commands error:', e.message));
