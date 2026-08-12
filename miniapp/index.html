@@ -289,11 +289,14 @@
       padding: 32px 28px;
     }
     .how-num {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
       color: var(--accent);
-      margin-bottom: 20px;
+      opacity: 0.25;
+      margin-bottom: 16px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
     }
     .how-icon {
       font-size: 32px;
@@ -334,6 +337,16 @@
       font-size: 36px;
       margin-bottom: 16px;
       display: block;
+    }
+    .whom-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--accent-bg);
+      border-radius: var(--radius-s);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
     }
     .whom-card h3 {
       font-size: 16px;
@@ -638,7 +651,7 @@
 <header class="hero">
   <div class="container">
     <div class="hero-eyebrow" aria-hidden="true">
-      <span>🤖</span> Работает через Telegram
+      Работает через Telegram
     </div>
     <h1>База гостей через Telegram.<br><em>Для любых событий.</em></h1>
     <p class="hero-sub">
@@ -647,7 +660,7 @@
     </p>
     <div class="hero-cta">
       <a href="https://t.me/great_guest_bot" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
-        🎉 Начать в Telegram
+        Начать в Telegram
       </a>
       <a href="#how" class="btn btn-outline btn-lg">Как это работает</a>
     </div>
@@ -663,44 +676,52 @@
         <line x1="340" y1="150" x2="505" y2="150" stroke="#1941CC" stroke-width="1.5" stroke-dasharray="4 5" opacity="0.35"/>
 
         <!-- Center node -->
-        <circle cx="340" cy="150" r="46" fill="#1941CC" opacity="0.1"/>
-        <circle cx="340" cy="150" r="34" fill="#1941CC" opacity="0.18"/>
-        <circle cx="340" cy="150" r="24" fill="#1941CC"/>
-        <text x="340" y="158" text-anchor="middle" font-size="20" aria-hidden="true">👤</text>
+        <circle cx="340" cy="150" r="46" fill="#1941CC" opacity="0.08"/>
+        <circle cx="340" cy="150" r="34" fill="#1941CC" opacity="0.15"/>
+        <circle cx="340" cy="150" r="26" fill="#1941CC"/>
+        <text x="340" y="147" text-anchor="middle" font-size="10" font-weight="700" fill="rgba(255,255,255,0.7)" font-family="Manrope,sans-serif" letter-spacing="0.08em">ОРГА</text>
+        <text x="340" y="160" text-anchor="middle" font-size="10" font-weight="700" fill="rgba(255,255,255,0.7)" font-family="Manrope,sans-serif" letter-spacing="0.08em">НИЗА</text>
+        <text x="340" y="173" text-anchor="middle" font-size="10" font-weight="700" fill="rgba(255,255,255,0.7)" font-family="Manrope,sans-serif" letter-spacing="0.08em">ТОР</text>
 
         <!-- Leaf: Restaurant -->
-        <circle cx="100" cy="60" r="26" fill="#ECEAE4" stroke="#D8D5CE" stroke-width="1.5"/>
-        <text x="100" y="68" text-anchor="middle" font-size="22" aria-hidden="true">🍽</text>
+        <circle cx="100" cy="60" r="26" fill="#E8EDF9" stroke="#1941CC" stroke-width="1" stroke-opacity="0.3"/>
+        <text x="100" y="56" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">РЕСТ</text>
+        <text x="100" y="68" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">ОРАН</text>
         <text x="100" y="92" text-anchor="middle" font-size="11" fill="#6E6B63" font-family="Manrope,sans-serif" font-weight="500">Ресторан</text>
 
         <!-- Leaf: Tour -->
-        <circle cx="580" cy="60" r="26" fill="#ECEAE4" stroke="#D8D5CE" stroke-width="1.5"/>
-        <text x="580" y="68" text-anchor="middle" font-size="22" aria-hidden="true">🗺</text>
+        <circle cx="580" cy="60" r="26" fill="#E8EDF9" stroke="#1941CC" stroke-width="1" stroke-opacity="0.3"/>
+        <text x="580" y="56" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">ЭКСКУР</text>
+        <text x="580" y="68" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">СИЯ</text>
         <text x="580" y="92" text-anchor="middle" font-size="11" fill="#6E6B63" font-family="Manrope,sans-serif" font-weight="500">Экскурсия</text>
 
         <!-- Leaf: Wedding -->
-        <circle cx="100" cy="240" r="26" fill="#ECEAE4" stroke="#D8D5CE" stroke-width="1.5"/>
-        <text x="100" y="248" text-anchor="middle" font-size="22" aria-hidden="true">💒</text>
+        <circle cx="100" cy="240" r="26" fill="#E8EDF9" stroke="#1941CC" stroke-width="1" stroke-opacity="0.3"/>
+        <text x="100" y="236" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">СВАДЬ</text>
+        <text x="100" y="248" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">БА</text>
         <text x="100" y="272" text-anchor="middle" font-size="11" fill="#6E6B63" font-family="Manrope,sans-serif" font-weight="500">Свадьба</text>
 
         <!-- Leaf: Corporate -->
-        <circle cx="580" cy="240" r="26" fill="#ECEAE4" stroke="#D8D5CE" stroke-width="1.5"/>
-        <text x="580" y="248" text-anchor="middle" font-size="22" aria-hidden="true">🏢</text>
+        <circle cx="580" cy="240" r="26" fill="#E8EDF9" stroke="#1941CC" stroke-width="1" stroke-opacity="0.3"/>
+        <text x="580" y="236" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">КОРПО</text>
+        <text x="580" y="248" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">РАТИВ</text>
         <text x="580" y="272" text-anchor="middle" font-size="11" fill="#6E6B63" font-family="Manrope,sans-serif" font-weight="500">Корпоратив</text>
 
         <!-- Leaf: Party -->
-        <circle cx="175" cy="150" r="26" fill="#ECEAE4" stroke="#D8D5CE" stroke-width="1.5"/>
-        <text x="175" y="158" text-anchor="middle" font-size="22" aria-hidden="true">🎉</text>
+        <circle cx="175" cy="150" r="26" fill="#E8EDF9" stroke="#1941CC" stroke-width="1" stroke-opacity="0.3"/>
+        <text x="175" y="146" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">ВЕЧЕР</text>
+        <text x="175" y="158" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">ИНКА</text>
         <text x="175" y="186" text-anchor="middle" font-size="11" fill="#6E6B63" font-family="Manrope,sans-serif" font-weight="500">Вечеринка</text>
 
         <!-- Leaf: Masterclass -->
-        <circle cx="505" cy="150" r="26" fill="#ECEAE4" stroke="#D8D5CE" stroke-width="1.5"/>
-        <text x="505" y="158" text-anchor="middle" font-size="22" aria-hidden="true">🎓</text>
+        <circle cx="505" cy="150" r="26" fill="#E8EDF9" stroke="#1941CC" stroke-width="1" stroke-opacity="0.3"/>
+        <text x="505" y="146" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">МАСТЕР</text>
+        <text x="505" y="158" text-anchor="middle" font-size="9" font-weight="700" fill="#1941CC" font-family="Manrope,sans-serif" letter-spacing="0.05em">КЛАСС</text>
         <text x="505" y="186" text-anchor="middle" font-size="11" fill="#6E6B63" font-family="Manrope,sans-serif" font-weight="500">Мастер-класс</text>
 
         <!-- Center labels -->
-        <text x="340" y="198" text-anchor="middle" font-size="13" font-weight="700" fill="#141410" font-family="Manrope,sans-serif">Организатор</text>
-        <text x="340" y="215" text-anchor="middle" font-size="11" fill="#6E6B63" font-family="Manrope,sans-serif">одна база · любой формат</text>
+        <text x="340" y="202" text-anchor="middle" font-size="13" font-weight="700" fill="#141410" font-family="Manrope,sans-serif">Организатор</text>
+        <text x="340" y="219" text-anchor="middle" font-size="11" fill="#6E6B63" font-family="Manrope,sans-serif">одна база · любой формат</text>
       </svg>
     </div>
   </div>
@@ -711,18 +732,18 @@
   <div class="container">
     <p class="formats-label">Подходит для любого формата</p>
     <div class="formats-track" role="list">
-      <span class="format-chip" role="listitem">🍽 Ресторан</span>
-      <span class="format-chip" role="listitem">☕ Кофейня</span>
-      <span class="format-chip" role="listitem">🗺 Экскурсия</span>
-      <span class="format-chip" role="listitem">💒 Свадьба</span>
-      <span class="format-chip" role="listitem">🎂 День рождения</span>
-      <span class="format-chip" role="listitem">🏢 Корпоратив</span>
-      <span class="format-chip" role="listitem">🎉 Вечеринка</span>
-      <span class="format-chip" role="listitem">🎓 Мастер-класс</span>
-      <span class="format-chip" role="listitem">🎭 Театр</span>
-      <span class="format-chip" role="listitem">🏋 Фитнес-клуб</span>
-      <span class="format-chip" role="listitem">🎸 Концерт</span>
-      <span class="format-chip" role="listitem">📚 Лекция</span>
+      <span class="format-chip" role="listitem">Ресторан</span>
+      <span class="format-chip" role="listitem">Кофейня</span>
+      <span class="format-chip" role="listitem">Экскурсия</span>
+      <span class="format-chip" role="listitem">Свадьба</span>
+      <span class="format-chip" role="listitem">День рождения</span>
+      <span class="format-chip" role="listitem">Корпоратив</span>
+      <span class="format-chip" role="listitem">Вечеринка</span>
+      <span class="format-chip" role="listitem">Мастер-класс</span>
+      <span class="format-chip" role="listitem">Театр</span>
+      <span class="format-chip" role="listitem">Фитнес-клуб</span>
+      <span class="format-chip" role="listitem">Концерт</span>
+      <span class="format-chip" role="listitem">Лекция</span>
     </div>
   </div>
 </div>
@@ -737,25 +758,21 @@
     <div class="how-grid">
       <div class="how-step">
         <div class="how-num">01</div>
-        <span class="how-icon" aria-hidden="true">📋</span>
         <h3>Создай событие</h3>
         <p>Запусти бота, создай событие с названием и датой. Получи ссылку-приглашение за 2 минуты.</p>
       </div>
       <div class="how-step">
         <div class="how-num">02</div>
-        <span class="how-icon" aria-hidden="true">📤</span>
         <h3>Пригласи гостей</h3>
         <p>Поделись ссылкой в любом мессенджере или соцсети. Гость нажимает — и автоматически в базе.</p>
       </div>
       <div class="how-step">
         <div class="how-num">03</div>
-        <span class="how-icon" aria-hidden="true">📱</span>
         <h3>Сканируй на входе</h3>
         <p>QR-код приходит каждому гостю в Telegram. Открываешь камеру в боте и сканируешь — гость отмечен.</p>
       </div>
       <div class="how-step">
         <div class="how-num">04</div>
-        <span class="how-icon" aria-hidden="true">📊</span>
         <h3>База растёт сама</h3>
         <p>Кто пришёл, сколько раз, на какие события — всё хранится. Со временем знаешь своих гостей лучше, чем они сами.</p>
       </div>
@@ -772,32 +789,32 @@
 
     <div class="whom-grid">
       <div class="whom-card">
-        <span class="whom-emoji" aria-hidden="true">🍽</span>
+        <div class="whom-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><line x1="7" y1="2" x2="7" y2="22"/><path d="M5 2C5 2 5 6 7 7C9 6 9 2 9 2"/><line x1="17" y1="2" x2="17" y2="22"/><path d="M17 2C19 3 20 5 20 8H17"/></svg></div>
         <h3>Рестораторы и кафе</h3>
         <p>Знай постоянных гостей по имени. Видь, кто пришёл впервые, кто — в пятый раз. Делай персональные предложения.</p>
       </div>
       <div class="whom-card">
-        <span class="whom-emoji" aria-hidden="true">🗺</span>
+        <div class="whom-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
         <h3>Экскурсоводы и гиды</h3>
         <p>Собирай группы через Telegram, отмечай явку на маршруте, веди историю поездок каждого туриста.</p>
       </div>
       <div class="whom-card">
-        <span class="whom-emoji" aria-hidden="true">💒</span>
+        <div class="whom-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
         <h3>Тамады и event-агентства</h3>
         <p>Контакты гостей свадьбы, юбилея или корпоратива — в одном месте. Больше никаких бумажных списков.</p>
       </div>
       <div class="whom-card">
-        <span class="whom-emoji" aria-hidden="true">🏢</span>
+        <div class="whom-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <h3>HR и корпоративные организаторы</h3>
         <p>Отмечай явку сотрудников на тренингах и мероприятиях. Всё фиксируется без таблиц и звонков.</p>
       </div>
       <div class="whom-card">
-        <span class="whom-emoji" aria-hidden="true">🎓</span>
+        <div class="whom-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
         <h3>Преподаватели и тренеры</h3>
         <p>Журнал посещаемости прямо в Telegram. Кто пришёл, кто пропустил — одним взглядом.</p>
       </div>
       <div class="whom-card">
-        <span class="whom-emoji" aria-hidden="true">🎉</span>
+        <div class="whom-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg></div>
         <h3>Организаторы вечеринок</h3>
         <p>Список гостей, guest list, QR на входе — всё готово. Никаких пропускных бумажек и путаницы.</p>
       </div>
@@ -814,42 +831,42 @@
 
     <div class="features-grid">
       <div class="feature-item">
-        <div class="feature-icon" aria-hidden="true">🎫</div>
+        <div class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="5" y="5" width="3" height="3" fill="var(--accent)" stroke="none"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="16" y="5" width="3" height="3" fill="var(--accent)" stroke="none"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="5" y="16" width="3" height="3" fill="var(--accent)" stroke="none"/><rect x="14" y="14" width="2" height="2" fill="var(--accent)" stroke="none"/><rect x="18" y="14" width="2" height="2" fill="var(--accent)" stroke="none"/><rect x="14" y="18" width="2" height="2" fill="var(--accent)" stroke="none"/><rect x="18" y="18" width="2" height="2" fill="var(--accent)" stroke="none"/></svg></div>
         <h3>QR-коды для гостей</h3>
         <p>Каждый гость получает уникальный QR-код в Telegram автоматически — при регистрации на событие.</p>
       </div>
       <div class="feature-item">
-        <div class="feature-icon" aria-hidden="true">📱</div>
+        <div class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/><line x1="7" y1="12" x2="17" y2="12"/></svg></div>
         <h3>Сканер прямо в боте</h3>
         <p>Открываешь бота на телефоне — и сканируешь QR-коды гостей на входе. Никаких дополнительных устройств.</p>
       </div>
       <div class="feature-item">
-        <div class="feature-icon" aria-hidden="true">📋</div>
+        <div class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
         <h3>История каждого гостя</h3>
         <p>Сколько раз пришёл, на каких событиях был, дата первого визита — всё хранится автоматически.</p>
       </div>
       <div class="feature-item">
-        <div class="feature-icon" aria-hidden="true">⭐</div>
+        <div class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
         <h3>Статус гостя</h3>
         <p>Гость видит свой статус: новичок, постоянный, VIP. Мотивирует возвращаться снова и снова.</p>
       </div>
       <div class="feature-item">
-        <div class="feature-icon" aria-hidden="true">🔒</div>
+        <div class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
         <h3>Соответствие 152-ФЗ</h3>
         <p>Согласие на обработку данных, право на удаление — всё по закону. Гость в любой момент может запросить или удалить свои данные.</p>
       </div>
       <div class="feature-item">
-        <div class="feature-icon" aria-hidden="true">🏢</div>
+        <div class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
         <h3>Несколько площадок</h3>
         <p>На тарифах Сеть и Империя подключи несколько заведений или локаций с единой базой гостей.</p>
       </div>
       <div class="feature-item">
-        <div class="feature-icon" aria-hidden="true">📊</div>
+        <div class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg></div>
         <h3>Аналитика</h3>
         <p>Сколько гостей пришло, конверсия приглашений, топ постоянных — данные всегда под рукой.</p>
       </div>
       <div class="feature-item">
-        <div class="feature-icon" aria-hidden="true">⚡</div>
+        <div class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
         <h3>Мгновенный старт</h3>
         <p>Первое событие создаётся за 2 минуты. Открываешь Telegram → /start → готово.</p>
       </div>
@@ -971,7 +988,7 @@
     <h2>Начни собирать базу гостей уже сегодня</h2>
     <p>Первое событие — бесплатно. Без карты и без регистрации на сайте.</p>
     <a href="https://t.me/great_guest_bot" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
-      🤖 Открыть в Telegram
+      Открыть в Telegram
     </a>
   </div>
 </div>
