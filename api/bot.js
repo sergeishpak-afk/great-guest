@@ -62,6 +62,12 @@ const adminBtn = Markup.inlineKeyboard([[
   Markup.button.webApp('🗂 Панель управления', ADMIN_APP),
 ]]);
 
+const ownerKb = Markup.keyboard([
+  ['🗂 Панель управления'],
+  ['🎫 Получить QR для визита', '⭐ Мой статус'],
+  ['📋 История визитов'],
+]).resize();
+
 const createClubBtn = Markup.inlineKeyboard([[
   Markup.button.webApp('🚀 Создать клуб / мероприятие', ADMIN_APP),
 ]]);
@@ -284,6 +290,15 @@ async function recordRsvp(ctx, venue) {
       p_first: u.first_name || '', p_last: u.last_name || '',
       p_user: u.username || '', p_rsvp: true,
     }).then().catch(() => {});
+
+    // Notify venue owner about new RSVP
+    const guestName = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Гость';
+    const guestLabel = guestName + (u.username ? ` (@${u.username})` : '') + ` [${telegramId}]`;
+    bot.telegram.sendMessage(
+      venue.owner_telegram_id,
+      `🔔 *Новая заявка на участие*\n\n📍 ${esc(venue.name)}\n👤 ${esc(guestLabel)}\n\nОткройте панель → Гостевой список для одобрения.`,
+      { parse_mode: 'Markdown' }
+    ).catch(() => {});
   }
 
   const dateStr = venue.event_date
@@ -422,6 +437,7 @@ bot.start(async (ctx) => {
 
     await ctx.replyWithMarkdown(
       `👋 Привет, *${esc(u.first_name)}*!\n\n*Great Guest* — ваши события и гости под рукой.`,
+      ownerKb
     );
 
     if (isActive) {
@@ -554,14 +570,19 @@ async function sendQrForVenue(ctx, u, venueId) {
 
   const { data: venue } = await supabase
     .from('restaurants')
-    .select('id, name, event_type, event_date, city, classification_mode')
+    .select('id, name, event_type, event_date, city')
     .eq('id', venueId)
     .single();
 
   if (!venue) return ctx.reply('Мероприятие не найдено — возможно, оно было удалено.');
 
-  // Guestlist mode: guest must have confirmed RSVP via invite link
-  if (venue.classification_mode === 'guestlist') {
+  // Guestlist mode: if venue has any RSVP rows, treat it as invite-only
+  const { count: rsvpCount } = await supabase
+    .from('rsvp')
+    .select('*', { count: 'exact', head: true })
+    .eq('venue_id', venueId);
+
+  if (rsvpCount > 0) {
     const { data: rsvpRow } = await supabase
       .from('rsvp')
       .select('id')
@@ -771,6 +792,11 @@ bot.action(/^adm_add365_(\d+)$/, async (ctx) => {
   const newExp = new Date(base + 365 * 24 * 60 * 60 * 1000);
   await supabase.from('owner_subscriptions').update({ subscription_status:'active', subscription_expires_at: newExp.toISOString() }).eq('telegram_id', tid);
   await ctx.editMessageText(`✅ +1 год для *${tid}*. До: *${newExp.toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'})}*`, { parse_mode: 'Markdown' });
+});
+
+// ─── Owner keyboard button ────────────────────────────────────────────────────
+bot.hears('🗂 Панель управления', async (ctx) => {
+  await ctx.reply('👇 Откройте панель:', adminBtn);
 });
 
 // ─── /restaurant — редирект на /start (команда устарела) ─────────────────────
@@ -1059,6 +1085,16 @@ bot.hears('📋 История визитов', async (ctx) => {
     `${i + 1}. ${v.restaurants?.name || 'Ресторан-партнёр'} — ${new Date(v.visited_at).toLocaleDateString('ru-RU')}`
   );
   await ctx.replyWithMarkdown(`📋 *Последние визиты*\n\n${lines.join('\n')}`);
+});
+
+// ─── Catch-all: handle any unrecognized text ─────────────────────────────────
+bot.on('text', async (ctx) => {
+  const ownerSub = await getOwnerSub(String(ctx.from.id));
+  if (ownerSub) {
+    await ctx.reply('Используйте меню ниже 👇', ownerKb);
+  } else {
+    await ctx.reply('Используйте кнопки ниже 👇', guestKb);
+  }
 });
 
 // ─── Vercel handler ───────────────────────────────────────────────────────────

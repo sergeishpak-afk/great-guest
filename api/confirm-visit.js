@@ -76,7 +76,7 @@ module.exports = async (req, res) => {
   const [guestResult, restResult] = await Promise.all([
     supabase.from('guests').select('first_name, last_name').eq('telegram_id', pending.telegram_id).single(),
     effectiveRestaurantId && UUID_RE.test(effectiveRestaurantId)
-      ? supabase.from('restaurants').select('name, owner_telegram_id, classification_mode').eq('id', effectiveRestaurantId).single()
+      ? supabase.from('restaurants').select('name, owner_telegram_id').eq('id', effectiveRestaurantId).single()
       : Promise.resolve({ data: null }),
   ]);
 
@@ -84,21 +84,28 @@ module.exports = async (req, res) => {
   if (effectiveRestaurantId && !UUID_RE.test(effectiveRestaurantId)) return res.status(400).json({ error: 'invalid restaurantId' });
   if (effectiveRestaurantId && !restResult.data) return res.status(404).json({ error: 'Ресторан не найден' });
 
-  // Guestlist mode: deny entry if guest has no approved RSVP for this venue
-  if (restResult.data?.classification_mode === 'guestlist') {
-    // К-4: Use effectiveRestaurantId so generic QR also works when guest has approved RSVP
-    const { data: rsvpRow } = await supabase
+  // Guestlist mode: if venue has any RSVP rows, treat it as invite-only
+  if (effectiveRestaurantId) {
+    const { count: rsvpCount } = await supabase
       .from('rsvp')
-      .select('status')
-      .eq('venue_id', effectiveRestaurantId)
-      .eq('telegram_id', pending.telegram_id)
-      .maybeSingle();
+      .select('*', { count: 'exact', head: true })
+      .eq('venue_id', effectiveRestaurantId);
 
-    if (!rsvpRow || rsvpRow.status !== 'approved') {
-      return res.status(403).json({
-        error: rsvpRow ? 'rsvp_not_approved' : 'not_on_guestlist',
-        message: rsvpRow ? 'Заявка ещё не одобрена организатором' : 'Гость не в списке приглашённых',
-      });
+    if (rsvpCount > 0) {
+      // К-4: Use effectiveRestaurantId so generic QR also works when guest has approved RSVP
+      const { data: rsvpRow } = await supabase
+        .from('rsvp')
+        .select('status')
+        .eq('venue_id', effectiveRestaurantId)
+        .eq('telegram_id', pending.telegram_id)
+        .maybeSingle();
+
+      if (!rsvpRow || rsvpRow.status !== 'approved') {
+        return res.status(403).json({
+          error: rsvpRow ? 'rsvp_not_approved' : 'not_on_guestlist',
+          message: rsvpRow ? 'Заявка ещё не одобрена организатором' : 'Гость не в списке приглашённых',
+        });
+      }
     }
   }
 

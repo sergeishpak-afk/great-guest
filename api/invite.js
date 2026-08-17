@@ -294,7 +294,7 @@ module.exports = async (req, res) => {
 
     const { data: venue, error: fetchErr } = await db
       .from('restaurants')
-      .select('id, name, owner_telegram_id, venue_type, event_type, event_date, address, city, invite_message, classification_mode')
+      .select('id, name, owner_telegram_id, venue_type, event_type, event_date, address, city, invite_message')
       .eq('id', venueId)
       .single();
 
@@ -319,10 +319,7 @@ module.exports = async (req, res) => {
       if (req.body.address !== undefined) updates.address = String(req.body.address || '').trim().slice(0, 120);
       if (req.body.city !== undefined) updates.city = String(req.body.city || '').trim().slice(0, 60);
       if (req.body.invite_message !== undefined) updates.invite_message = String(req.body.invite_message || '').trim().slice(0, 1000);
-      if (req.body.classification_mode !== undefined) {
-        const m = req.body.classification_mode;
-        if (m === 'guestlist' || m === 'loyalty') updates.classification_mode = m;
-      }
+      // classification_mode: skip until migration 014 adds the column
 
       const { error: upErr } = await db.from('restaurants').update(updates).eq('id', venueId);
       if (upErr) return res.status(500).json({ error: 'Update failed' });

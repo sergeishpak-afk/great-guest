@@ -195,7 +195,7 @@ module.exports = async (req, res) => {
       event_type:          (event_type || '').trim(),
       invite_message:      (invite_message || '').trim().slice(0, 1000),
       owner_telegram_id:   ownerId,
-      classification_mode: ['loyalty','guestlist','open'].includes(classification_mode) ? classification_mode : 'loyalty',
+      // classification_mode: added via migration 014 — omit until column exists
     })
     .select()
     .single();
