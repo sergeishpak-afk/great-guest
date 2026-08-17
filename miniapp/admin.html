@@ -1039,7 +1039,8 @@ function show(id) {
     _regDraft.edate     = document.getElementById('r-edate')?.value     || '';
     _regDraft.inviteMsg = document.getElementById('r-invite-msg')?.value || '';
   }
-  if (_currentScreen && _currentScreen !== id && id !== 's-error') {
+  // Don't push loading screen into navigation history
+  if (_currentScreen && _currentScreen !== id && id !== 's-error' && _currentScreen !== 's-loading') {
     _screenStack.push(_currentScreen);
     if (_screenStack.length > 8) _screenStack.shift();
   }
@@ -1048,16 +1049,23 @@ function show(id) {
     const el = document.getElementById(k);
     if (el) el.style.display = k === id ? SCREEN_DISPLAY[k] : 'none';
   });
-  if (typeof tg !== 'undefined' && tg?.BackButton) {
-    if (_screenStack.length > 0) tg.BackButton.show();
-    else tg.BackButton.hide();
+  // Always show BackButton so user can close mini-app from root screen
+  if (typeof tg !== 'undefined' && tg?.BackButton && id !== 's-loading' && id !== 's-error') {
+    tg.BackButton.show();
+  } else if (typeof tg !== 'undefined' && tg?.BackButton) {
+    tg.BackButton.hide();
   }
 }
 
 function goBack() {
   const prev = _screenStack.pop();
   if (prev) { _currentScreen = null; show(prev); }
-  else window.location.href = 'app.html';
+  else {
+    // Root screen — close mini-app and return to bot chat
+    if (typeof tg !== 'undefined' && typeof tg.close === 'function') tg.close();
+    else if (window.history.length > 1) window.history.back();
+    else window.close();
+  }
 }
 
 function showErr(msg, retryFn) {
@@ -1956,7 +1964,7 @@ function renderDashboard() {
     <div class="event-hero" style="background-image:url('${esc(v.cover_image_url)}')">
       <div class="event-hero-overlay"></div>
       <div class="event-hero-top">
-        <div class="hero-back-btn" onclick="renderNetwork()">←</div>
+        <div class="hero-back-btn" onclick="goBack()">←</div>
         <div style="display:flex;gap:8px">
           <button onclick="showInviteLink()" aria-label="Ссылка-приглашение" class="hero-icon-btn">🔗</button>
           <button onclick="showVenueQR()" aria-label="QR входа" class="hero-icon-btn"
@@ -1971,7 +1979,7 @@ function renderDashboard() {
   ` : `
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-back" onclick="renderNetwork()">←</div>
+        <div class="topbar-back" onclick="goBack()">←</div>
         <div style="min-width:0">
           <div class="rest-name">${esc(v.name)}</div>
           <div class="rest-sub">${esc(isEvent ? (v.event_type || 'Мероприятие') : (v.cuisine || 'Ресторан'))}${v.city ? ' · ' + esc(v.city) : ''}</div>
@@ -2047,7 +2055,7 @@ function renderGuestsPane(guests, owner, isEvent) {
         color:#0D0C12;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none">
         💳 Продлить подписку
       </a><br><br>
-      Или напишите нам: <button onclick="openTgLink('https://t.me/great_guest_bot?start=support')" style="background:none;border:none;color:var(--gold);font-size:inherit;cursor:pointer;padding:0;font-family:inherit">в поддержку</button>
+      Или напишите нам: <button onclick="openTgLink('https://t.me/shpaksergey')" style="background:none;border:none;color:var(--gold);font-size:inherit;cursor:pointer;padding:0;font-family:inherit">в поддержку</button>
     </div>`;
   }
   const scanBtn = `
@@ -3471,7 +3479,7 @@ function openTgLink(url) {
 }
 
 function contactSupport() {
-  openTgLink('https://t.me/great_guest_bot?start=support');
+  openTgLink('https://t.me/shpaksergey');
 }
 
 // ─ Bonus visit ───────────────────────────────────────────────────────────────

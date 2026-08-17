@@ -855,7 +855,7 @@ bot.command('mydata', async (ctx) => {
     `• **Дата согласия:** ${consentDate}\n` +
     `• **Версия согласия:** ${guest.consent_version || '—'}\n\n` +
     `_Чтобы удалить все данные, используйте /forget_\n` +
-    `_По вопросам: privacy@great-guest.ru_`
+    `_По вопросам: shpak.organika@gmail.com_`
   );
 });
 
@@ -914,7 +914,7 @@ bot.action(/^confirm_forget_(.+)$/, async (ctx) => {
     );
   } catch (e) {
     console.error('forget error:', e);
-    await ctx.editMessageText('Произошла ошибка при удалении. Обратитесь на privacy@great-guest.ru');
+    await ctx.editMessageText('Произошла ошибка при удалении. Обратитесь на shpak.organika@gmail.com');
   }
 });
 
