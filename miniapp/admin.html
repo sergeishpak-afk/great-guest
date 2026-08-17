@@ -1785,17 +1785,23 @@ function renderRegistrationForm() {
     ${extraFields}
 
     <div class="field">
-      <label>Классификация гостей</label>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-        ${[
-          {k:'loyalty',   e:'🏅', l:'Лоялти',        d:'Уровни Bronze → Platinum, медали'},
-          {k:'guestlist', e:'🎟', l:'Список гостей',  d:'Приглашён / Пришёл — для мероприятий'},
-          {k:'open',      e:'🔓', l:'Открытый',       d:'Просто база без уровней и значков'},
-        ].map(m => `<div class="mode-card${classMode===m.k?' selected':''}" onclick="selectMode('${m.k}')">
-          <span style="font-size:22px">${m.e}</span>
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:700;color:var(--text)">${m.l}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:1px">${m.d}</div>
+      <label>${isEvent ? 'Режим доступа на мероприятие' : 'Тип гостевой программы'}</label>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+        ${(isEvent ? [
+          {k:'guestlist', e:'🔒', l:'Только по приглашению', badge:'ЗАКРЫТОЕ',    bs:'rgba(231,76,60,0.15)',   bc:'#e05a4a',     d:'Гость подаёт заявку → вы одобряете → он получает QR. Не одобрили — вход закрыт.'},
+          {k:'open',      e:'🔓', l:'Открытый вход',         badge:'ОТКРЫТОЕ',    bs:'rgba(46,204,113,0.15)',  bc:'#2ecc71',     d:'Любой может получить QR сразу, без заявки и вашего одобрения.'},
+        ] : [
+          {k:'loyalty',   e:'🏅', l:'Лоялти-программа',      badge:'ЛОЯЛТИ',      bs:'rgba(201,169,110,0.15)', bc:'var(--gold)', d:'Гости накапливают визиты и получают уровни Bronze → Platinum.'},
+          {k:'open',      e:'🔓', l:'Открытый учёт',          badge:'БЕЗ УРОВНЕЙ', bs:'rgba(120,120,120,0.12)', bc:'var(--muted)',d:'Фиксируете визиты без уровней и значков.'},
+          {k:'guestlist', e:'🔒', l:'Список гостей',          badge:'ЗАКРЫТОЕ',    bs:'rgba(231,76,60,0.15)',   bc:'#e05a4a',     d:'Вход только по одобренной заявке. Для закрытых вечеров ресторана.'},
+        ]).map(m => `<div class="mode-card${classMode===m.k?' selected':''}" onclick="selectMode('${m.k}')">
+          <span style="font-size:26px;line-height:1;flex-shrink:0">${m.e}</span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-size:14px;font-weight:700;color:var(--text)">${m.l}</span>
+              <span style="font-size:10px;font-weight:800;letter-spacing:0.06em;padding:2px 8px;border-radius:20px;white-space:nowrap;background:${m.bs};color:${m.bc}">${m.badge}</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.55">${m.d}</div>
           </div>
           <div class="mode-check">${classMode===m.k?'✓':''}</div>
         </div>`).join('')}
