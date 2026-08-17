@@ -1061,10 +1061,8 @@ function goBack() {
   const prev = _screenStack.pop();
   if (prev) { _currentScreen = null; show(prev); }
   else {
-    // Root screen — close mini-app and return to bot chat
-    if (typeof tg !== 'undefined' && typeof tg.close === 'function') tg.close();
-    else if (window.history.length > 1) window.history.back();
-    else window.close();
+    // Root screen — return to main app (card / cabinet / network tabs)
+    window.location.href = 'app.html';
   }
 }
 
