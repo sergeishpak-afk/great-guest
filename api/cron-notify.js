@@ -56,11 +56,13 @@ async function getExpiredToday() {
 
 module.exports = async (req, res) => {
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const auth = req.headers.authorization || '';
-    if (auth !== `Bearer ${cronSecret}`) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+  if (!cronSecret) {
+    console.error('[cron-notify] CRON_SECRET is not configured — refusing request');
+    return res.status(500).json({ error: 'Server misconfiguration: CRON_SECRET required' });
+  }
+  const auth = req.headers.authorization || '';
+  if (auth !== `Bearer ${cronSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   let sent = 0;

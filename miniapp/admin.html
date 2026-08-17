@@ -874,7 +874,7 @@
       <button onclick="closeRsvpPanel()" style="background:none;border:none;font-size:20px;
         cursor:pointer;color:var(--muted);line-height:1">×</button>
     </div>
-    <div class="modal-sub" id="rsvp-modal-sub">Только эти гости смогут получить QR и войти</div>
+    <div class="modal-sub" id="rsvp-modal-sub">Одобрите заявку → гость получит уведомление → сможет войти по QR на входе</div>
 
     <!-- Add by ID -->
     <div style="display:flex;gap:8px;margin:14px 0 10px">
@@ -2319,7 +2319,11 @@ function renderEventPane(v) {
               style="width:20px;height:20px;margin-top:2px;cursor:pointer;accent-color:#C9A96E;flex-shrink:0">
             <div>
               <div style="font-weight:700;font-size:14px">🔒 Закрытое мероприятие</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px">Гости подают заявку через инвайт-ссылку — вы одобряете или отклоняете каждую. При сканировании QR проверяется статус заявки.</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.55">
+                Гость переходит по инвайт-ссылке и подаёт заявку.<br>
+                <strong style="color:var(--gold)">Вы должны одобрить заявку</strong> — только тогда его QR-код будет принят на входе.<br>
+                Не одобрили → гость приходит, QR не работает.
+              </div>
             </div>
           </label>
         </div>

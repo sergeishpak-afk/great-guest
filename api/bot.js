@@ -585,7 +585,7 @@ async function sendQrForVenue(ctx, u, venueId) {
   if (rsvpCount > 0) {
     const { data: rsvpRow } = await supabase
       .from('rsvp')
-      .select('id')
+      .select('id, status')
       .eq('venue_id', venueId)
       .eq('telegram_id', telegramId)
       .maybeSingle();
@@ -594,8 +594,18 @@ async function sendQrForVenue(ctx, u, venueId) {
       return ctx.replyWithMarkdown(
         `⛔ *Вход только для приглашённых*\n\n` +
         `*${esc(venue.name)}* — закрытое мероприятие.\n` +
-        `Вы не найдены в списке гостей.\n\n` +
-        `Запросите персональную ссылку у организатора и подтвердите участие — тогда QR-код станет доступен.`
+        `Вас нет в списке гостей.\n\n` +
+        `Запросите персональную ссылку у организатора, перейдите по ней и подтвердите участие.\n\n` +
+        `После того как организатор *одобрит* вашу заявку — QR-код станет доступен.`
+      );
+    }
+
+    if (rsvpRow.status !== 'approved') {
+      return ctx.replyWithMarkdown(
+        `⏳ *Заявка на рассмотрении*\n\n` +
+        `Вы подали заявку на *${esc(venue.name)}*.\n\n` +
+        `QR-код будет доступен только после того, как организатор *одобрит* вашу заявку.\n` +
+        `Вы получите уведомление в этот бот — просто ждите. 🙏`
       );
     }
   }
@@ -1102,10 +1112,12 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
   const webhookSecret = process.env.WEBHOOK_SECRET;
-  if (webhookSecret) {
-    const incoming = req.headers['x-telegram-bot-api-secret-token'] || '';
-    if (incoming !== webhookSecret) return res.status(401).end('Unauthorized');
+  if (!webhookSecret) {
+    console.error('[bot] WEBHOOK_SECRET is not configured — refusing all updates');
+    return res.status(500).json({ error: 'Server misconfiguration: WEBHOOK_SECRET required' });
   }
+  const incoming = req.headers['x-telegram-bot-api-secret-token'] || '';
+  if (incoming !== webhookSecret) return res.status(401).end('Unauthorized');
 
   try {
     await bot.handleUpdate(req.body);

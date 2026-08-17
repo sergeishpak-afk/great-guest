@@ -354,7 +354,15 @@ async function confirmVisit() {
       body: JSON.stringify({ token: currentToken, restaurantId }),
     });
     const data = await res.json();
-    if (!res.ok) return showError(data.message || data.error || 'Ошибка подтверждения');
+    if (!res.ok) {
+      if (data.error === 'rsvp_not_approved') {
+        return showError('Заявка гостя ещё не одобрена.\nОдобрите в панели управления → 📋 Заявки');
+      }
+      if (data.error === 'not_on_guestlist') {
+        return showError('Гость не в списке приглашённых.\nЗакрытое мероприятие — нужна одобренная заявка');
+      }
+      return showError(data.message || data.error || 'Ошибка подтверждения');
+    }
     showSuccess(data.guest);
   } catch {
     showError('Ошибка соединения');
